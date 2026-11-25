@@ -23,7 +23,10 @@ ATEST03-unit1/
 │   ├── steps/                  # common, cart, product, account, search
 │   └── environment.py          # hooks
 ├── dataset/products.json       # test data read by the steps
+├── dataset/requirements.json   # requirement registry: tag (@add_to_cart ...) -> REQ id, title, risk
+├── dataset/tags.json           # every other allowed tag (area, risk, suite, type, control)
 ├── helper_utility/helpers.py   # page(), product(): helpers shared by steps
+├── helper_utility/traceability.py  # requirement matrix from requirement tags + scenario results
 ├── reports/                    # generated
 └── docs/Unit1_BDD_vi.md, Unit1_BDD_en.md (+ images/)
 ```
@@ -33,14 +36,30 @@ ATEST03-unit1/
 ```bash
 pip install -r requirements.txt
 behave --dry-run                    # every step implemented?
-behave                              # default suite (not @manual / @wip / @data-creating)
+behave                              # default suite (not @manual / @wip / @data-creating) + every report
 behave --tags=@smoke
 behave --tags=@checkout             # every scenario of one feature area
-behave -f json.pretty -o reports/results.json -f html -o reports/report.html -f progress    # HTML + JSON reports
-behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results
+behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
+python -m unittest discover -s tests/unit    # page-object layout + traceability rules (no browser)
 ```
 
-JUnit XML is written to `reports/junit/` on every run (`behave.ini`). Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 21 scenarios passed, 1 skipped (`@data-creating`).
+## Reports
+
+Every `behave` run writes all of them (`behave.ini`, `tests/environment.py`):
+
+| Output | Path | For |
+| --- | --- | --- |
+| Console | `pretty` | whoever runs it |
+| HTML report | `reports/report.html` | trainer, BA, PO |
+| JSON results | `reports/results.json` | tools, dashboards |
+| JUnit XML | `reports/junit/*.xml` | CI test tab |
+| Traceability matrix | `reports/traceability.md`, `.csv` | requirement → scenarios → PASS / FAIL / NOT RUN / NO TEST |
+| Screenshots of failed steps | `reports/screenshots/` | debugging (also attached to Allure) |
+| Allure results (opt-in) | `reports/allure-results/` | history and trends (`allure serve reports/allure-results`) |
+
+Each scenario carries one **requirement tag** that names what it proves, e.g. `@cart @critical @smoke @add_to_cart` (registry: `dataset/requirements.json`, which maps `add_to_cart` to REQ-01). A requirement is FAIL if any of its scenarios failed, PASS if every scenario that ran passed, NOT RUN if none ran (e.g. `@data-creating`, or another area with `--tags`), NO TEST if nothing is tagged with it. Unit tests fail when a scenario has no requirement tag, a requirement has no scenario, or a feature uses a tag that is in neither `requirements.json` nor `tags.json` (a typo such as `@add_to_card`).
+
+Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 21 scenarios passed, 1 skipped (`@data-creating`).
 
 Verified against a local mock with the standard Shopify page structure. If a locator differs on the live theme, fix it in `pages/` only.
 

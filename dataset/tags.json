@@ -1,0 +1,9 @@
+{
+  "_comment": "Every tag a feature file may use. Requirement tags (@add_to_cart ...) live in requirements.json; an unknown tag (a typo such as @add_to_card) fails tests/unit/test_traceability.py.",
+  "area":    {"cart": "cart page and mini-cart", "checkout": "checkout", "login": "login and password reset",
+              "product": "catalog and product page", "register": "registration", "search": "search"},
+  "risk":    {"critical": "risk score >= 15", "high": "risk score 10-14", "medium": "risk score 6-9"},
+  "suite":   {"smoke": "run on every deploy", "regression": "full suite, nightly"},
+  "type":    {"negative": "invalid input or error path"},
+  "control": {"manual": "not automated", "wip": "work in progress", "data-creating": "creates real data: only with trainer approval"}
+}

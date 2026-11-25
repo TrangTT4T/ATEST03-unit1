@@ -130,7 +130,8 @@ Sauce Demo là store Shopify, nhóm test không có mã nguồn hay API nội b�
 | `@smoke`                          | Luồng tối thiểu: trang chủ mở, thêm vào giỏ, sang checkout | Mỗi lần deploy, \< 5 phút          |
 | `@regression`                     | Toàn bộ scenario đã automate                               | Hằng đêm                           |
 | `@critical` / `@high` / `@medium` | Mức rủi ro từ bảng mục 2                                   | Lọc khi thời gian chạy bị giới hạn |
-| `@cart`, `@login`, `@checkout` …    | Nhóm chức năng, dùng cho truy vết                          | Chạy một nhóm                      |
+| `@cart`, `@login`, `@checkout` …    | Nhóm chức năng                                             | Chạy một nhóm                      |
+| `@add_to_cart`, `@secure_login` … | Yêu cầu mà scenario chứng minh (REQ-01, REQ-05 …)          | Ma trận truy vết                   |
 | `@negative`                       | Case âm                                                    | –                                  |
 | `@data-creating`                  | Tạo dữ liệu thật trên store                                | Chỉ chạy khi được phép             |
 | `@wip`, `@manual`                 | Đang viết / chỉ kiểm thủ công                              | Loại khỏi pipeline                 |
@@ -793,7 +794,7 @@ Bản trong file zip có thêm vài dòng cho Docker/CI (`--no-sandbox`, `CHROME
 
 ### 5. Tags
 
-Tag làm ba việc: chọn scenario sẽ chạy, điều khiển hook (bỏ qua `@manual`), và gắn scenario với requirement qua tag nhóm chức năng.
+Tag làm ba việc: chọn scenario sẽ chạy, điều khiển hook (bỏ qua `@manual`), và gắn scenario với requirement qua tag yêu cầu.
 
 | Nhóm       | Tag                                 | Dùng trong Day 2                          |
 |------------|-------------------------------------|-------------------------------------------|
@@ -801,7 +802,8 @@ Tag làm ba việc: chọn scenario sẽ chạy, điều khiển hook (bỏ qua 
 | Mức rủi ro | `@critical`, `@high`, `@medium`     | Giỏ hàng `@critical`, đăng nhập `@high`   |
 | Loại case  | `@negative`                         | Login sai thông tin                       |
 | Kiểm soát  | `@manual`, `@wip`, `@data-creating` | Bị loại theo mặc định                     |
-| Nhóm chức năng | `@cart`, `@login`               | Tag cấp Feature, nối với requirement      |
+| Nhóm chức năng | `@cart`, `@login`               | Tag cấp Feature: chạy một nhóm            |
+| Yêu cầu    | `@add_to_cart`, `@secure_login` …   | Mỗi scenario một tag: ma trận truy vết (Day 3) |
 
 Biểu thức lọc (behave 1.3, cú pháp tag expression v2):
 
@@ -975,20 +977,25 @@ Mọi step gọi Page Object trong `pages/`; không step nào chứa locator.
 ```bash
 cd ATEST03-unit1
 pip install -r requirements.txt
-behave                                # bộ mặc định (behave.ini: bỏ @manual / @wip / @data-creating)
+behave                                # bộ mặc định (behave.ini: bỏ @manual / @wip / @data-creating) + mọi báo cáo
 behave --tags=@smoke                  # chỉ smoke
 behave --tags=@data-creating          # tạo tài khoản thật: chỉ khi trainer cho phép
-behave -f json.pretty -o reports/results.json -f html -o reports/report.html -f progress    # báo cáo HTML + JSON
-behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # kết quả Allure
+behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # kết quả Allure (tùy chọn)
+python -m unittest discover -s tests/unit    # kiểm tra cấu trúc page object + truy vết (không cần trình duyệt)
 ```
+
+Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatter; `after_all` trong `tests/environment.py` ghi ma trận):
 
 | Đầu ra | Đường dẫn |
 | --- | --- |
 | Báo cáo HTML | `reports/report.html` |
 | Kết quả JSON | `reports/results.json` |
 | JUnit XML (CI) | `reports/junit/*.xml` |
-| Allure | `reports/allure-results/` (`allure serve reports/allure-results`) |
+| Ma trận truy vết | `reports/traceability.md`, `reports/traceability.csv` |
+| Allure (tùy chọn) | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Ảnh step fail | `reports/screenshots/` |
+
+**Ma trận truy vết sinh từ tag.** Mỗi scenario mang đúng một tag yêu cầu, gọi tên điều nó chứng minh (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` nối mỗi tag với mã Day 1 (REQ-01 …), tiêu đề và rủi ro. `helper_utility/traceability.py` gom scenario của lượt chạy theo yêu cầu: FAIL nếu có scenario fail, PASS nếu mọi scenario đã chạy đều pass, NOT RUN nếu không scenario nào chạy (`@data-creating`, hoặc lọc khu vực khác bằng `--tags`), NO TEST nếu chưa scenario nào gắn tag đó. `tests/unit/test_traceability.py` báo lỗi khi scenario thiếu tag yêu cầu, khi một yêu cầu chưa có scenario, hoặc khi feature dùng tag không có trong `requirements.json` lẫn `dataset/tags.json` (gõ sai như `@add_to_card`).
 
 ### 6. Kết quả mong đợi
 
@@ -996,7 +1003,7 @@ behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f p
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 6 feature, 21 scenario pass, 1 bỏ qua (`@data-creating`), 70 step pass |
-| Truy vết | `behave --dry-run --tags=@cart` … `@search`: nhóm chức năng nào cũng có ít nhất một scenario |
+| Truy vết | `reports/traceability.md`: REQ-01 … REQ-08 đều PASS (scenario `@data-creating` của REQ-07 hiện NOT RUN); `python -m unittest discover -s tests/unit` OK |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
 

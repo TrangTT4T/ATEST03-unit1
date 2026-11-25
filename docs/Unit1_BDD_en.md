@@ -130,7 +130,8 @@ Sauce Demo is a Shopify store: the team has no source code or internal API, so t
 | `@smoke`                          | Minimum flow: home opens, add to cart, reach checkout | Every deploy, \< 5 min      |
 | `@regression`                     | All automated scenarios                               | Nightly                     |
 | `@critical` / `@high` / `@medium` | Risk level from section 2                             | Filter when time is limited |
-| `@cart`, `@login`, `@checkout` …    | Feature area, for traceability                        | Run one area                |
+| `@cart`, `@login`, `@checkout` …    | Feature area                                          | Run one area                |
+| `@add_to_cart`, `@secure_login` … | Requirement the scenario proves (REQ-01, REQ-05 …)    | Traceability matrix         |
 | `@negative`                       | Negative case                                         | –                           |
 | `@data-creating`                  | Creates real data on the store                        | Only when permitted         |
 | `@wip`, `@manual`                 | Work in progress / manual only                        | Excluded from the pipeline  |
@@ -793,7 +794,7 @@ The file in the zip adds a few lines for Docker/CI (`--no-sandbox`, `CHROMEDRIVE
 
 ### 5. Tags
 
-Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), and link scenarios to requirements through the feature-area tag.
+Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), and link scenarios to requirements through a requirement tag.
 
 | Group        | Tags                                | Used on Day 2                             |
 |--------------|-------------------------------------|-------------------------------------------|
@@ -801,7 +802,8 @@ Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), an
 | Risk level   | `@critical`, `@high`, `@medium`     | Cart `@critical`, login `@high`           |
 | Case type    | `@negative`                         | Invalid login                             |
 | Control      | `@manual`, `@wip`, `@data-creating` | Excluded by default                       |
-| Feature area | `@cart`, `@login`                   | Feature-level tags, mapped to requirements |
+| Feature area | `@cart`, `@login`                   | Feature-level tags: run one area           |
+| Requirement  | `@add_to_cart`, `@secure_login` …   | One per scenario: the traceability matrix (Day 3) |
 
 Filter expressions (behave 1.3, tag expressions v2):
 
@@ -975,20 +977,25 @@ Every step calls a Page Object from `pages/`; no step contains a locator.
 ```bash
 cd ATEST03-unit1
 pip install -r requirements.txt
-behave                                # default suite (behave.ini: not @manual / @wip / @data-creating)
+behave                                # default suite (behave.ini: not @manual / @wip / @data-creating) + every report
 behave --tags=@smoke                  # smoke only
 behave --tags=@data-creating          # creates a real account: only with trainer approval
-behave -f json.pretty -o reports/results.json -f html -o reports/report.html -f progress    # HTML + JSON reports
-behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results
+behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
+python -m unittest discover -s tests/unit    # page-object layout + traceability rules (no browser)
 ```
+
+One `behave` run writes every report (`behave.ini` sets the formatters; `after_all` in `tests/environment.py` writes the matrix):
 
 | Output | Path |
 | --- | --- |
 | HTML report | `reports/report.html` |
 | JSON results | `reports/results.json` |
 | JUnit XML (CI) | `reports/junit/*.xml` |
-| Allure results | `reports/allure-results/` (`allure serve reports/allure-results`) |
+| Traceability matrix | `reports/traceability.md`, `reports/traceability.csv` |
+| Allure results (opt-in) | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Screenshots of failed steps | `reports/screenshots/` |
+
+**Traceability matrix generated from tags.** Every scenario carries one requirement tag that names what it proves (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` maps each tag to its Day 1 id (REQ-01 …), title and risk. `helper_utility/traceability.py` groups the run's scenarios by requirement: FAIL if any failed, PASS if every scenario that ran passed, NOT RUN if none ran (`@data-creating`, or another area with `--tags`), NO TEST if no scenario is tagged. `tests/unit/test_traceability.py` fails when a scenario has no requirement tag, a requirement has no scenario, or a tag is in neither `requirements.json` nor `dataset/tags.json` (a typo such as `@add_to_card`).
 
 ### 6. Expected results
 
@@ -996,7 +1003,7 @@ behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f p
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 6 features, 21 scenarios passed, 1 skipped (`@data-creating`), 70 steps passed |
-| Traceability | `behave --dry-run --tags=@cart` … `@search`: every feature area lists at least one scenario |
+| Traceability | `reports/traceability.md`: REQ-01 … REQ-08 all PASS (the `@data-creating` scenario of REQ-07 is listed as NOT RUN); `python -m unittest discover -s tests/unit` OK |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
 
