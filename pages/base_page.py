@@ -1,4 +1,10 @@
-"""Base Page Object (Selenium WebDriver): navigation, waits and shared helpers."""
+"""Base Page Object (Selenium WebDriver): navigation, waits and shared helpers.
+
+Layout of every page object (one class per file):
+    behaviour first (methods), then a ``# --- Locators ---`` section at the BOTTOM of the class.
+A locator is a ``(By, value)`` tuple; a value that depends on data is a template filled by
+``locator(...)``. Methods never write a selector inline.
+"""
 import re
 
 from selenium.webdriver.common.by import By
@@ -35,6 +41,12 @@ class BasePage:
         return self.driver.current_url
 
     # Element helpers (explicit waits, never time.sleep) ---------------------
+    @staticmethod
+    def locator(template: tuple[str, str], **values) -> tuple[str, str]:
+        """Fill a locator template: locator(self._tile, handle="grey-jacket")."""
+        by, value = template
+        return by, value.format(**values)
+
     def find(self, by, value):
         return self.wait.until(EC.presence_of_element_located((by, value)))
 
@@ -49,7 +61,7 @@ class BasePage:
 
         Without this, the next driver.get() can cancel the form POST (Day 4 findings F7/F8).
         """
-        old_page = self.driver.find_element(By.TAG_NAME, "html")
+        old_page = self.driver.find_element(*self._html)
         self.click(by, value)
         self.wait.until(EC.staleness_of(old_page))
 
@@ -60,14 +72,21 @@ class BasePage:
         return element
 
     def body_text(self) -> str:
-        return self.driver.find_element(By.TAG_NAME, "body").text
+        return self.driver.find_element(*self._body).text
 
     # Header ------------------------------------------------------------------
     def mini_cart_count(self) -> int:
-        link = self.find(By.XPATH, "//a[contains(., 'My Cart')]")
+        link = self.find(*self._mini_cart)
         return int(re.search(r"\((\d+)\)", link.text).group(1))
 
     def search(self, keyword: str):
-        box = self.type(By.NAME, "q", keyword)
+        box = self.type(*self._search_box, keyword)
         box.send_keys(Keys.ENTER)
         self.wait.until(EC.url_contains("/search"))
+
+    # --- Locators -------------------------------------------------------------
+    _html = (By.TAG_NAME, "html")
+    _body = (By.TAG_NAME, "body")
+    # Header (on every page)
+    _mini_cart = (By.XPATH, "//a[contains(., 'My Cart')]")
+    _search_box = (By.NAME, "q")

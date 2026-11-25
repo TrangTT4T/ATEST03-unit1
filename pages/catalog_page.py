@@ -9,4 +9,7 @@ class CatalogPage(BasePage):
 
     def tile_text(self, handle: str) -> str:
         # Each product tile is a link to /products/<handle> holding name, price and "Sold Out".
-        return self.find(By.CSS_SELECTOR, f"a[href*='/products/{handle}']").text
+        return self.find(*self.locator(self._tile, handle=handle)).text
+
+    # --- Locators -------------------------------------------------------------
+    _tile = (By.CSS_SELECTOR, "a[href*='/products/{handle}']")
