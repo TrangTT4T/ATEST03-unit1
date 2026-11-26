@@ -721,7 +721,7 @@ A locator is a plain XPath string that describes the element (its id, an attribu
 | By text | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
 | Template | `"//a[contains(@href,'/products/{}')]"`, filled with `self._tile.format(path_name)` |
 
-`ElementFinder` (in `helper_utility/helpers.py`, the same shape as the team's `selenium_wrapper/elementfinder.py`) reads every locator. `by_locator(locator)` calls `_parse_locator()` to split it into a prefix and the criteria, looks the prefix up in its `strategies` table and returns `(By, criteria)`:
+`ElementFinder` (in `helper_utility/helpers.py`, the same shape as the team's `selenium_wrapper/elementfinder.py`) reads every locator. `by_locator(locator)` splits it into a prefix and the criteria (no prefix for XPath), looks the prefix up in its `strategies` table and returns `(By, criteria)`:
 
 | Locator | Prefix | Selenium |
 | --- | --- | --- |

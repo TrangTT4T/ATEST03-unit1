@@ -722,7 +722,7 @@ Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó
 | Theo chữ | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
 | Template | `"//a[contains(@href,'/products/{}')]"`, điền bằng `self._tile.format(path_name)` |
 
-`ElementFinder` (trong `helper_utility/helpers.py`, cùng khung với `selenium_wrapper/elementfinder.py` của team) đọc mọi locator. `by_locator(locator)` gọi `_parse_locator()` để tách locator thành prefix và criteria, tra prefix trong bảng `strategies` rồi trả về `(By, criteria)`:
+`ElementFinder` (trong `helper_utility/helpers.py`, cùng khung với `selenium_wrapper/elementfinder.py` của team) đọc mọi locator. `by_locator(locator)` tách locator thành prefix và criteria (XPath thì không có prefix), tra prefix trong bảng `strategies` rồi trả về `(By, criteria)`:
 
 | Locator | Prefix | Selenium |
 | --- | --- | --- |

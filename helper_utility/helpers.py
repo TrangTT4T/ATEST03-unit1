@@ -53,7 +53,11 @@ class ElementFinder:
     def by_locator(self, locator: str) -> tuple[str, str]:
         """The (By, criteria) pair Selenium needs for ``locator``.
 
-        "//*[@id='cart']" -> (By.XPATH, "//*[@id='cart']");  "id=cart" -> (By.ID, "cart")
+        "//*[@id='cart']" -> (By.XPATH, "//*[@id='cart']");  "id=cart" or "id:cart" -> (By.ID, "cart")
+
+        A locator starting with "/" or "(" is XPath (prefix "default"). Otherwise any word before
+        the first "=" or ":" is the prefix, so a typo such as "nmae=q" fails here with a clear
+        message instead of being sent to Selenium as XPath.
 
         :param locator: locator string, plain XPath or "prefix=criteria"
         :return: (strategy, criteria) for driver.find_element(s) and expected_conditions
@@ -61,8 +65,12 @@ class ElementFinder:
         """
         if not isinstance(locator, str) or not locator.strip():
             raise ValueError(f"A locator is a non-empty string, got {locator!r}")
-        prefix, criteria = self._parse_locator(locator.strip())
-        prefix = "default" if prefix is None else prefix
+        locator = locator.strip()
+        prefix, criteria = "default", locator
+        if not locator.startswith(("/", "(")):
+            match = re.match(r"([A-Za-z_ ]+?)\s*[=:]\s*(.*)", locator, re.DOTALL)
+            if match:
+                prefix, criteria = match.group(1).strip().lower(), match.group(2)
         strategy = self._strategies.get(prefix)
         if strategy is None:
             raise ValueError(f"Element locator with prefix '{prefix}' is not supported: {locator!r}")
@@ -86,16 +94,3 @@ class ElementFinder:
         :return: list of WebElements
         """
         return driver.find_elements(*self.by_locator(locator))
-
-    def _parse_locator(self, locator: str) -> tuple[str | None, str]:
-        """("id", "cart") for "id=cart" or "id:cart"; (None, locator) for plain XPath.
-
-        Any word before the first "=" or ":" is taken as the prefix, so a typo such as "nmae=q"
-        fails in by_locator with a clear message instead of being sent to Selenium as XPath.
-        """
-        if locator.startswith(("/", "(")):
-            return None, locator
-        match = re.match(r"([A-Za-z_ ]+?)\s*[=:]\s*(.*)", locator, re.DOTALL)
-        if match:
-            return match.group(1).strip().lower(), match.group(2)
-        return None, locator
