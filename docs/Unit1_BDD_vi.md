@@ -152,7 +152,7 @@ Sauce Demo kiểm thử được ở mức trung bình: dữ liệu sản phẩm
 |-----------------------------------------|----------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | Controllability – điều khiển trạng thái | Trung bình     | Không có API reset giỏ hàng; giỏ lưu theo cookie                                                  | Mỗi scenario chạy trong browser context mới (cookie sạch) qua hook `before_scenario`                                        |
 | Observability – quan sát kết quả        | Tốt            | Giá, tên SP, "My Cart (n)", nhãn Sold Out đều hiển thị dạng text                                  | Assert trên text hiển thị; chụp ảnh khi fail trong `after_step`                                                             |
-| Locator                                 | Trung bình–yếu | Theme cũ, không có `data-testid`; có thể có class/name chuẩn của Shopify (ví dụ form `/cart/add`) | Ưu tiên locator theo text/name chuẩn của Shopify (`By.LINK_TEXT`, `By.NAME`), sau đó attribute ổn định; gom vào Page Object |
+| Locator                                 | Trung bình–yếu | Theme cũ, không có `data-testid`; có thể có class/name chuẩn của Shopify (ví dụ form `/cart/add`) | Ưu tiên locator theo text/name chuẩn của Shopify (`link=...`, `name=...`), sau đó attribute ổn định; gom vào Page Object |
 | Test data                               | Tốt            | 7 sản phẩm, giá cố định, 2 SP Sold Out                                                            | Giữ trong `dataset/products.json`, không hard-code trong step                                                             |
 | Định danh URL                           | Có bẫy         | Handle Black heels là `flower-print-jeans`                                                        | Map tên → handle trong test data, không suy URL từ tên                                                                      |
 | Môi trường                              | Yếu            | Chỉ có production demo, dùng chung với người khác, không có staging                               | Không chạy tải; giới hạn song song; tag `@data-creating` cho case tạo tài khoản                                             |
@@ -657,33 +657,28 @@ def page(context, cls):
 #### 3.4 Page Object mà step gọi tới (`pages/product_page.py`, rút gọn)
 
 ```python
-ADD_FORM = "form[action*='/cart/add']"            # standard Shopify add-to-cart form
-ADD_BUTTON = ADD_FORM + " [type='submit']"
-
-
 class ProductPage(BasePage):
-    def open_product(self, handle: str):
-        return self.open(f"/products/{handle}")
-
+    ############################################################################
+    # Add to cart methods
+    # Scope: Product page > Add to cart form
+    ############################################################################
     def add_to_cart(self, quantity: int = 1):
-        qty = self.find_all(By.CSS_SELECTOR, ADD_FORM + " input[name='quantity']")
-        if qty:
-            qty[0].clear()
-            qty[0].send_keys(str(quantity))
-            self._submit()
+        """Add ``quantity`` items and wait until the store has taken every one."""
+        if self.is_element_visible(self._quantity):
+            self.type_text(self._quantity, str(quantity))
+            self._add(expected_increase=quantity)
         else:  # theme without a quantity box: add the product N times
             ...
 
-    def _submit(self):
-        self.submit(By.CSS_SELECTOR, ADD_BUTTON)   # BasePage.submit: click + wait for the new page
-        self.wait.until(lambda d: "/cart" in d.current_url and "/products/" not in d.current_url)
+    def _add(self, expected_increase: int):
+        before = self.mini_cart_count()
+        self.click_element(self._add_button)
+        self.wait_until(lambda d: ... or (self.mini_cart_count_now() or 0) >= before + expected_increase,
+                        f"The cart never took the product (header count stayed at {before})")
 
-
-# pages/base_page.py – used by every form button (Add to Cart, Update, Check Out, Sign In)
-def submit(self, by, value):
-    old_page = self.driver.find_element(By.TAG_NAME, "html")
-    self.click(by, value)
-    self.wait.until(EC.staleness_of(old_page))     # explicit wait, never time.sleep
+    # --- Locators -------------------------------------------------------------
+    _add_button = "css=form[action*='/cart/add'] [type='submit']"
+    _quantity = "css=form[action*='/cart/add'] input[name='quantity']"
 ```
 
 Quy tắc viết step:
@@ -697,6 +692,32 @@ Quy tắc viết step:
 - Trạng thái giữa các step để trong `context` (ví dụ `context.driver`), không dùng biến toàn cục.
 
 - `behave --dry-run` in ra snippet cho step chưa có code – cách nhanh nhất để biết còn thiếu gì.
+
+
+#### 3.5 Locator dạng chuỗi và các method tự viết của BasePage
+
+Locator là một CHUỖI có tiền tố chiến lược, khai ở cuối class page; `parse_locator()` trong `pages/base_page.py` đổi chuỗi đó thành cặp `(By, value)` mà Selenium cần, nên không page nào import `By`:
+
+| Chuỗi locator | Selenium |
+| --- | --- |
+| `"css=#cart"` | `(By.CSS_SELECTOR, "#cart")` |
+| `"xpath=//a[contains(., 'My Cart')]"` | `(By.XPATH, ...)` |
+| `"id=cart"`, `"name=q"`, `"tag=html"`, `"class=errors"` | `By.ID`, `By.NAME`, `By.TAG_NAME`, `By.CLASS_NAME` |
+| `"link=Forgot your password?"`, `"partial_link=Forgot"` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
+| `"//h1"` (không tiền tố) / `"input[name='q']"` (không tiền tố) | XPath / CSS |
+| `"css=a[href*='/products/{handle}']"` | template: `self.locator(self._tile, handle="grey-jacket")` |
+
+Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọi các method của `BasePage`. Các method này đọc locator, chờ đúng trạng thái, ghi log thao tác (behave in ra khi step fail; mật khẩu được ghi là `***`) và báo lỗi có tên locator:
+
+| Nhóm | Method |
+| --- | --- |
+| Điều hướng | `open(path)`, `url`, `wait_for_url_contains(fragment)` |
+| Locator | `locator(template, **values)`, `find_element(locator)`, `find_elements(locator)`, `is_element_present(locator)` |
+| Thao tác | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (nút submit form, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
+| Chờ và đọc | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
+| Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — đều nhận `error_msg` tùy chọn |
+
+`is_element_enabled(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. `tests/unit/test_page_objects.py` làm lần chạy fail nếu trong `pages/` có `By` hay locator dạng tuple, có lời gọi driver ngoài `BasePage`, thiếu banner hoặc docstring; `tests/unit/test_base_page_methods.py` kiểm tra các method bằng driver giả.
 
 ### 4. Hooks
 
@@ -1002,7 +1023,7 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
-| `python -m unittest discover -s tests/unit` | 12 test OK: cấu trúc page object, checklist review Day 4, cách chờ khi thêm vào giỏ |
+| `python -m unittest discover -s tests/unit` | 27 test OK: cấu trúc page object, locator dạng chuỗi, method của BasePage, checklist review Day 4, cách chờ khi thêm vào giỏ |
 | Truy vết | `behave --dry-run --tags=@add_to_cart` … `@search_products`: yêu cầu nào cũng liệt kê được ít nhất một scenario |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
@@ -1019,7 +1040,7 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 phút · Hybrid · Code: repo `ATEST03-unit1`
 
-Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F13: phân lớp, hành vi của site thật, checklist được tự động hóa thành test); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
+Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F14: phân lớp, hành vi của site thật, checklist được tự động hóa thành test); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
 
 ### 1. Cách review
 
@@ -1038,7 +1059,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | Độ dài scenario | Tối đa 7 step (tính cả background) | `test_scenarios_stay_short` |
 | Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | review: `behave --dry-run --tags=@add_to_cart` … cho từng yêu cầu trong bảng Day 1 |
 | Tái sử dụng step, không trùng lặp | Không step thừa hoặc chưa định nghĩa; không có hai câu step chỉ khác tham số hoặc chữ s số nhiều (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
-| Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator ở cuối | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
+| Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator dạng chuỗi ở cuối, không `By` hay lời gọi driver ngoài `BasePage` | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
 | Ổn định | Không `sleep()` trong steps, pages, helper, hook | `test_no_fixed_waits` |
 | Tách dữ liệu | Không gõ cứng giá trong code step | `test_no_prices_in_step_code` |
 | Rủi ro dẫn dắt phạm vi | Yêu cầu Critical/High nào cũng có scenario chạy mặc định (không chỉ `@manual` / `@data-creating`) | review: đối chiếu scenario với bảng rủi ro Day 1 (mục 2) |
@@ -1073,6 +1094,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | F10 | "Search with no matching products" dùng `zzqxnotaproduct`, site thật vẫn khớp (4 sản phẩm, qua chữ "product") | Từ khóa `zzqqxx`; step chờ thêm thông báo "No results found" của store | Đã sửa |
 | F11 | Trên site thật, theme thêm vào giỏ bằng AJAX (jQuery): trang đứng yên, nên chờ chuyển sang `/cart` (F7) sẽ timeout | `ProductPage._add()` chờ số trên header tăng HOẶC trang `/cart`; có unit test với driver giả cho cả hai kiểu theme | Đã sửa |
 | F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | `tests/unit/test_framework_review.py` chạy nó ở mỗi thay đổi | Đã sửa |
+| F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `css=[itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
 | F13 | Cơ chế chống bot (CAPTCHA) của store chặn form đăng nhập và đăng ký: không gửi request, không hiện lỗi (kiểm tra 2026-11-25) | Hai lượt đăng nhập sai và "đăng ký thiếu email" thành `@manual`; scenario reset mật khẩu vẫn tự động phủ REQ-05 | Chấp nhận (môi trường) |
 
 Code sửa F1:

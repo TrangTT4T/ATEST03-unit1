@@ -51,5 +51,4 @@ def step_register_error(context):
 
 @then("the customer should be logged in")
 def step_logged_in(context):
-    reg = page(context, RegisterPage)
-    reg.wait.until(lambda d: d.current_url.rstrip("/").endswith("/account") or "Log out" in reg.body_text())
+    assert page(context, RegisterPage).account_opened()

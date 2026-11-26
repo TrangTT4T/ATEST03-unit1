@@ -15,7 +15,8 @@ Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Obje
 ATEST03-unit1/
 ├── behave.ini                  # default tags, userdata (base_url, browser), formatters
 ├── requirements.txt
-├── pages/                      # Selenium Page Objects (only place with locators)
+├── pages/                      # Selenium Page Objects (only place with locators): locator strings at the bottom,
+│                               #   BasePage = parse_locator() + custom click/type/wait/check methods
 ├── tests/                      # everything behave runs (behave.ini: paths = tests)
 │   ├── features/               # Gherkin specs
 │   │   ├── cart.feature  checkout.feature  product.feature
@@ -37,8 +38,12 @@ behave                              # default suite (not @manual / @wip / @data-
 behave --tags=@smoke
 behave --tags=@checkout             # every scenario of one feature area
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout, the Day 4 review checklist (no browser)
+python -m unittest discover -s tests/unit    # page-object layout, BasePage methods, the Day 4 review checklist (no browser)
 ```
+
+## Page objects
+
+Locators are strings with a strategy prefix (`"css=#cart"`, `"xpath=//a[contains(., 'My Cart')]"`, `"name=q"`, `"tag=html"`, `"link=..."`), declared at the bottom of each page class. Pages never touch `By`, `driver.find_element` or `WebDriverWait`: they call the `BasePage` methods (`find_element`, `click_element`, `type_text`, `wait_until`, `is_element_enabled`, `element_should_be_disabled` …), which parse the locator, wait for a state (never a fixed sleep), log the action and fail with the locator's name. Details: Day 3 section 3.5 of the unit document.
 
 ## Reports
 

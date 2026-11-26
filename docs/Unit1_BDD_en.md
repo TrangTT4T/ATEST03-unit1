@@ -152,7 +152,7 @@ Sauce Demo has medium testability: product data is stable and URLs are clear, bu
 |------------------------------------|-------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | Controllability – setting up state | Medium      | No API to reset the cart; cart is stored in cookies                                               | Each scenario runs in a fresh browser context (clean cookies) via the `before_scenario` hook                                |
 | Observability – reading results    | Good        | Price, product name, "My Cart (n)", Sold Out label are all visible text                           | Assert on visible text; screenshot on failure in `after_step`                                                               |
-| Locators                           | Medium–weak | Old theme, no `data-testid`; standard Shopify names/classes may exist (e.g. the `/cart/add` form) | Prefer standard Shopify text/name locators (`By.LINK_TEXT`, `By.NAME`), then stable attributes; keep them in Page Objects   |
+| Locators                           | Medium–weak | Old theme, no `data-testid`; standard Shopify names/classes may exist (e.g. the `/cart/add` form) | Prefer standard Shopify text/name locators (`link=...`, `name=...`), then stable attributes; keep them in Page Objects   |
 | Test data                          | Good        | 7 products, fixed prices, 2 sold out                                                              | Keep in `dataset/products.json`, never hard-coded in steps                                                                |
 | URL identity                       | Trap        | Black heels handle is `flower-print-jeans`                                                        | Map name → handle in test data; never derive URLs from names                                                                |
 | Environment                        | Weak        | Only a shared production demo, no staging                                                         | No load testing; limit parallelism; tag account-creating cases `@data-creating`                                             |
@@ -657,33 +657,28 @@ def page(context, cls):
 #### 3.4 The Page Object the steps call (`pages/product_page.py`, shortened)
 
 ```python
-ADD_FORM = "form[action*='/cart/add']"            # standard Shopify add-to-cart form
-ADD_BUTTON = ADD_FORM + " [type='submit']"
-
-
 class ProductPage(BasePage):
-    def open_product(self, handle: str):
-        return self.open(f"/products/{handle}")
-
+    ############################################################################
+    # Add to cart methods
+    # Scope: Product page > Add to cart form
+    ############################################################################
     def add_to_cart(self, quantity: int = 1):
-        qty = self.find_all(By.CSS_SELECTOR, ADD_FORM + " input[name='quantity']")
-        if qty:
-            qty[0].clear()
-            qty[0].send_keys(str(quantity))
-            self._submit()
+        """Add ``quantity`` items and wait until the store has taken every one."""
+        if self.is_element_visible(self._quantity):
+            self.type_text(self._quantity, str(quantity))
+            self._add(expected_increase=quantity)
         else:  # theme without a quantity box: add the product N times
             ...
 
-    def _submit(self):
-        self.submit(By.CSS_SELECTOR, ADD_BUTTON)   # BasePage.submit: click + wait for the new page
-        self.wait.until(lambda d: "/cart" in d.current_url and "/products/" not in d.current_url)
+    def _add(self, expected_increase: int):
+        before = self.mini_cart_count()
+        self.click_element(self._add_button)
+        self.wait_until(lambda d: ... or (self.mini_cart_count_now() or 0) >= before + expected_increase,
+                        f"The cart never took the product (header count stayed at {before})")
 
-
-# pages/base_page.py – used by every form button (Add to Cart, Update, Check Out, Sign In)
-def submit(self, by, value):
-    old_page = self.driver.find_element(By.TAG_NAME, "html")
-    self.click(by, value)
-    self.wait.until(EC.staleness_of(old_page))     # explicit wait, never time.sleep
+    # --- Locators -------------------------------------------------------------
+    _add_button = "css=form[action*='/cart/add'] [type='submit']"
+    _quantity = "css=form[action*='/cart/add'] input[name='quantity']"
 ```
 
 Step-writing rules:
@@ -697,6 +692,31 @@ Step-writing rules:
 - State shared between steps lives on `context` (e.g. `context.driver`), never in globals.
 
 - `behave --dry-run` prints snippets for undefined steps – the fastest way to see what is missing.
+
+#### 3.5 Locator strings and the custom BasePage methods
+
+A locator is a STRING with a strategy prefix, declared at the bottom of the page class; `parse_locator()` in `pages/base_page.py` turns it into the `(By, value)` pair Selenium needs, so no page imports `By`:
+
+| Locator string | Selenium |
+| --- | --- |
+| `"css=#cart"` | `(By.CSS_SELECTOR, "#cart")` |
+| `"xpath=//a[contains(., 'My Cart')]"` | `(By.XPATH, ...)` |
+| `"id=cart"`, `"name=q"`, `"tag=html"`, `"class=errors"` | `By.ID`, `By.NAME`, `By.TAG_NAME`, `By.CLASS_NAME` |
+| `"link=Forgot your password?"`, `"partial_link=Forgot"` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
+| `"//h1"` (no prefix) / `"input[name='q']"` (no prefix) | XPath / CSS |
+| `"css=a[href*='/products/{handle}']"` | a template: `self.locator(self._tile, handle="grey-jacket")` |
+
+Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePage` methods, which parse the locator, wait for the right state, log the action (shown by behave when a step fails; passwords are logged as `***`) and fail with a message that names the locator:
+
+| Group | Methods |
+| --- | --- |
+| Navigation | `open(path)`, `url`, `wait_for_url_contains(fragment)` |
+| Locators | `locator(template, **values)`, `find_element(locator)`, `find_elements(locator)`, `is_element_present(locator)` |
+| Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
+| Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
+| Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — each takes an optional `error_msg` |
+
+`is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. `tests/unit/test_page_objects.py` fails the run on a `By` or a tuple locator in `pages/`, a driver call outside `BasePage`, a missing banner or docstring; `tests/unit/test_base_page_methods.py` checks the methods with a fake driver.
 
 ### 4. Hooks
 
@@ -1002,7 +1022,7 @@ One `behave` run writes every report (`behave.ini` sets the formatters):
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
-| `python -m unittest discover -s tests/unit` | 12 tests OK: page-object layout, the Day 4 review checklist, add-to-cart waits |
+| `python -m unittest discover -s tests/unit` | 27 tests OK: page-object layout, locator strings, BasePage methods, the Day 4 review checklist, add-to-cart waits |
 | Traceability | `behave --dry-run --tags=@add_to_cart` … `@search_products`: every requirement lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
@@ -1019,7 +1039,7 @@ Verified against a local Shopify-structured mock of the store. On the live Sauce
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 min · Hybrid · Code: repo `ATEST03-unit1`
 
-The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F13: layering, live-store behaviour, the checklist automated as tests); the remaining open items need a run on the live store or trainer input.
+The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F14: layering, live-store behaviour, the checklist automated as tests); the remaining open items need a run on the live store or trainer input.
 
 ### 1. How the review is run
 
@@ -1038,7 +1058,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | Scenario size | At most 7 steps (background included) | `test_scenarios_stay_short` |
 | Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | review: `behave --dry-run --tags=@add_to_cart` … for each requirement of the Day 1 table |
 | Step reuse, no duplication | No unused or undefined step; no two step texts that differ only by parameters or a plural s (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
-| Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locators at the bottom | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
+| Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locator strings at the bottom, no `By` or driver call outside `BasePage` | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
 | Stability | No `sleep()` in steps, pages, helpers or hooks | `test_no_fixed_waits` |
 | Data separation | No prices hard-coded in step code | `test_no_prices_in_step_code` |
 | Risk drives scope | Every Critical/High requirement has a scenario that runs by default (not only `@manual` / `@data-creating`) | review: compare the scenarios with the Day 1 risk table (section 2) |
@@ -1073,6 +1093,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | F10 | "Search with no matching products" used `zzqxnotaproduct`, which the live store still matches (4 products, through the word "product") | Keyword `zzqqxx`; the step also waits for the store's "No results found" message | Fixed |
 | F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; unit-tested with a fake driver for both themes | Fixed |
 | F12 | The review checklist was a manual routine (searches, reading) | `tests/unit/test_framework_review.py` runs it on every change | Fixed |
+| F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `css=[itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
 | F13 | The store's bot protection (CAPTCHA) stops the login and registration forms: no request, no error message (checked 2026-11-25) | The two invalid-login runs and "registration without an email" are `@manual`; the password-reset scenario still covers REQ-05 automatically | Accepted (environment) |
 
 F1 fix:

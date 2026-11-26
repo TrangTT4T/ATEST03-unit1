@@ -1,29 +1,37 @@
 """Product detail page: /products/<handle>"""
-from selenium.webdriver.common.by import By
-
 from .base_page import BasePage
 
 
 class ProductPage(BasePage):
+    ############################################################################
+    # Product detail methods
+    # Scope: Product page > Name, price, stock
+    ############################################################################
     def open_product(self, handle: str):
+        """Open /products/<handle> (the handle comes from dataset/products.json)."""
         return self.open(f"/products/{handle}")
 
     def title(self) -> str:
-        return self.find(*self._title).text
+        """The product name."""
+        return self.get_text(self._title)
 
     def can_add_to_cart(self) -> bool:
-        buttons = self.find_all(*self._add_button)
+        """False for a sold-out product: no button, a disabled one, or one labelled "Sold Out"."""
+        buttons = self.find_elements(self._add_button)
         if not buttons:
             return False
         button = buttons[0]
         label = (button.get_attribute("value") or button.text or "").lower()
         return button.is_enabled() and "sold out" not in label and "unavailable" not in label
 
+    ############################################################################
+    # Add to cart methods
+    # Scope: Product page > Add to cart form
+    ############################################################################
     def add_to_cart(self, quantity: int = 1):
-        qty = [box for box in self.find_all(*self._quantity) if box.is_displayed()]
-        if qty:
-            qty[0].clear()
-            qty[0].send_keys(str(quantity))
+        """Add ``quantity`` items and wait until the store has taken every one."""
+        if self.is_element_visible(self._quantity):
+            self.type_text(self._quantity, str(quantity))
             self._add(expected_increase=quantity)
             return
         # Theme without a visible quantity box: add the product N times.
@@ -42,14 +50,16 @@ class ProductPage(BasePage):
         that an AJAX theme does not make.
         """
         before = self.mini_cart_count()
-        self.click(*self._add_button)
-        self.wait.until(
+        self.click_element(self._add_button)
+        self.wait_until(
             lambda d: ("/cart" in d.current_url and "/products/" not in d.current_url)
-            or (self.mini_cart_count_now() or 0) >= before + expected_increase
+            or (self.mini_cart_count_now() or 0) >= before + expected_increase,
+            f"The cart never took the product (header count stayed at {before})",
         )
 
     # --- Locators -------------------------------------------------------------
-    _title = (By.TAG_NAME, "h1")
+    # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).
+    _title = "css=[itemprop='name']"
     # The standard Shopify add-to-cart form
-    _add_button = (By.CSS_SELECTOR, "form[action*='/cart/add'] [type='submit']")
-    _quantity = (By.CSS_SELECTOR, "form[action*='/cart/add'] input[name='quantity']")
+    _add_button = "css=form[action*='/cart/add'] [type='submit']"
+    _quantity = "css=form[action*='/cart/add'] input[name='quantity']"

@@ -1,15 +1,17 @@
 """Catalog page: /collections/all"""
-from selenium.webdriver.common.by import By
-
 from .base_page import BasePage
 
 
 class CatalogPage(BasePage):
     path = "/collections/all"
 
+    ############################################################################
+    # Product tile methods
+    # Scope: Catalog > All products
+    ############################################################################
     def tile_text(self, handle: str) -> str:
-        # Each product tile is a link to /products/<handle> holding name, price and "Sold Out".
-        return self.find(*self.locator(self._tile, handle=handle)).text
+        """Text of one product tile (a link to /products/<handle>): name, price and "Sold Out"."""
+        return self.get_text(self.locator(self._tile, handle=handle))
 
     # --- Locators -------------------------------------------------------------
-    _tile = (By.CSS_SELECTOR, "a[href*='/products/{handle}']")
+    _tile = "css=a[href*='/products/{handle}']"

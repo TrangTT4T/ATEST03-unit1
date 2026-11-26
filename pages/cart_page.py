@@ -1,8 +1,6 @@
 """Cart page: /cart"""
 import re
 
-from selenium.webdriver.common.by import By
-
 from .base_page import BasePage, money_to_float
 
 TOTAL = re.compile(r"(sub)?total[^£]{0,40}£\s?([\d,]+\.\d{2})", re.IGNORECASE)  # a text pattern, not a locator
@@ -11,48 +9,58 @@ TOTAL = re.compile(r"(sub)?total[^£]{0,40}£\s?([\d,]+\.\d{2})", re.IGNORECASE)
 class CartPage(BasePage):
     path = "/cart"
 
-    def quantity_inputs(self):
-        return self.find_all(*self._quantity_inputs)
+    ############################################################################
+    # Cart line methods
+    # Scope: Cart page > Cart table
+    ############################################################################
+    def quantity_inputs(self) -> list:
+        """The quantity box of every cart line (no wait: an empty cart has none)."""
+        return self.find_elements(self._quantity_inputs)
 
     def total_quantity(self) -> int:
+        """Sum of the quantity boxes: the number of items in the cart."""
         return sum(int(i.get_attribute("value") or 0) for i in self.quantity_inputs())
 
     def is_empty(self) -> bool:
+        """True when the cart has no lines."""
         return not self.quantity_inputs()
 
-    def line_input(self, product_name: str):
-        # The quantity box in the same cart row as the product link.
-        return self.find(*self.locator(self._line_quantity, name=product_name))
-
     def set_quantity(self, product_name: str, quantity: int):
-        # Setting a line to 0 and updating removes it (standard Shopify behaviour).
-        box = self.line_input(product_name)
-        box.clear()
-        box.send_keys(str(quantity))
-        self.submit(*self._update_button)
+        """Type ``quantity`` in the line of ``product_name`` and click Update.
+
+        Quantity 0 + Update removes the line (standard Shopify behaviour).
+        """
+        self.type_text(self.locator(self._line_quantity, name=product_name), str(quantity))
+        self.click_and_wait_for_new_page(self._update_button)
 
     def remove(self, product_name: str):
+        """Remove the line of ``product_name`` (quantity 0 + Update)."""
         self.set_quantity(product_name, 0)
 
+    ############################################################################
+    # Total and checkout methods
+    # Scope: Cart page > Total, Check Out button
+    ############################################################################
     def total(self) -> float:
+        """The cart total in pounds, e.g. 55.0."""
         match = TOTAL.search(self.body_text())
         if match:
             return float(match.group(2).replace(",", ""))
-        form = self.find(*self._cart_form)
-        amounts = re.findall(r"£\s?[\d,]+\.\d{2}", form.text)
+        amounts = re.findall(r"£\s?[\d,]+\.\d{2}", self.get_text(self._cart_form))
         return money_to_float(amounts[-1])
 
     def checkout(self):
-        self.submit(*self._checkout_button)
+        """Click Check Out and wait for the next page."""
+        self.click_and_wait_for_new_page(self._checkout_button)
 
     # --- Locators -------------------------------------------------------------
-    _cart_form = (By.CSS_SELECTOR, "form[action*='/cart']")
-    _quantity_inputs = (By.CSS_SELECTOR, "input[name^='updates']")
+    _cart_form = "css=form[action*='/cart']"
+    _quantity_inputs = "css=input[name^='updates']"
+    # The quantity box in the same cart row as the product link
     _line_quantity = (
-        By.XPATH,
-        "//a[normalize-space()='{name}']"
+        "xpath=//a[normalize-space()='{name}']"
         "/ancestor::*[.//input[starts-with(@name,'updates')]][1]"
-        "//input[starts-with(@name,'updates')]",
+        "//input[starts-with(@name,'updates')]"
     )
-    _update_button = (By.CSS_SELECTOR, "[name='update']")
-    _checkout_button = (By.CSS_SELECTOR, "[name='checkout']")
+    _update_button = "css=[name='update']"
+    _checkout_button = "css=[name='checkout']"
