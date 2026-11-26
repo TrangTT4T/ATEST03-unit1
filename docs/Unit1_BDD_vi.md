@@ -683,8 +683,8 @@ class ProductPage(BasePage):
         self.wait_until(EC.staleness_of(old_page), "The add did not open the cart", timeout=8)
 
     # --- Locators -------------------------------------------------------------
-    _add_button = "xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"
-    _quantity = "xpath=//form[contains(@action,'/cart/add')]//input[@name='quantity']"
+    _add_button = "//form[contains(@action,'/cart/add')]//*[@type='submit']"
+    _quantity = "//form[contains(@action,'/cart/add')]//input[@name='quantity']"
 ```
 
 Quy tắc viết step:
@@ -702,27 +702,32 @@ Quy tắc viết step:
 
 #### 3.5 Locator dạng chuỗi và các method tự viết của BasePage
 
-Locator là một CHUỖI có tiền tố chiến lược, khai ở cuối class page; `BasePage.parse_locator()` đổi chuỗi đó thành cặp `(By, value)` mà Selenium cần, nên không page nào import `By`:
+Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó), khai ở cuối class page, gom dưới comment ghi khu vực của trang. `BasePage.to_xpath_locator()` đưa cho Selenium cặp `(By.XPATH, ...)`, nên không page nào import `By`:
 
-Quy ước của team: **ưu tiên XPath**. Mọi locator trong `pages/` đều là `xpath=...`:
+```python
+    # --- Locators -------------------------------------------------------------
+    # Cart table (inside #cart; the hidden mini-cart drawer repeats every row)
+    _cart_form = "//*[@id='cart']"
+    _quantity_inputs = "//*[@id='cart']//input[starts-with(@name,'updates')]"
+    # Cart buttons
+    _update_button = "//*[@id='update']"
+    _checkout_button = "//*[@id='checkout']"
+```
 
 | Cần tìm | XPath trong `pages/` |
 | --- | --- |
-| Theo id | `"xpath=//*[@id='cart']"`, `"xpath=//*[@id='checkout']"` |
-| Theo attribute | `"xpath=//input[@name='q']"`, `"xpath=//*[@itemprop='name']"` |
-| Attribute có chứa | `"xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
-| Theo chữ của link | `"xpath=//a[normalize-space()='Forgot your password?']"` |
-| Theo một class CSS | `"xpath=//section[contains(concat(' ',normalize-space(@class),' '),' product-grid ')]"` (khớp đúng class, không khớp chuỗi con) |
-| Template | `"xpath=//a[contains(@href,'/products/{path_name}')]"`, điền bằng `self.fill_locator(self._tile, path_name="grey-jacket")` |
-
-`parse_locator()` vẫn nhận `css=`, `id=`, `name=`, `tag=`, `link=`, `partial_link=`, `class=` (và chuỗi không tiền tố: XPath nếu bắt đầu bằng `//`, còn lại là CSS), nhưng các page không dùng.
+| Theo id | `"//*[@id='cart']"`, `"//*[@id='checkout']"` |
+| Theo attribute | `"//*[@itemprop='name']"`, `"//section[@class='product-grid']"` |
+| Attribute có chứa | `"//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
+| Theo chữ | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
+| Template | `"//a[contains(@href,'/products/{}')]"`, điền bằng `self._tile.format(path_name)` |
 
 Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọi các method của `BasePage`. Các method này đọc locator, chờ đúng trạng thái, ghi log thao tác (behave in ra khi step fail; mật khẩu được ghi là `***`) và báo lỗi có tên locator:
 
 | Nhóm | Method |
 | --- | --- |
 | Điều hướng | `open_page(path)`, `current_url`, `wait_until_url_contains(fragment)` |
-| Locator | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
+| Locator | `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
 | Thao tác | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (nút submit form, F8), `type_text(locator, text, secret=False)` |
 | Chờ và đọc | `wait_until(condition, message)`, `get_element_text(locator)`, `get_page_text()`, `is_element_visible(locator, timeout=0)` |
 | Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_contain_text` — đều nhận `error_msg` tùy chọn |
@@ -740,7 +745,7 @@ Tên method cho biết method làm gì và có chờ hay không:
 | `open_…`, `click_…`, `change_…`, `type_…` | Thao tác trên trang | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Kiểm tra: raise `AssertionError` với thông điệp dễ đọc | `element_should_be_visible` |
 
-`is_element_visible(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Chỉ giữ method mà page có dùng; method không dùng thì xoá. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Hàm phụ như `parse_locator`, `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
+`is_element_visible(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Chỉ giữ method mà page có dùng; method không dùng thì xoá. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Hàm phụ như `to_xpath_locator`, `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
 
 ### 4. Hooks
 
@@ -1116,7 +1121,7 @@ behave                                             # chạy toàn bộ
 | F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | Giữ trong checklist Day 4 của tài liệu này; suite chạy bằng `behave` | Chấp nhận |
 | F15 | Lần đầu chạy trên site thật bằng ChromeDriver thật: ô sản phẩm ở catalog và kết quả tìm kiếm hiện dần (`fadeInUpBig`), còn `.text` của Selenium trả về `""` khi phần tử chưa lên màn hình, nên đọc ra ô trống (sản phẩm nào lỗi thay đổi giữa các lần chạy) | `BasePage.get_element_text()` chờ tới khi phần tử có chữ; `SearchPage.get_search_result_names()` chờ tới khi mọi kết quả có chữ | Đã sửa |
 | F16 | Cùng lần chạy đó: giỏ đếm 2 món khi chỉ có 1 và không đổi được số lượng; mini-cart ẩn lặp lại mọi dòng và ô số lượng của giỏ | Mọi locator của `CartPage` giới hạn trong `#cart`, giống Unit 2 | Đã sửa |
-| F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `xpath=//*[@itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
+| F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `//*[@itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
 | F13 | Cơ chế chống bot (CAPTCHA) của store chặn form đăng nhập và đăng ký: không gửi request, không hiện lỗi (kiểm tra 2026-11-25) | Hai lượt đăng nhập sai và "đăng ký thiếu email" thành `@manual`; scenario reset mật khẩu vẫn tự động phủ REQ-05 | Chấp nhận (môi trường) |
 
 Code sửa F1:

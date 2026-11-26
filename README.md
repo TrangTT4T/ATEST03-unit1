@@ -16,7 +16,7 @@ ATEST03-unit1/
 ├── behave.ini                  # default tags, userdata (base_url, browser), formatters
 ├── requirements.txt
 ├── pages/                      # Selenium Page Objects (only place with locators): locator strings at the bottom,
-│                               #   BasePage = parse_locator(), money_to_float() + click/type/wait/check methods
+│                               #   BasePage = to_xpath_locator(), money_to_float() + click/type/wait/check methods
 ├── tests/                      # everything behave runs (behave.ini: paths = tests)
 │   ├── features/               # Gherkin specs
 │   │   ├── cart.feature  checkout.feature  product.feature
@@ -44,7 +44,7 @@ behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f p
 
 ## Page objects
 
-Locators are strings with a strategy prefix, **XPath first** (`"xpath=//*[@id='cart']"`, `"xpath=//input[@name='q']"`, `"xpath=//a[normalize-space()='Forgot your password?']"`), declared at the bottom of each page class. Pages never touch `By`, `driver.find_element` or `WebDriverWait`: they call the `BasePage` methods (`wait_for_element`, `click_element`, `type_text`, `wait_until`, `get_element_text`, `element_should_be_visible` …), which parse the locator, wait for a state (never a fixed sleep), log the action and fail with the locator's name. A page file holds only imports and its one class: helpers such as `parse_locator` and `money_to_float` are `BasePage` methods. In `dataset/products.json`, each product's `path-name` is the last part of its page address (`/products/<path-name>`), never derived from the name. Details: Day 3 section 3.5 of the unit document.
+Locators are plain XPath strings that describe the element (`"//*[@id='cart']"`, `"//*[@itemprop='name']"`, `"//a[normalize-space()='Forgot your password?']"`), declared at the bottom of each page class under a comment naming the area of the page; a template uses `{}` and `.format()`. Pages never touch `By`, `driver.find_element` or `WebDriverWait`: they call the `BasePage` methods (`wait_for_element`, `click_element`, `type_text`, `wait_until`, `get_element_text`, `element_should_be_visible` …), which parse the locator, wait for a state (never a fixed sleep), log the action and fail with the locator's name. A page file holds only imports and its one class: helpers such as `to_xpath_locator` and `money_to_float` are `BasePage` methods. In `dataset/products.json`, each product's `path-name` is the last part of its page address (`/products/<path-name>`), never derived from the name. Details: Day 3 section 3.5 of the unit document.
 
 ## Reports
 

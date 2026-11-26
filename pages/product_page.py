@@ -59,7 +59,7 @@ class ProductPage(BasePage):
             " jQuery('form.quickAdd').off('submit');"
             "}"
         )
-        old_page = self.wait_for_element(self._html)
+        old_page = self.wait_for_element(self._page)
         try:
             self.click_element(self._add_button)
         except TimeoutException:
@@ -77,8 +77,8 @@ class ProductPage(BasePage):
             self.wait_until_url_contains("/cart")
 
     # --- Locators -------------------------------------------------------------
-    # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).
-    _title = "xpath=//*[@itemprop='name']"
-    # The standard Shopify add-to-cart form
-    _add_button = "xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"
-    _quantity = "xpath=//form[contains(@action,'/cart/add')]//input[@name='quantity']"
+    # Product details. itemprop="name" (schema.org) is the name; the first <h1> is the shop logo (F14).
+    _title = "//*[@itemprop='name']"
+    # Add to cart form (standard Shopify)
+    _add_button = "//form[contains(@action,'/cart/add')]//*[@type='submit']"
+    _quantity = "//form[contains(@action,'/cart/add')]//input[@name='quantity']"

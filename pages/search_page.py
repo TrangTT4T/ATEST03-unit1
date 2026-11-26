@@ -45,5 +45,7 @@ class SearchPage(BasePage):
         return True
 
     # --- Locators -------------------------------------------------------------
-    _keyword = "xpath=//*[@id='keyword']"
-    _result_names = "xpath=//section[contains(concat(' ',normalize-space(@class),' '),' product-grid ')]//a[contains(@href,'/products/')]//h3"
+    # Results banner: "Showing results..." or "No results found..."
+    _keyword = "//*[@id='keyword']"
+    # Results grid: the name of each product found
+    _result_names = "//section[@class='product-grid']//a[contains(@href,'/products/')]//h3"

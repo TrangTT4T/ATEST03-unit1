@@ -19,5 +19,6 @@ class LoginPage(BasePage):
         return True
 
     # --- Locators -------------------------------------------------------------
-    _forgot_password_link = "xpath=//a[normalize-space()='Forgot your password?']"
-    _reset_form = "xpath=//form[contains(@action,'/account/recover')]"
+    # Password reset
+    _forgot_password_link = "//a[normalize-space()='Forgot your password?']"
+    _reset_form = "//form[contains(@action,'/account/recover')]"

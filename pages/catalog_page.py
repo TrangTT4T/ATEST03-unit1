@@ -13,7 +13,7 @@ class CatalogPage(BasePage):
     ############################################################################
     def read_product_tile_text_now(self, path_name: str) -> str:
         """Text currently visible on one product tile. The price may not have faded in yet."""
-        locator = self.fill_locator(self._tile, path_name=path_name)
+        locator = self._tile.format(path_name)
         try:
             elements = self.find_elements_now(locator)
             return elements[0].text.strip() if elements else ""
@@ -37,4 +37,5 @@ class CatalogPage(BasePage):
         )
 
     # --- Locators -------------------------------------------------------------
-    _tile = "xpath=//a[contains(@href,'/products/{path_name}')]"  # the tile links to the product page
+    # Product tiles: each tile links to its product page. .format(path_name)
+    _tile = "//a[contains(@href,'/products/{}')]"

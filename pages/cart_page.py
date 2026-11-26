@@ -35,7 +35,7 @@ class CartPage(BasePage):
 
         Quantity 0 + Update removes the line (standard Shopify behaviour).
         """
-        line = self.fill_locator(self._line_quantity, name=product_name)
+        line = self._line_quantity.format(product_name)
         if not self.is_element_present(line):
             # These scenarios put one product in the cart. The row markup does not always
             # match the link text, but the quantity box in #cart is that line.
@@ -80,13 +80,13 @@ class CartPage(BasePage):
             self.wait_until_url_contains("checkout")
 
     # --- Locators -------------------------------------------------------------
-    _cart_form = "xpath=//*[@id='cart']"
-    _quantity_inputs = "xpath=//*[@id='cart']//input[starts-with(@name,'updates')]"
-    # The quantity box in the same cart row as the product link
-    _line_quantity = (
-        "xpath=//*[@id='cart']//div[contains(@class,'row')]"
-        "[.//a[contains(normalize-space(.), '{name}')]]"
+    # Cart table (inside #cart; the hidden mini-cart drawer repeats every row)
+    _cart_form = "//*[@id='cart']"
+    _quantity_inputs = "//*[@id='cart']//input[starts-with(@name,'updates')]"
+    _line_quantity = (  # the quantity box in the row of one product: .format(product_name)
+        "//*[@id='cart']//div[contains(@class,'row')][.//a[contains(normalize-space(),'{}')]]"
         "//input[starts-with(@name,'updates')]"
     )
-    _update_button = "xpath=//*[@id='update']"
-    _checkout_button = "xpath=//*[@id='checkout']"
+    # Cart buttons
+    _update_button = "//*[@id='update']"
+    _checkout_button = "//*[@id='checkout']"

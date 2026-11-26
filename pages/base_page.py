@@ -1,14 +1,14 @@
 """Base Page Object (Selenium WebDriver): navigation and the custom element methods every page uses.
 
-Locators are STRINGS with a strategy prefix, so pages never import ``By``. Team rule: XPath first.
+Locators are plain XPath strings that describe the element, grouped under a comment that names
+the area of the page, at the bottom of each class:
 
-    _search_box = "xpath=//input[@name='q']"
-    _cart_form  = "xpath=//*[@id='cart']"
-    _tile       = "xpath=//a[contains(@href,'/products/{path_name}')]"  # a template, filled with fill_locator()
+    # Cart table
+    _cart_form = "//*[@id='cart']"
+    # Product tiles
+    _tile = "//a[contains(@href,'/products/{}')]"   # a template: self._tile.format(path_name)
 
-``parse_locator()`` below turns the string into the ``(By, value)`` pair Selenium needs.
-It also accepts css, id, name, tag, link, partial_link and class, and a value with no prefix
-(XPath when it starts with "//", "(/" or "./", CSS otherwise), but pages use ``xpath=``.
+``to_xpath_locator()`` below gives Selenium the ``(By.XPATH, ...)`` pair, so pages never import ``By``.
 
 Pages never call ``driver.find_element`` or ``WebDriverWait`` themselves. They pass a locator
 string to the BasePage methods, which parse it, wait for the right state, log what they do and
@@ -18,7 +18,7 @@ Layout of every page object (one class per file):
 
 * methods grouped under ``####`` banners that name the area of the page (``# Scope: ...``);
 * a docstring on every public method;
-* a ``# --- Locators ---`` section at the BOTTOM of the class, with locator strings only.
+* a ``# --- Locators ---`` section at the BOTTOM of the class: XPath strings, grouped by area.
 """
 import logging
 import re
@@ -45,35 +45,21 @@ class BasePage:
 
     ############################################################################
     # Locator and data helpers (no browser needed)
-    # Scope: Every page > locator strings, prices
+    # Scope: Every page > XPath locators, prices
     ############################################################################
     @staticmethod
-    def parse_locator(locator: str) -> tuple[str, str]:
-        """'name=q' -> (By.NAME, 'q');  "//a[@id='x']" -> (By.XPATH, "//a[@id='x']");  'input.q' -> (By.CSS_SELECTOR, ...)
+    def to_xpath_locator(locator: str) -> tuple[str, str]:
+        """The (By, value) pair Selenium needs for one of our XPath locators.
 
-        :param locator: a locator string, with or without a strategy prefix
-        :return: the (By, value) pair for driver.find_element / expected_conditions
+        "//input[@name='q']" -> (By.XPATH, "//input[@name='q']")
+
+        :param locator: an XPath string from a page's locator section
+        :return: (By.XPATH, locator)
+        :raises ValueError: when the locator is not an XPath (it must start with "/" or "(")
         """
-        strategies = {
-            "css": By.CSS_SELECTOR,
-            "xpath": By.XPATH,
-            "id": By.ID,
-            "name": By.NAME,
-            "tag": By.TAG_NAME,
-            "link": By.LINK_TEXT,
-            "partial_link": By.PARTIAL_LINK_TEXT,
-            "class": By.CLASS_NAME,
-        }
-        if not isinstance(locator, str) or not locator.strip():
-            raise ValueError(f"A locator is a non-empty string such as 'css=#cart', got {locator!r}")
-        prefix, separator, value = locator.partition("=")
-        if separator and prefix.strip() in strategies:
-            if not value.strip():
-                raise ValueError(f"Locator {locator!r} has a strategy but no value")
-            return strategies[prefix.strip()], value.strip()
-        if locator.startswith(("//", "(/", "./")):
-            return By.XPATH, locator
-        return By.CSS_SELECTOR, locator
+        if not isinstance(locator, str) or not locator.strip().startswith(("/", "(")):
+            raise ValueError(f"A locator is an XPath string such as \"//input[@name='q']\", got {locator!r}")
+        return By.XPATH, locator.strip()
 
     @staticmethod
     def money_to_float(text: str) -> float:
@@ -116,34 +102,25 @@ class BasePage:
 
     ############################################################################
     # Locator methods
-    # Scope: Every page > locator strings -> elements
+    # Scope: Every page > XPath locators -> elements
     ############################################################################
-    @staticmethod
-    def fill_locator(template: str, **values) -> str:
-        """Fill a locator template: ``fill_locator(self._tile, path_name="grey-jacket")``.
-
-        :param template: locator string with ``{name}`` fields
-        :return: the locator string with the fields filled in
-        """
-        return template.format(**values)
-
     def wait_for_element(self, locator: str, timeout: int | None = None):
         """Wait until the element is in the page and return it.
 
-        :param locator: locator string, e.g. "css=#cart"
+        :param locator: XPath locator, e.g. "//*[@id='cart']"
         :param timeout: seconds; default is the page timeout
         :return: the WebElement
         """
-        return self.wait_until(EC.presence_of_element_located(self.parse_locator(locator)),
+        return self.wait_until(EC.presence_of_element_located(self.to_xpath_locator(locator)),
                                f"Element {locator!r} not found", timeout)
 
     def find_elements_now(self, locator: str) -> list:
         """All elements matching ``locator`` right now (no wait; an empty list is a valid answer).
 
-        :param locator: locator string
+        :param locator: XPath locator
         :return: list of WebElements
         """
-        return self.driver.find_elements(*self.parse_locator(locator))
+        return self.driver.find_elements(*self.to_xpath_locator(locator))
 
     def is_element_present(self, locator: str, driver=None) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""
@@ -156,11 +133,11 @@ class BasePage:
     def click_element(self, locator: str, timeout: int | None = None):
         """Wait until the element is visible and enabled, then click it.
 
-        :param locator: locator string
+        :param locator: XPath locator
         :param timeout: seconds; default is the page timeout
         """
         self.logger.info("Click %s", locator)
-        self.wait_until(EC.element_to_be_clickable(self.parse_locator(locator)),
+        self.wait_until(EC.element_to_be_clickable(self.to_xpath_locator(locator)),
                         f"Element {locator!r} never became clickable", timeout).click()
 
     def click_and_wait_for_new_page(self, locator: str):
@@ -168,16 +145,16 @@ class BasePage:
 
         Without this, the next driver.get() can cancel the form POST (Day 4 findings F7/F8).
 
-        :param locator: locator string of the submit button
+        :param locator: XPath locator of the submit button
         """
-        old_page = self.wait_for_element(self._html)
+        old_page = self.wait_for_element(self._page)
         self.click_element(locator)
         self.wait_until(EC.staleness_of(old_page), f"Clicking {locator!r} did not load a new page")
 
     def type_text(self, locator: str, text: str, clear: bool = True, secret: bool = False):
         """Type ``text`` into a field (cleared first by default).
 
-        :param locator: locator string of the input
+        :param locator: XPath locator of the input
         :param text: text to type
         :param clear: empty the field first
         :param secret: a password: the log shows *** instead of the text
@@ -228,17 +205,17 @@ class BasePage:
 
     def get_page_text(self) -> str:
         """All visible text of the page."""
-        return self.get_element_text(self._body)
+        return self.get_element_text(self._page_body)
 
     def is_element_visible(self, locator: str, timeout: int = 0) -> bool:
         """True when the element is visible, waiting up to ``timeout`` seconds (0: check now).
 
-        :param locator: locator string
+        :param locator: XPath locator
         :param timeout: seconds to wait; never a fixed sleep
         :return: True or False, never an exception
         """
         try:
-            self.wait_until(EC.visibility_of_element_located(self.parse_locator(locator)), "", timeout)
+            self.wait_until(EC.visibility_of_element_located(self.to_xpath_locator(locator)), "", timeout)
         except TimeoutException:
             self.logger.info("Element %s is not visible", locator)
             return False
@@ -251,7 +228,7 @@ class BasePage:
     def element_should_be_visible(self, locator: str, error_msg: str | None = None):
         """Fail unless the element becomes visible within the page timeout.
 
-        :param locator: locator string
+        :param locator: XPath locator
         :param error_msg: message to fail with; default names the locator
         """
         if not self.is_element_visible(locator, self.timeout):
@@ -260,12 +237,12 @@ class BasePage:
     def element_should_contain_text(self, locator: str, text: str, error_msg: str | None = None):
         """Fail unless the element's text contains ``text`` within the page timeout.
 
-        :param locator: locator string
+        :param locator: XPath locator
         :param text: expected part of the text
         :param error_msg: message to fail with; default names the locator and both texts
         """
         try:
-            self.wait_until(EC.text_to_be_present_in_element(self.parse_locator(locator), text), "")
+            self.wait_until(EC.text_to_be_present_in_element(self.to_xpath_locator(locator), text), "")
         except TimeoutException:
             matches = self.find_elements_now(locator)
             actual = matches[0].text if matches else "<no element>"
@@ -273,7 +250,7 @@ class BasePage:
 
     ############################################################################
     # Header methods
-    # Scope: Every page > Header (mini-cart, search box)
+    # Scope: Every page > Header cart link, search results
     ############################################################################
     def get_header_cart_count(self) -> int:
         """N in "My Cart (N)". Reads textContent: the desktop link is often hidden, and Selenium's .text is then empty."""
@@ -285,7 +262,7 @@ class BasePage:
         return int(match.group(1)) if match else False
 
     def _read_header_cart_text(self) -> str:
-        _by, xpath = self.parse_locator(self._header_cart_link)
+        _by, xpath = self.to_xpath_locator(self._header_cart_link)
         return self.driver.execute_script(
             "var found=document.evaluate(arguments[0], document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);"
             "var text='';"
@@ -317,9 +294,11 @@ class BasePage:
         return self.is_element_present(self._search_banner) or "Verify you are human" in (driver.title or "")
 
     # --- Locators -------------------------------------------------------------
-    _html = "xpath=/html"
-    _body = "xpath=/html/body"
-    # Header (on every page). textContent, not .text: the desktop link is often hidden.
-    _header_cart_link = "xpath=//a[contains(concat(' ',normalize-space(@class),' '),' cart ') or contains(concat(' ',normalize-space(@class),' '),' toggle-drawer ')]"
-    _search_box = "xpath=//input[@name='q']"
-    _search_banner = "xpath=//*[@id='keyword']"
+    # Whole page
+    _page = "//html"
+    _page_body = "//body"
+    # Header (on every page). Two cart links (desktop and mobile), both "My Cart (N)";
+    # read with textContent, not .text: the desktop link is often hidden.
+    _header_cart_link = "//a[contains(normalize-space(),'My Cart')]"
+    # Search results banner: "Showing results..." or "No results found..."
+    _search_banner = "//*[@id='keyword']"

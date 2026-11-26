@@ -683,8 +683,8 @@ class ProductPage(BasePage):
         self.wait_until(EC.staleness_of(old_page), "The add did not open the cart", timeout=8)
 
     # --- Locators -------------------------------------------------------------
-    _add_button = "xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"
-    _quantity = "xpath=//form[contains(@action,'/cart/add')]//input[@name='quantity']"
+    _add_button = "//form[contains(@action,'/cart/add')]//*[@type='submit']"
+    _quantity = "//form[contains(@action,'/cart/add')]//input[@name='quantity']"
 ```
 
 Step-writing rules:
@@ -701,27 +701,32 @@ Step-writing rules:
 
 #### 3.5 Locator strings and the custom BasePage methods
 
-A locator is a STRING with a strategy prefix, declared at the bottom of the page class; `BasePage.parse_locator()` turns it into the `(By, value)` pair Selenium needs, so no page imports `By`:
+A locator is a plain XPath string that describes the element (its id, an attribute, its text), declared at the bottom of the page class under a comment that names the area of the page. `BasePage.to_xpath_locator()` gives Selenium the `(By.XPATH, ...)` pair, so no page imports `By`:
 
-Team rule: **XPath first**. Every locator in `pages/` is `xpath=...`:
+```python
+    # --- Locators -------------------------------------------------------------
+    # Cart table (inside #cart; the hidden mini-cart drawer repeats every row)
+    _cart_form = "//*[@id='cart']"
+    _quantity_inputs = "//*[@id='cart']//input[starts-with(@name,'updates')]"
+    # Cart buttons
+    _update_button = "//*[@id='update']"
+    _checkout_button = "//*[@id='checkout']"
+```
 
 | What to find | XPath in `pages/` |
 | --- | --- |
-| By id | `"xpath=//*[@id='cart']"`, `"xpath=//*[@id='checkout']"` |
-| By attribute | `"xpath=//input[@name='q']"`, `"xpath=//*[@itemprop='name']"` |
-| Attribute contains | `"xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
-| By link text | `"xpath=//a[normalize-space()='Forgot your password?']"` |
-| By one CSS class | `"xpath=//section[contains(concat(' ',normalize-space(@class),' '),' product-grid ')]"` (exact class, not a substring) |
-| Template | `"xpath=//a[contains(@href,'/products/{path_name}')]"`, filled with `self.fill_locator(self._tile, path_name="grey-jacket")` |
-
-`parse_locator()` still accepts `css=`, `id=`, `name=`, `tag=`, `link=`, `partial_link=`, `class=` (and a value with no prefix: XPath when it starts with `//`, otherwise CSS), but the pages do not use them.
+| By id | `"//*[@id='cart']"`, `"//*[@id='checkout']"` |
+| By attribute | `"//*[@itemprop='name']"`, `"//section[@class='product-grid']"` |
+| Attribute contains | `"//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
+| By text | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
+| Template | `"//a[contains(@href,'/products/{}')]"`, filled with `self._tile.format(path_name)` |
 
 Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePage` methods, which parse the locator, wait for the right state, log the action (shown by behave when a step fails; passwords are logged as `***`) and fail with a message that names the locator:
 
 | Group | Methods |
 | --- | --- |
 | Navigation | `open_page(path)`, `current_url`, `wait_until_url_contains(fragment)` |
-| Locators | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
+| Locators | `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
 | Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)` |
 | Wait and read | `wait_until(condition, message)`, `get_element_text(locator)`, `get_page_text()`, `is_element_visible(locator, timeout=0)` |
 | Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_contain_text` — each takes an optional `error_msg` |
@@ -739,7 +744,7 @@ Method names say what the method does and whether it waits:
 | `open_…`, `click_…`, `change_…`, `type_…` | Does something on the page | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Check: raises `AssertionError` with a readable message | `element_should_be_visible` |
 
-`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `parse_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
+`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `to_xpath_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
 
 ### 4. Hooks
 
@@ -1115,7 +1120,7 @@ Read the checklist against the feature files, steps and page objects. What stays
 | F12 | The review checklist was a manual routine (searches, reading) | Kept as the Day 4 checklist in this document; the suite itself is `behave` | Accepted |
 | F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_element_text()` waits until the element shows text; `SearchPage.get_search_result_names()` waits until every result does | Fixed |
 | F16 | Same run: the cart counted 2 items for 1 and could not change a quantity; the hidden mini-cart drawer repeats every cart row and quantity box | Every `CartPage` locator is scoped to `#cart`, as in Unit 2 | Fixed |
-| F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `xpath=//*[@itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
+| F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `//*[@itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
 | F13 | The store's bot protection (CAPTCHA) stops the login and registration forms: no request, no error message (checked 2026-11-25) | The two invalid-login runs and "registration without an email" are `@manual`; the password-reset scenario still covers REQ-05 automatically | Accepted (environment) |
 
 F1 fix:
