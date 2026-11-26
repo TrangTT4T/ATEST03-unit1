@@ -4,7 +4,7 @@ Locators are STRINGS with a strategy prefix, so pages never import ``By``:
 
     _search_box = "name=q"
     _mini_cart  = "xpath=//a[contains(., 'My Cart')]"
-    _tile       = "css=a[href*='/products/{handle}']"      # a template, filled with locator()
+    _tile       = "css=a[href*='{url}']"                  # a template, filled with locator()
 
 ``parse_locator()`` below turns the string into the ``(By, value)`` pair Selenium needs.
 Prefixes: css, xpath, id, name, tag, link, partial_link, class. No prefix: a value starting with
@@ -33,47 +33,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-MONEY = re.compile(r"£\s?([\d,]+\.\d{2})")
-
-
-def parse_locator(locator: str) -> tuple[str, str]:
-    """'name=q' -> (By.NAME, 'q');  "//a[@id='x']" -> (By.XPATH, "//a[@id='x']");  'input.q' -> (By.CSS_SELECTOR, ...)
-
-    :param locator: a locator string, with or without a strategy prefix
-    :return: the (By, value) pair for driver.find_element / expected_conditions
-    """
-    strategies = {
-        "css": By.CSS_SELECTOR,
-        "xpath": By.XPATH,
-        "id": By.ID,
-        "name": By.NAME,
-        "tag": By.TAG_NAME,
-        "link": By.LINK_TEXT,
-        "partial_link": By.PARTIAL_LINK_TEXT,
-        "class": By.CLASS_NAME,
-    }
-    if not isinstance(locator, str) or not locator.strip():
-        raise ValueError(f"A locator is a non-empty string such as 'css=#cart', got {locator!r}")
-    prefix, separator, value = locator.partition("=")
-    if separator and prefix.strip() in strategies:
-        if not value.strip():
-            raise ValueError(f"Locator {locator!r} has a strategy but no value")
-        return strategies[prefix.strip()], value.strip()
-    if locator.startswith(("//", "(/", "./")):
-        return By.XPATH, locator
-    return By.CSS_SELECTOR, locator
-
-
-def money_to_float(text: str) -> float:
-    """'£1,120.00' -> 1120.0"""
-    match = MONEY.search(text)
-    if not match:
-        raise ValueError(f"No £ amount found in: {text!r}")
-    return float(match.group(1).replace(",", ""))
-
 
 class BasePage:
     path = "/"
+    MONEY_PATTERN = re.compile(r"£\s?([\d,]+\.\d{2})")  # a text pattern, not a locator
 
     def __init__(self, driver, base_url: str, timeout: int = 10):
         self.driver = driver
@@ -81,6 +44,50 @@ class BasePage:
         self.timeout = timeout
         self.wait = WebDriverWait(driver, timeout)
         self.logger = logging.getLogger(type(self).__name__)  # behave shows these lines when a step fails
+
+    ############################################################################
+    # Locator and data helpers (no browser needed)
+    # Scope: Every page > locator strings, prices
+    ############################################################################
+    @staticmethod
+    def parse_locator(locator: str) -> tuple[str, str]:
+        """'name=q' -> (By.NAME, 'q');  "//a[@id='x']" -> (By.XPATH, "//a[@id='x']");  'input.q' -> (By.CSS_SELECTOR, ...)
+
+        :param locator: a locator string, with or without a strategy prefix
+        :return: the (By, value) pair for driver.find_element / expected_conditions
+        """
+        strategies = {
+            "css": By.CSS_SELECTOR,
+            "xpath": By.XPATH,
+            "id": By.ID,
+            "name": By.NAME,
+            "tag": By.TAG_NAME,
+            "link": By.LINK_TEXT,
+            "partial_link": By.PARTIAL_LINK_TEXT,
+            "class": By.CLASS_NAME,
+        }
+        if not isinstance(locator, str) or not locator.strip():
+            raise ValueError(f"A locator is a non-empty string such as 'css=#cart', got {locator!r}")
+        prefix, separator, value = locator.partition("=")
+        if separator and prefix.strip() in strategies:
+            if not value.strip():
+                raise ValueError(f"Locator {locator!r} has a strategy but no value")
+            return strategies[prefix.strip()], value.strip()
+        if locator.startswith(("//", "(/", "./")):
+            return By.XPATH, locator
+        return By.CSS_SELECTOR, locator
+
+    @staticmethod
+    def money_to_float(text: str) -> float:
+        """'£1,120.00' -> 1120.0
+
+        :param text: any text with one £ amount in it
+        :return: the amount as a float
+        """
+        match = BasePage.MONEY_PATTERN.search(text)
+        if not match:
+            raise ValueError(f"No £ amount found in: {text!r}")
+        return float(match.group(1).replace(",", ""))
 
     ############################################################################
     # Navigation methods
@@ -117,7 +124,7 @@ class BasePage:
     ############################################################################
     @staticmethod
     def locator(template: str, **values) -> str:
-        """Fill a locator template: ``locator(self._tile, handle="grey-jacket")``.
+        """Fill a locator template: ``locator(self._tile, url="/products/grey-jacket")``.
 
         :param template: locator string with ``{name}`` fields
         :return: the locator string with the fields filled in
@@ -131,7 +138,7 @@ class BasePage:
         :param timeout: seconds; default is the page timeout
         :return: the WebElement
         """
-        return self.wait_until(EC.presence_of_element_located(parse_locator(locator)),
+        return self.wait_until(EC.presence_of_element_located(self.parse_locator(locator)),
                                f"Element {locator!r} not found", timeout)
 
     def find_elements(self, locator: str) -> list:
@@ -140,7 +147,7 @@ class BasePage:
         :param locator: locator string
         :return: list of WebElements
         """
-        return self.driver.find_elements(*parse_locator(locator))
+        return self.driver.find_elements(*self.parse_locator(locator))
 
     def is_element_present(self, locator: str) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""
@@ -158,7 +165,7 @@ class BasePage:
         :return: this page
         """
         self.logger.info("Click %s", locator)
-        self.wait_until(EC.element_to_be_clickable(parse_locator(locator)),
+        self.wait_until(EC.element_to_be_clickable(self.parse_locator(locator)),
                         f"Element {locator!r} never became clickable", timeout).click()
         return self
 
@@ -223,7 +230,7 @@ class BasePage:
         :param timeout: seconds; default is the page timeout
         :return: the WebElement
         """
-        return self.wait_until(EC.visibility_of_element_located(parse_locator(locator)),
+        return self.wait_until(EC.visibility_of_element_located(self.parse_locator(locator)),
                                f"Element {locator!r} never became visible", timeout)
 
     def get_text(self, locator: str) -> str:
@@ -246,7 +253,7 @@ class BasePage:
         :return: True or False, never an exception
         """
         try:
-            self.wait_until(EC.visibility_of_element_located(parse_locator(locator)), "", timeout)
+            self.wait_until(EC.visibility_of_element_located(self.parse_locator(locator)), "", timeout)
         except TimeoutException:
             self.logger.info("Element %s is not visible", locator)
             return False
@@ -260,7 +267,7 @@ class BasePage:
         :return: True or False, never an exception
         """
         try:
-            self.wait_until(lambda d: d.find_element(*parse_locator(locator)).is_enabled(), "", timeout)
+            self.wait_until(lambda d: d.find_element(*self.parse_locator(locator)).is_enabled(), "", timeout)
         except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
             self.logger.info("Element %s is disabled or missing", locator)
             return False
@@ -302,7 +309,7 @@ class BasePage:
         :return: this page
         """
         try:
-            self.wait_until(EC.text_to_be_present_in_element(parse_locator(locator), text), "")
+            self.wait_until(EC.text_to_be_present_in_element(self.parse_locator(locator), text), "")
         except TimeoutException:
             actual = self.get_text(locator) if self.is_element_present(locator) else "<no element>"
             raise AssertionError(error_msg or f"Element {locator!r} shows {actual!r}, expected to contain {text!r}")
@@ -328,7 +335,7 @@ class BasePage:
     def mini_cart_count_now(self) -> int | None:
         """The header count right now, or None while the page changes. No wait: for wait conditions."""
         try:
-            match = re.search(r"\((\d+)\)", self.driver.find_element(*parse_locator(self._mini_cart)).text)
+            match = re.search(r"\((\d+)\)", self.driver.find_element(*self.parse_locator(self._mini_cart)).text)
         except (NoSuchElementException, StaleElementReferenceException):
             return None
         return int(match.group(1)) if match else None

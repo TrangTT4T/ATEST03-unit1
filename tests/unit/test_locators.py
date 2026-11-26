@@ -1,4 +1,4 @@
-"""Locator strings -> Selenium (By, value): parse_locator() in pages/base_page.py."""
+"""Locator strings -> Selenium (By, value): BasePage.parse_locator()."""
 import sys
 import unittest
 from pathlib import Path
@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from selenium.webdriver.common.by import By  # noqa: E402
 
-from pages.base_page import parse_locator  # noqa: E402
+from pages import BasePage  # noqa: E402
 
 
 class ParseLocator(unittest.TestCase):
@@ -24,21 +24,21 @@ class ParseLocator(unittest.TestCase):
         }
         for locator, expected in cases.items():
             with self.subTest(locator):
-                self.assertEqual(parse_locator(locator), expected)
+                self.assertEqual(BasePage.parse_locator(locator), expected)
 
     def test_a_value_may_contain_equals_signs(self):
-        self.assertEqual(parse_locator("css=input[name='q']"), (By.CSS_SELECTOR, "input[name='q']"))
-        self.assertEqual(parse_locator("xpath=//input[@name='q']"), (By.XPATH, "//input[@name='q']"))
+        self.assertEqual(BasePage.parse_locator("css=input[name='q']"), (By.CSS_SELECTOR, "input[name='q']"))
+        self.assertEqual(BasePage.parse_locator("xpath=//input[@name='q']"), (By.XPATH, "//input[@name='q']"))
 
     def test_no_prefix_means_xpath_or_css(self):
-        self.assertEqual(parse_locator("//h1"), (By.XPATH, "//h1"))
-        self.assertEqual(parse_locator("(//a)[1]"), (By.XPATH, "(//a)[1]"))
-        self.assertEqual(parse_locator("input[name='q']"), (By.CSS_SELECTOR, "input[name='q']"))
+        self.assertEqual(BasePage.parse_locator("//h1"), (By.XPATH, "//h1"))
+        self.assertEqual(BasePage.parse_locator("(//a)[1]"), (By.XPATH, "(//a)[1]"))
+        self.assertEqual(BasePage.parse_locator("input[name='q']"), (By.CSS_SELECTOR, "input[name='q']"))
 
     def test_bad_locators_fail_loudly(self):
         for bad in ("", "   ", "css=", ("css", "#cart")):
             with self.subTest(bad), self.assertRaises(ValueError):
-                parse_locator(bad)
+                BasePage.parse_locator(bad)
 
 
 if __name__ == "__main__":

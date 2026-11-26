@@ -1,6 +1,7 @@
 """Layout rules for page objects, checked on every run:  python -m unittest discover -s tests/unit
 
-* one class per file in pages/;
+* one class per file in pages/, and NOTHING outside it: only the docstring, imports and that class
+  (a helper function or constant at module level belongs inside the class, e.g. BasePage.money_to_float);
 * its methods are grouped under ``####`` banners, each naming its area with ``# Scope: ...``;
 * every public method has a docstring;
 * its locators are declared at the BOTTOM of the class, after the last method, as locator STRINGS
@@ -17,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from pages.base_page import parse_locator  # noqa: E402
+from pages import BasePage  # noqa: E402
 
 PAGES = sorted(p for p in (ROOT / "pages").glob("*.py") if p.name != "__init__.py")
 BANNER = re.compile(r"^\s*#{20,}\n\s*# .+\n\s*# Scope: .+\n\s*#{20,}$", re.MULTILINE)
@@ -29,6 +30,10 @@ def layout_problems(source: str, is_base_page: bool = False) -> list[str]:
     lines = source.splitlines()
     classes = [n for n in tree.body if isinstance(n, ast.ClassDef)]
     problems = [] if len(classes) == 1 else [f"{len(classes)} classes; a page file holds exactly one"]
+    for node in tree.body:
+        is_docstring = isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+        if not (is_docstring or isinstance(node, (ast.Import, ast.ImportFrom, ast.ClassDef))):
+            problems.append(f"line {node.lineno}: code outside the class; put it inside the page class")
     if not is_base_page:
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and node.id == "By":
@@ -56,7 +61,7 @@ def layout_problems(source: str, is_base_page: bool = False) -> list[str]:
                 problems.append(f"line {node.lineno}: a locator is a string such as 'css=...', not a tuple")
             else:
                 try:
-                    parse_locator(node.value.value)
+                    BasePage.parse_locator(node.value.value)
                 except ValueError as error:
                     problems.append(f"line {node.lineno}: {error}")
     return problems
@@ -78,9 +83,14 @@ class PageObjectLayout(unittest.TestCase):
             "        return self.driver.find_element(By.ID, 'x')\n"  # 4: driver call, By
             "class B:\n"  # second class
             "    pass\n"
+            "def money_to_float(text):\n"  # 7: a helper outside the class
+            "    return 1.0\n"
+            "TOTAL = 1\n"  # 9: a constant outside the class
         )
         self.assertEqual(layout_problems(sample), [
             "2 classes; a page file holds exactly one",
+            "line 7: code outside the class; put it inside the page class",
+            "line 9: code outside the class; put it inside the page class",
             "line 2: By used in a page; write a locator string such as 'css=...'",
             "line 4: By used in a page; write a locator string such as 'css=...'",
             "line 4: driver call in a page; use the BasePage methods",

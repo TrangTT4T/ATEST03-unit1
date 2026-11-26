@@ -1,14 +1,14 @@
 """Cart and checkout steps (REQ-01, REQ-02, REQ-03)."""
 from behave import given, then, use_step_matcher, when
 
-from pages import CartPage, CheckoutPage, ProductPage, money_to_float
+from pages import BasePage, CartPage, CheckoutPage, ProductPage
 from helper_utility.helpers import page, product
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
     product_page = page(context, ProductPage)
-    product_page.open_product(product(context, name)["handle"])
+    product_page.open_product(product(context, name)["url"])
     product_page.add_to_cart(quantity)
 
 
@@ -60,7 +60,7 @@ use_step_matcher("parse")
 def step_cart_total(context, expected):
     cart = page(context, CartPage).open()
     actual = cart.total()
-    assert actual == money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
+    assert actual == BasePage.money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
 
 
 @then("the cart should be empty")
