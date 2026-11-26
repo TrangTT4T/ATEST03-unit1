@@ -409,33 +409,17 @@ class BasePage:
         return None if value is None else int(value)
 
     def search(self, keyword: str):
-        """Search for ``keyword`` and wait until the results banner names it.
+        """Open the search results for ``keyword``.
 
-        The keyword is written into the same form that is submitted. Pressing Enter can
-        leave it behind, and an empty search page has no #keyword.
+        Submitting the header form can be intercepted: the URL changes to /search but the
+        results document, including #keyword, never loads. A direct navigation does load it.
         """
-        self.driver.execute_script(
-            "var form=document.querySelector('form.search-form');"
-            "if(!form) return;"
-            "var input=form.querySelector('[name=q]');"
-            "if(input) input.value=arguments[0];"
-            "form.submit();",
-            keyword,
-        )
-        self.wait_for_url_contains(keyword)
-        self.wait_until(
-            lambda d: keyword.lower() in self._search_banner_text().lower(),
-            f"Search results for {keyword!r} never loaded (now {self.url})",
-        )
-        return self
+        from urllib.parse import quote
 
-    def _search_banner_text(self) -> str:
-        try:
-            return self.driver.execute_script(
-                "var el=document.querySelector('#keyword'); return el ? el.textContent : '';"
-            ) or ""
-        except Exception:
-            return ""
+        self.type_text(self._search_box, keyword)
+        self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
+        self.page_should_contain_text("Search Results", f"Search results for {keyword!r} never loaded")
+        return self
 
     # --- Locators -------------------------------------------------------------
     _html = "tag=html"

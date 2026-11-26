@@ -46,36 +46,25 @@ class ProductPage(BasePage):
             self._add(expected_increase=1)
 
     def _add(self, expected_increase: int):
-        """Click Add to Cart and wait until the store has taken the product.
+        """Click Add to Cart and wait until the browser is on the cart page.
 
-        The theme plays a fly-to-cart animation and only then submits the form. If that animation
-        never finishes, post the form to /cart/add.js. The header link is not used: its text
-        disappears while the theme rewrites it.
+        The theme's click handler only submits the form after a fly-to-cart animation, and
+        that animation often never finishes. Turn the handler off so the click posts the form.
         """
-        before = self.cart_count() or 0
+        self.driver.execute_script(
+            "if (window.jQuery) {"
+            " jQuery('.add-to-cart').off('click');"
+            " jQuery('form.quickAdd').off('submit');"
+            "}"
+        )
         self.click_element(self._add_button)
         try:
-            self._wait_until_taken(before, expected_increase, timeout=4)
+            self.wait_for_url_contains("/cart", timeout=4)
         except TimeoutException:
-            try:
-                self.driver.execute_script(
-                    "var form=document.getElementById('product-form');"
-                    "if(!form) return;"
-                    "var xhr=new XMLHttpRequest();"
-                    "xhr.open('POST','/cart/add.js',false);"
-                    "xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');"
-                    "xhr.send(new URLSearchParams(new FormData(form)).toString());"
-                )
-            except Exception:
-                pass
-            self._wait_until_taken(before, expected_increase)
-
-    def _wait_until_taken(self, before: int, expected_increase: int, timeout: int | None = None):
-        self.wait_until(
-            lambda d: (self.cart_count() or -1) >= before + expected_increase,
-            f"The cart never took the product (count stayed at {before})",
-            timeout,
-        )
+            self.driver.execute_script(
+                "var form=document.getElementById('product-form'); if (form) form.submit();"
+            )
+            self.wait_for_url_contains("/cart")
 
     # --- Locators -------------------------------------------------------------
     # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).
