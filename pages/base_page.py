@@ -3,6 +3,7 @@
 Locators are STRINGS with a strategy prefix, so pages never import ``By``:
 
     _search_box = "name=q"
+    _search_banner = "css=#keyword"
     _mini_cart  = "xpath=//a[contains(., 'My Cart')]"
     _tile       = "css=a[href*='/products/{path_name}']"  # a template, filled with locator()
 
@@ -376,10 +377,15 @@ class BasePage:
         return int(match.group(1)) if match else None
 
     def search(self, keyword: str):
-        """Search for ``keyword`` from the header and wait for the results page."""
+        """Search for ``keyword`` from the header and wait until the results banner is on the page.
+
+        URL ``/search`` can change before the new document is ready. Reading the grid at that
+        moment finds no product links.
+        """
         self.type_text(self._search_box, keyword)
         self.press_enter(self._search_box)
         self.wait_for_url_contains("/search")
+        self.wait_for_element_visible(self._search_banner)
         return self
 
     # --- Locators -------------------------------------------------------------
