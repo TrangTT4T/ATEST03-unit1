@@ -3,7 +3,7 @@
 
 def get_product_from_dataset(context, product_name):
     """Return the test data of one product from dataset/products.json: path-name, price, status.
-git diff --stat
+
     Fails the step with a clear message when the name is not in the file.
     """
     try:
