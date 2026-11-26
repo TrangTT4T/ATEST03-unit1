@@ -58,10 +58,6 @@ def before_all(context):
 
 
 def before_scenario(context, scenario):
-    # Tags that must never hit the pipeline are skipped here, before a browser opens.
-    if {"manual", "wip"} & set(scenario.effective_tags):
-        scenario.skip("Tagged @manual / @wip")
-        return
     # One fresh browser per scenario = clean cookies = an empty cart (independence).
     context.driver = _make_driver(context.browser_name, context.headless)
     context.driver.implicitly_wait(0)  # explicit waits only
