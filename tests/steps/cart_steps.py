@@ -1,4 +1,4 @@
-"""Cart and checkout steps (REQ-01, REQ-02, REQ-03)."""
+"""Cart and checkout steps."""
 from behave import given, then, use_step_matcher, when
 
 from pages import BasePage, CartPage, CheckoutPage, ProductPage

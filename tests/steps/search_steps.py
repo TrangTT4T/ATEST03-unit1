@@ -1,4 +1,4 @@
-"""Search steps (REQ-08)."""
+"""Search steps."""
 from behave import then, when
 
 from helper_utility.helpers import page

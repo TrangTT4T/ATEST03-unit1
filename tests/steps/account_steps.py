@@ -1,4 +1,4 @@
-"""Login and registration steps (REQ-05, REQ-07)."""
+"""Login and registration steps."""
 import uuid
 
 from behave import then, when

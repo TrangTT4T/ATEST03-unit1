@@ -1,4 +1,4 @@
-"""Catalog and product detail steps (REQ-04, REQ-06)."""
+"""Catalog and product detail steps."""
 from behave import then, when
 
 from pages import CatalogPage, ProductPage

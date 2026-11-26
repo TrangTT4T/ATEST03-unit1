@@ -472,8 +472,8 @@ ATEST03-unit1/
 ├── pages/                     # BasePage, ProductPage, CartPage, CatalogPage, LoginPage
 ├── tests/                     # behave.ini: paths = tests
 │   ├── features/
-│   │   ├── cart.feature       # REQ-01, REQ-02
-│   │   └── login.feature      # REQ-05
+│   │   ├── cart.feature       # cart
+│   │   └── login.feature      # login
 │   ├── steps/
 │   │   ├── common_steps.py    # shared navigation
 │   │   ├── cart_steps.py
@@ -593,7 +593,7 @@ Each Gherkin line matches exactly one Python function through `@given / @when / 
 #### 3.2 Code: `tests/steps/cart_steps.py`
 
 ```python
-"""Cart steps (REQ-01, REQ-02)."""
+"""Cart and checkout steps."""
 from behave import given, then, when
 
 from pages import BasePage, CartPage, ProductPage
