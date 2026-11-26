@@ -720,11 +720,12 @@ Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePa
 
 | Group | Methods |
 | --- | --- |
-| Navigation | `open(path)`, `url`, `wait_for_url_contains(fragment)` |
+| Navigation | `open_page(path)`, `current_url`, `wait_until_url_contains(fragment)` |
 | Locators | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
-| Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
-| Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_element_text`, `get_all_element_texts`, `get_element_attribute`, `get_page_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
-| Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text` — each takes an optional `error_msg` |
+| Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)` |
+| Wait and read | `wait_until(condition, message)`, `get_element_text(locator)`, `get_page_text()`, `is_element_visible(locator, timeout=0)` |
+| Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_contain_text` — each takes an optional `error_msg` |
+| Header | `get_header_cart_count()`, `open_search_results(keyword)` |
 
 Method names say what the method does and whether it waits:
 
@@ -738,7 +739,7 @@ Method names say what the method does and whether it waits:
 | `open_…`, `click_…`, `change_…`, `type_…` | Does something on the page | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Check: raises `AssertionError` with a readable message | `element_should_be_visible` |
 
-`is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `parse_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
+`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `parse_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
 
 ### 4. Hooks
 
@@ -1112,7 +1113,7 @@ Read the checklist against the feature files, steps and page objects. What stays
 | F10 | "Search with no matching products" used `zzqxnotaproduct`, which the live store still matches (4 products, through the word "product") | Keyword `zzqqxx`; the step also waits for the store's "No results found" message | Fixed |
 | F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; checked on the live store (2026-11-26) | Fixed |
 | F12 | The review checklist was a manual routine (searches, reading) | Kept as the Day 4 checklist in this document; the suite itself is `behave` | Accepted |
-| F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_element_text()` waits until the element shows text; `get_all_element_texts()` waits until every result does | Fixed |
+| F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_element_text()` waits until the element shows text; `SearchPage.get_search_result_names()` waits until every result does | Fixed |
 | F16 | Same run: the cart counted 2 items for 1 and could not change a quantity; the hidden mini-cart drawer repeats every cart row and quantity box | Every `CartPage` locator is scoped to `#cart`, as in Unit 2 | Fixed |
 | F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `xpath=//*[@itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
 | F13 | The store's bot protection (CAPTCHA) stops the login and registration forms: no request, no error message (checked 2026-11-25) | The two invalid-login runs and "registration without an email" are `@manual`; the password-reset scenario still covers REQ-05 automatically | Accepted (environment) |

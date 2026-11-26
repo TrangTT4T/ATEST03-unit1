@@ -25,12 +25,10 @@ import re
 from functools import partial
 
 from selenium.common.exceptions import (
-    NoSuchElementException,
     StaleElementReferenceException,
     TimeoutException,
 )
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -192,13 +190,6 @@ class BasePage:
         element.send_keys(text)
         return element
 
-    def press_enter(self, locator: str):
-        """Press Enter in a field (e.g. submit a search).
-
-        :param locator: locator string of the input
-        """
-        self.wait_for_element(locator).send_keys(Keys.ENTER)
-
     ############################################################################
     # Wait and read methods
     # Scope: Every page > element state and text
@@ -214,16 +205,6 @@ class BasePage:
         """
         wait = self.wait if timeout is None else WebDriverWait(self.driver, timeout)
         return wait.until(condition, message)
-
-    def wait_for_element_visible(self, locator: str, timeout: int | None = None):
-        """Wait until the element is visible and return it.
-
-        :param locator: locator string
-        :param timeout: seconds; default is the page timeout
-        :return: the WebElement
-        """
-        return self.wait_until(EC.visibility_of_element_located(self.parse_locator(locator)),
-                               f"Element {locator!r} never became visible", timeout)
 
     def get_element_text(self, locator: str) -> str:
         """Visible text of the element; waits until the element shows some text.
@@ -245,28 +226,6 @@ class BasePage:
         except StaleElementReferenceException:
             return False
 
-    def get_all_element_texts(self, locator: str) -> list[str]:
-        """Visible text of every match, once each one shows its text; [] when nothing matches."""
-        ready = self.wait_until(
-            partial(self.all_match_texts_if_shown, locator),
-            f"Some {locator!r} never showed their text",
-        )
-        return ready[0]
-
-    def all_match_texts_if_shown(self, locator: str, driver=None) -> tuple[list[str]] | bool:
-        """A one-item tuple of the texts once every match has text, or False while they are loading."""
-        try:
-            texts = [element.text.strip() for element in self.find_elements_now(locator)]
-        except StaleElementReferenceException:
-            return False
-        if not all(texts):
-            return False
-        return (texts,)
-
-    def get_element_attribute(self, locator: str, name: str) -> str | None:
-        """Attribute ``name`` of the element (waits for it to exist)."""
-        return self.wait_for_element(locator).get_attribute(name)
-
     def get_page_text(self) -> str:
         """All visible text of the page."""
         return self.get_element_text(self._body)
@@ -285,25 +244,6 @@ class BasePage:
             return False
         return True
 
-    def is_element_enabled_now(self, locator: str, driver=None) -> bool:
-        """True when the element exists and is enabled. The wait passes the driver in."""
-        return self.driver.find_element(*self.parse_locator(locator)).is_enabled()
-
-    def is_element_enabled(self, locator: str, timeout: int = 0) -> bool:
-        """True when the element exists and is enabled, waiting up to ``timeout`` seconds (0: check now).
-
-        :param locator: locator string
-        :param timeout: seconds to wait; never a fixed sleep
-        :return: True or False, never an exception
-        """
-        try:
-            self.wait_until(partial(self.is_element_enabled_now, locator), "", timeout)
-        except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
-            self.logger.info("Element %s is disabled or missing", locator)
-            return False
-        self.logger.info("Element %s is enabled", locator)
-        return True
-
     ############################################################################
     # Check methods (raise AssertionError with a readable message)
     # Scope: Every page > element state
@@ -316,15 +256,6 @@ class BasePage:
         """
         if not self.is_element_visible(locator, self.timeout):
             raise AssertionError(error_msg or f"Element {locator!r} is not visible")
-
-    def element_should_be_disabled(self, locator: str, error_msg: str | None = None):
-        """Fail unless the element is disabled (it must exist).
-
-        :param locator: locator string
-        :param error_msg: message to fail with; default names the locator
-        """
-        if self.wait_for_element(locator).is_enabled():
-            raise AssertionError(error_msg or f"Element {locator!r} is not disabled")
 
     def element_should_contain_text(self, locator: str, text: str, error_msg: str | None = None):
         """Fail unless the element's text contains ``text`` within the page timeout.
@@ -352,14 +283,6 @@ class BasePage:
         """The number in the header cart link, or False until that number is on the page."""
         match = re.search(r"\((\d+)\)", self._read_header_cart_text() or "")
         return int(match.group(1)) if match else False
-
-    def read_header_cart_count_now(self) -> int | None:
-        """The header count right now, or None while the page changes. No wait: for wait conditions."""
-        try:
-            match = re.search(r"\((\d+)\)", self._read_header_cart_text() or "")
-        except Exception:
-            return None
-        return int(match.group(1)) if match else None
 
     def _read_header_cart_text(self) -> str:
         _by, xpath = self.parse_locator(self._header_cart_link)
