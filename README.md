@@ -2,7 +2,7 @@
 
 behave (Cucumber for Python) + Selenium WebDriver · Application under test: https://sauce-demo.myshopify.com
 
-Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Objects and `behave.ini`; everything runs with the `behave` command. Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (plain Playwright, no Gherkin) is the [ATEST03-unit2](https://github.com/TrangTT4T/ATEST03-unit2) repository; it automates the same requirements (`dataset/requirements.json`) and test data.
+Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Objects and `behave.ini`; everything runs with the `behave` command. Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (plain Playwright, no Gherkin) is the [ATEST03-unit2](https://github.com/TrangTT4T/ATEST03-unit2) repository; it automates the same requirements and test data.
 
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
@@ -23,8 +23,6 @@ ATEST03-unit1/
 │   ├── steps/                  # common, cart, product, account, search
 │   └── environment.py          # hooks
 ├── dataset/products.json       # test data read by the steps
-├── dataset/requirements.json   # requirement registry: tag (@add_to_cart ...) -> REQ id, title, risk
-├── dataset/tags.json           # every other allowed tag (area, risk, suite, type, control)
 ├── helper_utility/helpers.py   # page(), product(): helpers shared by steps
 ├── reports/                    # generated
 └── docs/Unit1_BDD_vi.md, Unit1_BDD_en.md (+ images/)
@@ -39,7 +37,7 @@ behave                              # default suite (not @manual / @wip / @data-
 behave --tags=@smoke
 behave --tags=@checkout             # every scenario of one feature area
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout, tags, the Day 4 review checklist (no browser)
+python -m unittest discover -s tests/unit    # page-object layout, the Day 4 review checklist (no browser)
 ```
 
 ## Reports
@@ -55,7 +53,7 @@ Every `behave` run writes all of them (`behave.ini`, `tests/environment.py`):
 | Screenshots of failed steps | `reports/screenshots/` | debugging (also attached to Allure) |
 | Allure results (opt-in) | `reports/allure-results/` | history and trends (`allure serve reports/allure-results`) |
 
-Each scenario carries one **requirement tag** that names what it proves, e.g. `@cart @critical @smoke @add_to_cart` (registry: `dataset/requirements.json`, which maps `add_to_cart` to REQ-01): `behave --tags=@add_to_cart` runs the scenarios of one requirement, and the tags appear in the HTML and JSON reports. Unit tests fail when a scenario has no requirement tag, a requirement has no scenario, or a feature uses a tag that is in neither `requirements.json` nor `tags.json` (a typo such as `@add_to_card`).
+Each scenario carries one **requirement tag** that names what it proves, e.g. `@cart @critical @smoke @add_to_cart` (REQ-01 in the Day 1 requirement table): `behave --tags=@add_to_cart` runs the scenarios of one requirement, and the tags appear in the HTML and JSON reports.
 
 Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 18 scenarios passed, 4 skipped (`@manual` ×3: the public store's CAPTCHA stops the login and registration forms; `@data-creating` ×1).
 

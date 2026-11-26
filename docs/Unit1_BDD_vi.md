@@ -981,7 +981,7 @@ behave                                # bộ mặc định (behave.ini: bỏ @ma
 behave --tags=@smoke                  # chỉ smoke
 behave --tags=@data-creating          # tạo tài khoản thật: chỉ khi trainer cho phép
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # kết quả Allure (tùy chọn)
-python -m unittest discover -s tests/unit    # kiểm tra cấu trúc page object, tag, checklist review (không cần trình duyệt)
+python -m unittest discover -s tests/unit    # kiểm tra cấu trúc page object, checklist review (không cần trình duyệt)
 ```
 
 Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatter):
@@ -994,7 +994,7 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | Allure (tùy chọn) | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Ảnh step fail | `reports/screenshots/` |
 
-**Truy vết qua tag.** Mỗi scenario mang đúng một tag yêu cầu, gọi tên điều nó chứng minh (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` nối mỗi tag với mã Day 1 (REQ-01 …), tiêu đề và rủi ro. `behave --tags=@add_to_cart` chạy riêng các scenario của một yêu cầu, và tag hiện trong báo cáo HTML, JSON. `tests/unit/test_tags.py` báo lỗi khi scenario thiếu tag yêu cầu, khi một yêu cầu chưa có scenario, hoặc khi feature dùng tag không có trong `requirements.json` lẫn `dataset/tags.json` (gõ sai như `@add_to_card`).
+**Truy vết qua tag.** Mỗi scenario mang đúng một tag yêu cầu, gọi tên điều nó chứng minh (`@add_to_cart`, `@secure_login` …); mỗi tag ứng với một yêu cầu trong bảng Day 1 (`@add_to_cart` = REQ-01 …). `behave --tags=@add_to_cart` chạy riêng các scenario của một yêu cầu, và tag hiện trong báo cáo HTML, JSON.
 
 ### 6. Kết quả mong đợi
 
@@ -1002,7 +1002,7 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
-| `python -m unittest discover -s tests/unit` | 17 test OK: cấu trúc page object, tag, checklist review Day 4, cách chờ khi thêm vào giỏ |
+| `python -m unittest discover -s tests/unit` | 12 test OK: cấu trúc page object, checklist review Day 4, cách chờ khi thêm vào giỏ |
 | Truy vết | `behave --dry-run --tags=@add_to_cart` … `@search_products`: yêu cầu nào cũng liệt kê được ít nhất một scenario |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
@@ -1032,16 +1032,16 @@ behave                                             # chạy toàn bộ
 
 Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy tắc làm lượt chạy fail thì không. Quy tắc nào trong checklist kiểm được bằng code đều là một test trong `tests/unit/` (`test_framework_review.py` nếu không ghi khác). Phần vẫn cần người review: scenario có phải ví dụ đúng cho yêu cầu không, và cách đặt tên.
 
-| Kiểm tra | Quy tắc | Tự động bởi |
+| Kiểm tra | Quy tắc | Kiểm tra bằng |
 | --- | --- | --- |
 | Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong step | `test_no_url_selector_click_or_wait_in_steps` |
 | Độ dài scenario | Tối đa 7 step (tính cả background) | `test_scenarios_stay_short` |
-| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | `test_tags.py`; `behave --tags=@add_to_cart` … |
+| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | review: `behave --dry-run --tags=@add_to_cart` … cho từng yêu cầu trong bảng Day 1 |
 | Tái sử dụng step, không trùng lặp | Không step thừa hoặc chưa định nghĩa; không có hai câu step chỉ khác tham số hoặc chữ s số nhiều (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
 | Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator ở cuối | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
 | Ổn định | Không `sleep()` trong steps, pages, helper, hook | `test_no_fixed_waits` |
 | Tách dữ liệu | Không gõ cứng giá trong code step | `test_no_prices_in_step_code` |
-| Rủi ro dẫn dắt phạm vi | Yêu cầu Critical/High nào cũng có scenario chạy mặc định (không chỉ `@manual` / `@data-creating`) | `test_every_critical_and_high_requirement_runs_by_default` |
+| Rủi ro dẫn dắt phạm vi | Yêu cầu Critical/High nào cũng có scenario chạy mặc định (không chỉ `@manual` / `@data-creating`) | review: đối chiếu scenario với bảng rủi ro Day 1 (mục 2) |
 
 ### 2. Rubric
 
@@ -1051,7 +1051,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | Gherkin declarative | 0 step imperative | 2 |
 | Độc lập | Trình duyệt mới mỗi scenario (`before_scenario`) | 2 |
 | Tái sử dụng step | 0 thừa, 0 chưa định nghĩa, 0 gần trùng (có test kiểm tra từ F12) | 2 |
-| Truy vết | 8/8 requirement, mỗi scenario một tag yêu cầu; một danh sách requirement (`dataset/requirements.json`) sau F5 | 2 |
+| Truy vết | 8/8 requirement, mỗi scenario một tag yêu cầu; một danh sách requirement (Day 1 mục 6) sau F5 | 2 |
 | Tách dữ liệu khỏi code | Tên, handle, giá nằm trong `dataset/products.json` / Examples | 2 |
 | Báo cáo | Một lần chạy sinh HTML, JSON và JUnit; Allure tùy chọn; ảnh khi fail | 2 |
 | Ổn định | Chỉ explicit wait; chưa chứng minh qua 3 lần chạy trên site thật (F3) | 1 |
@@ -1065,7 +1065,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | F2 | Locator viết theo cấu trúc Shopify chuẩn, chưa đối chiếu theme thật | Chạy trên site thật; nếu lệch chỉ sửa `pages/` | Mở |
 | F3 | Chưa đo độ ổn định trên site thật | Chạy `behave` 3 lần và so kết quả; tiếp tục ở Unit 2 Day 8 | Mở → Unit 2 Day 8 |
 | F4 | Case đăng ký `@data-creating` mặc định không chạy | Xin trainer cho phép hoặc store riêng | Mở (trainer) |
-| F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Một danh mục máy đọc được, `dataset/requirements.json` (tag → mã REQ, tiêu đề, rủi ro); bảng Day 1 mô tả nó | Đã sửa |
+| F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Chỉ giữ ở một chỗ: bảng requirement của Day 1 (mục 6) | Đã sửa |
 | F6 | Checkout dừng ở trang checkout | Thanh toán kiểm thủ công; Unit 2 thêm kiểm tra mức network | Chấp nhận |
 | F7 | Với theme không có ô số lượng, thêm N sản phẩm có thể làm hủy request POST trước đó (phát hiện khi kiểm tra lại cùng Unit 2) | `ProductPage._submit()` chờ chuyển sang `/cart` sau mỗi lần bấm | Đã sửa |
 | F8 | Update / Check Out / Sign In: step sau mở `/cart` trước khi POST của form chạy xong, nên đôi khi giỏ hàng giữ số lượng cũ (gặp 2 trong khoảng 15 lần chạy; ảnh chụp lỗi cho thấy `My Cart (1)` sau khi đổi thành 2) | Thêm `BasePage.submit()` chờ trang cũ bị thay thế (Selenium `staleness_of`); Unit 2 sửa tương tự (`expect_navigation`) | Đã sửa; 0 lỗi trong 10 lần chạy lặp |
@@ -1101,7 +1101,7 @@ use_step_matcher("parse")
 
 | Kết quả Unit 1 | Unit 2 dùng thế nào |
 | --- | --- |
-| Yêu cầu và tag của chúng | `dataset/requirements.json` (cùng file); mỗi tag thành một marker pytest (`@pytest.mark.add_to_cart`) trên test Playwright thuần |
+| Yêu cầu và tag của chúng | Cùng các yêu cầu; mỗi tag thành một marker pytest (`@pytest.mark.add_to_cart`) trên test Playwright thuần |
 | Scenario | Viết lại thành test pytest thường (Unit 2 là Playwright thuần; BDD + Playwright là mock project ở Unit 5) |
 | `dataset/products.json` | Chép sang repo Unit 2 |
 | Mẫu Page Object | Cùng tên class, locator Playwright |

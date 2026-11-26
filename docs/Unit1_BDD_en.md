@@ -981,7 +981,7 @@ behave                                # default suite (behave.ini: not @manual /
 behave --tags=@smoke                  # smoke only
 behave --tags=@data-creating          # creates a real account: only with trainer approval
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout, tags, review checklist (no browser)
+python -m unittest discover -s tests/unit    # page-object layout, review checklist (no browser)
 ```
 
 One `behave` run writes every report (`behave.ini` sets the formatters):
@@ -994,7 +994,7 @@ One `behave` run writes every report (`behave.ini` sets the formatters):
 | Allure results (opt-in) | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Screenshots of failed steps | `reports/screenshots/` |
 
-**Traceability through tags.** Every scenario carries one requirement tag that names what it proves (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` maps each tag to its Day 1 id (REQ-01 …), title and risk. `behave --tags=@add_to_cart` runs the scenarios of one requirement, and the tags appear in the HTML and JSON reports. `tests/unit/test_tags.py` fails when a scenario has no requirement tag, a requirement has no scenario, or a tag is in neither `requirements.json` nor `dataset/tags.json` (a typo such as `@add_to_card`).
+**Traceability through tags.** Every scenario carries one requirement tag that names what it proves (`@add_to_cart`, `@secure_login` …); each tag maps to a requirement of the Day 1 table (`@add_to_cart` = REQ-01 …). `behave --tags=@add_to_cart` runs the scenarios of one requirement, and the tags appear in the HTML and JSON reports.
 
 ### 6. Expected results
 
@@ -1002,7 +1002,7 @@ One `behave` run writes every report (`behave.ini` sets the formatters):
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
-| `python -m unittest discover -s tests/unit` | 17 tests OK: page-object layout, tags, the Day 4 review checklist, add-to-cart waits |
+| `python -m unittest discover -s tests/unit` | 12 tests OK: page-object layout, the Day 4 review checklist, add-to-cart waits |
 | Traceability | `behave --dry-run --tags=@add_to_cart` … `@search_products`: every requirement lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
@@ -1032,16 +1032,16 @@ behave                                             # full run
 
 A rule that only lives in a review document erodes; a rule that fails the run does not. Every checklist rule that code can check is a test in `tests/unit/` (`test_framework_review.py` unless noted). What stays a human review: whether a scenario is the right example for its requirement, and naming.
 
-| Check | Rule | Automated by |
+| Check | Rule | Checked by |
 | --- | --- | --- |
 | Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in a step | `test_no_url_selector_click_or_wait_in_steps` |
 | Scenario size | At most 7 steps (background included) | `test_scenarios_stay_short` |
-| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | `test_tags.py`; `behave --tags=@add_to_cart` … |
+| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | review: `behave --dry-run --tags=@add_to_cart` … for each requirement of the Day 1 table |
 | Step reuse, no duplication | No unused or undefined step; no two step texts that differ only by parameters or a plural s (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
 | Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locators at the bottom | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
 | Stability | No `sleep()` in steps, pages, helpers or hooks | `test_no_fixed_waits` |
 | Data separation | No prices hard-coded in step code | `test_no_prices_in_step_code` |
-| Risk drives scope | Every Critical/High requirement has a scenario that runs by default (not only `@manual` / `@data-creating`) | `test_every_critical_and_high_requirement_runs_by_default` |
+| Risk drives scope | Every Critical/High requirement has a scenario that runs by default (not only `@manual` / `@data-creating`) | review: compare the scenarios with the Day 1 risk table (section 2) |
 
 ### 2. Rubric
 
@@ -1051,7 +1051,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | Declarative Gherkin | 0 imperative steps | 2 |
 | Independence | Fresh browser per scenario (`before_scenario`) | 2 |
 | Step reuse | 0 unused, 0 undefined, 0 near-duplicates (checked by a test since F12) | 2 |
-| Traceability | 8/8 requirements, every scenario has one requirement tag; one requirement list (`dataset/requirements.json`) after F5 | 2 |
+| Traceability | 8/8 requirements, every scenario has one requirement tag; one requirement list (Day 1 section 6) after F5 | 2 |
 | Data separated from code | Names, handles, prices in `dataset/products.json` / Examples | 2 |
 | Reporting | One run writes HTML, JSON and JUnit; Allure opt-in; screenshot on failure | 2 |
 | Stability | Explicit waits only; not yet proven on 3 live runs (F3) | 1 |
@@ -1065,7 +1065,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store; fix only `pages/` if needed | Open |
 | F3 | Stability not measured on the live site | Run `behave` 3 times and compare the results; continued in Unit 2 Day 8 | Open → Unit 2 Day 8 |
 | F4 | `@data-creating` registration excluded by default | Ask trainer for permission or a disposable store | Open (trainer) |
-| F5 | Requirement list kept in more than one place (code and the Day 1 document) | One machine-readable registry, `dataset/requirements.json` (tag → REQ id, title, risk); the Day 1 tables describe it | Fixed |
+| F5 | Requirement list kept in more than one place (code and the Day 1 document) | Kept in one place: the Day 1 requirement table (section 6) | Fixed |
 | F6 | Checkout stops at the checkout page | Payment stays manual; network-level checks added in Unit 2 | Accepted |
 | F7 | On a theme without a quantity box, adding N items could cancel the previous POST (found when re-checking with Unit 2) | `ProductPage._submit()` now waits for the redirect to `/cart` after every click | Fixed |
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
@@ -1101,7 +1101,7 @@ use_step_matcher("parse")
 
 | Unit 1 result | How Unit 2 uses it |
 | --- | --- |
-| Requirements and their tags | `dataset/requirements.json` (same file); each tag becomes a pytest marker (`@pytest.mark.add_to_cart`) on plain Playwright tests |
+| Requirements and their tags | Same requirements; each tag becomes a pytest marker (`@pytest.mark.add_to_cart`) on plain Playwright tests |
 | Scenarios | Rewritten as plain pytest tests (Unit 2 is pure Playwright; BDD + Playwright is the Unit 5 mock project) |
 | `dataset/products.json` | Copied into the Unit 2 repo |
 | Page Object pattern | Same class names, Playwright locators |

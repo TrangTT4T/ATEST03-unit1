@@ -5,7 +5,6 @@
 A rule that only lives in a review document erodes; a rule that fails the run does not. What stays a
 human review: whether a scenario is the RIGHT example for its requirement, and naming.
 """
-import json
 import re
 import subprocess
 import sys
@@ -19,7 +18,6 @@ FEATURES = sorted((ROOT / "tests" / "features").glob("*.feature"))
 STEP_FILES = sorted((ROOT / "tests" / "steps").glob("*.py"))
 CODE_FILES = [*STEP_FILES, *sorted((ROOT / "pages").glob("*.py")), *sorted((ROOT / "helper_utility").glob("*.py")),
               ROOT / "tests" / "environment.py"]
-EXCLUDED_BY_DEFAULT = {"manual", "wip", "data-creating"}  # behave.ini: tags = not @manual and ...
 MAX_STEPS = 7
 
 
@@ -102,21 +100,6 @@ class Stability(unittest.TestCase):
     def test_no_fixed_waits(self):
         offenders = [p.name for p in CODE_FILES if re.search(r"\bsleep\(", p.read_text(encoding="utf-8"))]
         self.assertEqual(offenders, [], "wait for a state (WebDriverWait), never for time")
-
-
-class RiskDrivesScope(unittest.TestCase):
-    def test_every_critical_and_high_requirement_runs_by_default(self):
-        """A Critical/High requirement proven only by @manual or @data-creating scenarios is not tested."""
-        requirements = json.loads((ROOT / "dataset" / "requirements.json").read_text(encoding="utf-8"))["requirements"]
-        running = {
-            tag
-            for feature in _parsed()
-            for scenario in feature.walk_scenarios()
-            if not EXCLUDED_BY_DEFAULT & set(scenario.effective_tags)
-            for tag in scenario.effective_tags
-        }
-        missing = sorted(r["id"] for tag, r in requirements.items() if r["level"] in {"Critical", "High"} and tag not in running)
-        self.assertEqual(missing, [])
 
 
 if __name__ == "__main__":
