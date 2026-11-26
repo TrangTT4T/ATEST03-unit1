@@ -478,8 +478,8 @@ ATEST03-unit1/
 ├── pages/                     # BasePage, ProductPage, CartPage, CatalogPage, LoginPage
 ├── tests/                     # behave.ini: paths = tests
 │   ├── features/
-│   │   ├── cart.feature       # cart
-│   │   └── login.feature      # login
+│   │   ├── cart.feature       # REQ-01, REQ-02
+│   │   └── login.feature      # REQ-05
 │   ├── steps/
 │   │   ├── common_steps.py    # điều hướng dùng chung
 │   │   ├── cart_steps.py
@@ -593,7 +593,7 @@ Mỗi câu Gherkin khớp với đúng một hàm Python qua decorator `@given /
 #### 3.2 Code `tests/steps/cart_steps.py`
 
 ```python
-"""Cart and checkout steps."""
+"""Cart steps (REQ-01, REQ-02)."""
 from behave import given, then, when
 
 from pages import BasePage, CartPage, ProductPage
