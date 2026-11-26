@@ -35,7 +35,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class BasePage:
-    path = "/"
+    path: str = "/"  # default page: the store home page, after the domain
     MONEY_PATTERN = re.compile(r"£\s?([\d,]+\.\d{2})")  # a text pattern, not a locator
 
     def __init__(self, driver, base_url: str, timeout: int = 10):
