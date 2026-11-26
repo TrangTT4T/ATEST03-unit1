@@ -668,11 +668,9 @@ class Helper:
 
     ############################################################################
     # Element finder
-    # Scope: BasePage > locator string -> (By, criteria) -> elements
+    # Scope: BasePage > locator string -> (By, criteria)
     ############################################################################
-    def by_locator(self, locator): ...       # section 3.5
-    def find_element(self, driver, locator): ...
-    def find_elements(self, driver, locator): ...
+    def by_locator(self, locator): ...       # section 3.5; BasePage.find_element(s) use it
 ```
 
 #### 3.4 Page Object mà step gọi tới (`pages/product_page.py`, rút gọn)

@@ -1,7 +1,7 @@
 """Helper: everything the steps and the pages share, in one class.
 
 * Step helpers: Helper.get_product_from_dataset(context, name), Helper.create_page_object(context, CartPage).
-* Element finder (used by BasePage): reads a locator string and tells Selenium how to find it, the same
+* Element finder (used by BasePage, which does the finding): reads a locator string and tells Selenium how to find it, the same
   idea as the team's selenium_wrapper/elementfinder.py. A locator is plain XPath with no prefix (the
   default, and what every page writes), or "prefix=criteria" / "prefix:criteria": "id=cart", "name=q",
   "css=#cart", "link=Forgot your password?", "partial link=Forgot", "tag_name=h1", "class_name=errors".
@@ -50,7 +50,7 @@ class Helper:
 
     ############################################################################
     # Element finder
-    # Scope: BasePage > locator string -> (By, criteria) -> elements
+    # Scope: BasePage > locator string -> (By, criteria)
     ############################################################################
     def by_locator(self, locator: str) -> tuple[str, str]:
         """The (By, criteria) pair Selenium needs for ``locator``.
@@ -77,22 +77,3 @@ class Helper:
         if strategy is None:
             raise ValueError(f"Element locator with prefix '{prefix}' is not supported: {locator!r}")
         return strategy, criteria
-
-    def find_element(self, driver, locator: str):
-        """The first element matching ``locator``.
-
-        :param driver: the WebDriver
-        :param locator: locator string
-        :return: the WebElement
-        :raises NoSuchElementException: when nothing matches (raised by Selenium; its message names the selector)
-        """
-        return driver.find_element(*self.by_locator(locator))
-
-    def find_elements(self, driver, locator: str) -> list:
-        """Every element matching ``locator`` (an empty list when nothing matches).
-
-        :param driver: the WebDriver
-        :param locator: locator string
-        :return: list of WebElements
-        """
-        return driver.find_elements(*self.by_locator(locator))

@@ -102,7 +102,7 @@ class BasePage:
         :raises TimeoutException: when the element never appears
         """
         return self.wait_until(
-            partial(self._helper.find_element, locator=locator),  # retried while not found
+            EC.presence_of_element_located(self._helper.by_locator(locator)),
             f"Element {locator!r} not found",
             timeout,
         )
@@ -113,7 +113,7 @@ class BasePage:
         :param locator: locator string
         :return: list of WebElements
         """
-        return self._helper.find_elements(self.driver, locator)
+        return self.driver.find_elements(*self._helper.by_locator(locator))
 
     def is_element_present(self, locator: str, driver=None) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""

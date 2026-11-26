@@ -26,7 +26,7 @@ ATEST03-unit1/
 ├── dataset/products.json       # test data read by the steps
 ├── helper_utility/
 │   └── helpers.py              # class Helper: get_product_from_dataset(), create_page_object() for the steps;
-│                               #   by_locator(), find_element(s)(): locator string -> (By, criteria), XPath by default
+│                               #   by_locator(): locator string -> (By, criteria), XPath by default
 ├── reports/                    # generated
 └── docs/Unit1_BDD_vi.md, Unit1_BDD_en.md (+ images/)
 ```
