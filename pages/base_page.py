@@ -397,9 +397,14 @@ class BasePage:
 
         self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
         self.wait_until(
-            lambda d: self.is_element_present(self._search_banner),
+            lambda d: self.is_element_present(self._search_banner)
+            or "Verify you are human" in (d.title or ""),
             f"Search results for {keyword!r} never loaded (now {self.url})",
         )
+        if "Verify you are human" in (self.driver.title or ""):
+            raise AssertionError(
+                "Cloudflare asked to verify a human, so the search page did not open"
+            )
         return self
 
     # --- Locators -------------------------------------------------------------

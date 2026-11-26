@@ -29,6 +29,11 @@ def _make_driver(browser: str, headless: bool):
         options.add_argument("--headless=new")
     options.add_argument("--window-size=1366,900")
     options.add_argument("--disable-dev-shm-usage")
+    # The infobar "controlled by automated test software" makes Cloudflare show
+    # "Verify you are human" on /search. These options remove that flag.
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+    options.add_argument("--disable-blink-features=AutomationControlled")
     if os.getenv("CI") or (hasattr(os, "geteuid") and os.geteuid() == 0):
         options.add_argument("--no-sandbox")  # needed in Docker/CI containers running as root
     driver_path = os.getenv("CHROMEDRIVER_PATH")
@@ -60,6 +65,14 @@ def before_scenario(context, scenario):
     # One fresh browser per scenario = clean cookies = an empty cart (independence).
     context.driver = _make_driver(context.browser_name, context.headless)
     context.driver.implicitly_wait(0)  # explicit waits only
+    try:
+        # Cloudflare treats navigator.webdriver as a bot. Hide it before the first page loads.
+        context.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
+        )
+    except Exception:
+        pass
 
 
 def after_step(context, step):
