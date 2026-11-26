@@ -13,20 +13,6 @@ class CartPage(BasePage):
     path = "/cart"
     TOTAL_PATTERN = re.compile(r"(sub)?total[^£]{0,40}£\s?([\d,]+\.\d{2})", re.IGNORECASE)  # text, not a locator
 
-    def open(self, path: str | None = None):
-        """Open the cart. The theme spinner can keep the load event from firing; the cart is already on screen."""
-        self.driver.set_page_load_timeout(8)
-        try:
-            return super().open(path)
-        except TimeoutException:
-            try:
-                self.driver.execute_script("window.stop();")
-            except Exception:
-                pass
-            return self
-        finally:
-            self.driver.set_page_load_timeout(300)
-
     ############################################################################
     # Cart line methods
     # Scope: Cart page > Cart table
