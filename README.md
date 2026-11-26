@@ -2,7 +2,7 @@
 
 behave (Cucumber for Python) + Selenium WebDriver · Application under test: https://sauce-demo.myshopify.com
 
-Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Objects and `behave.ini`; everything runs with the `behave` command. Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (Playwright) is the [ATEST03-unit2](https://github.com/TrangTT4T/ATEST03-unit2) repository and reuses these feature files.
+Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Objects and `behave.ini`; everything runs with the `behave` command. Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (plain Playwright, no Gherkin) is the [ATEST03-unit2](https://github.com/TrangTT4T/ATEST03-unit2) repository; it automates the same requirements (`dataset/requirements.json`) and test data.
 
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ ATEST03-unit1/
 ├── requirements.txt
 ├── pages/                      # Selenium Page Objects (only place with locators)
 ├── tests/                      # everything behave runs (behave.ini: paths = tests)
-│   ├── features/               # Gherkin specs (also copied into Unit 2)
+│   ├── features/               # Gherkin specs
 │   │   ├── cart.feature  checkout.feature  product.feature
 │   │   └── login.feature register.feature  search.feature
 │   ├── steps/                  # common, cart, product, account, search
@@ -40,7 +40,7 @@ behave                              # default suite (not @manual / @wip / @data-
 behave --tags=@smoke
 behave --tags=@checkout             # every scenario of one feature area
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout + traceability rules (no browser)
+python -m unittest discover -s tests/unit    # page-object layout, traceability, the Day 4 review checklist (no browser)
 ```
 
 ## Reports
@@ -59,9 +59,9 @@ Every `behave` run writes all of them (`behave.ini`, `tests/environment.py`):
 
 Each scenario carries one **requirement tag** that names what it proves, e.g. `@cart @critical @smoke @add_to_cart` (registry: `dataset/requirements.json`, which maps `add_to_cart` to REQ-01). A requirement is FAIL if any of its scenarios failed, PASS if every scenario that ran passed, NOT RUN if none ran (e.g. `@data-creating`, or another area with `--tags`), NO TEST if nothing is tagged with it. Unit tests fail when a scenario has no requirement tag, a requirement has no scenario, or a feature uses a tag that is in neither `requirements.json` nor `tags.json` (a typo such as `@add_to_card`).
 
-Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 21 scenarios passed, 1 skipped (`@data-creating`).
+Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 18 scenarios passed, 4 skipped (`@manual` ×3: the public store's CAPTCHA stops the login and registration forms; `@data-creating` ×1).
 
-Verified against a local mock with the standard Shopify page structure. If a locator differs on the live theme, fix it in `pages/` only.
+Verified against a local mock with the standard Shopify page structure; the live-store behaviour (AJAX add to cart, CAPTCHA on account forms, partial-word search) was checked with a browser on 2026-11-25 and is handled (Day 4 findings F10, F11, F13). If a locator differs on the live theme, fix it in `pages/` only.
 
 ## ATEST03 course repositories
 
@@ -70,7 +70,7 @@ One repository per unit:
 | Unit | Days | Topic | Repository |
 | --- | --- | --- | --- |
 | 1 | 1–4 | BDD automation design and framework practices (behave + Selenium) | **ATEST03-unit1** (this repository) |
-| 2 | 5–8 | Playwright end-to-end automation (pytest + pytest-bdd) | [ATEST03-unit2](https://github.com/TrangTT4T/ATEST03-unit2) |
+| 2 | 5–8 | Playwright end-to-end automation (pytest + Playwright) | [ATEST03-unit2](https://github.com/TrangTT4T/ATEST03-unit2) |
 | 3 | 9–12 | Mobile (Appium) and asynchronous systems | [ATEST03-unit3](https://github.com/TrangTT4T/ATEST03-unit3) |
 | 4 | 13–18 | Containers, AWS cloud execution, performance (JMeter), CI/CD | [ATEST03-unit4](https://github.com/TrangTT4T/ATEST03-unit4) |
 | 5 | 19–22 | Mock project: Swag Labs, end to end, without AWS | [ATEST03-unit5-mock](https://github.com/TrangTT4T/ATEST03-unit5-mock) |

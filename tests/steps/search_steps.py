@@ -1,9 +1,8 @@
 """Search steps (REQ-08)."""
 from behave import then, when
-from selenium.webdriver.common.by import By
 
-from pages import BasePage
 from helper_utility.helpers import page
+from pages import BasePage, SearchPage
 
 
 @when('the customer searches for "{keyword}"')
@@ -13,12 +12,12 @@ def step_search(context, keyword):
 
 @then('the results should include "{name}"')
 def step_result_includes(context, name):
-    links = context.driver.find_elements(By.CSS_SELECTOR, "a[href*='/products/']")
-    names = [link.text for link in links]
+    names = page(context, SearchPage).result_names()
     assert any(name in text for text in names), f"{name!r} not in results: {names}"
 
 
 @then("no products should be shown in the results")
 def step_no_results(context):
-    links = context.driver.find_elements(By.CSS_SELECTOR, "a[href*='/products/']")
-    assert not links, f"Expected no results, found {[l.text for l in links]}"
+    search = page(context, SearchPage)
+    assert search.no_results_shown()
+    assert not search.result_names(), f"Expected no results, found {search.result_names()}"

@@ -1002,8 +1002,9 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | Kiểm tra | Kết quả |
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
-| `behave` | 6 feature, 21 scenario pass, 1 bỏ qua (`@data-creating`), 70 step pass |
-| Truy vết | `reports/traceability.md`: REQ-01 … REQ-08 đều PASS (scenario `@data-creating` của REQ-07 hiện NOT RUN); `python -m unittest discover -s tests/unit` OK |
+| `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
+| `python -m unittest discover -s tests/unit` | 21 test OK: cấu trúc page object, truy vết, checklist review Day 4, cách chờ khi thêm vào giỏ |
+| Truy vết | `reports/traceability.md`: REQ-01 … REQ-06 và REQ-08 PASS; REQ-07 NOT RUN (cả hai scenario đăng ký đều bị loại: `@manual`, `@data-creating`) |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
 
@@ -1019,36 +1020,29 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 phút · Hybrid · Code: repo `ATEST03-unit1`
 
-Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp) và khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form); các mục còn mở cần site thật hoặc ý kiến trainer.
+Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F13: phân lớp, hành vi của site thật, checklist được tự động hóa thành test); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
 
 ### 1. Cách review
 
 ```bash
 cd ATEST03-unit1
+python -m unittest discover -s tests/unit          # checklist tự động bên dưới (không cần trình duyệt)
 behave --dry-run                                   # step chưa có code hoặc bị mơ hồ
-behave --dry-run --tags=@checkout                  # các scenario của một nhóm chức năng (lặp cho từng nhóm)
-behave                                             # chạy toàn bộ
+behave                                             # chạy toàn bộ + reports/traceability.md
 ```
 
-Lệnh tìm nhanh cho checklist (PowerShell; trong Git Bash dùng `grep -rnE`):
+Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy tắc làm lượt chạy fail thì không. Quy tắc nào trong checklist kiểm được bằng code đều là một test trong `tests/unit/` (`test_framework_review.py` nếu không ghi khác). Phần vẫn cần người review: scenario có phải ví dụ đúng cho yêu cầu không, và cách đặt tên.
 
-```powershell
-Select-String -Path tests\features\*.feature -Pattern 'https?://|click|wait|xpath|css|seconds'   # Gherkin imperative
-Select-String -Path tests\steps\*.py, pages\*.py -Pattern 'sleep\('                            # chờ cố định
-Select-String -Path tests\steps\*.py -Pattern '£\d'                                            # giá gõ cứng trong step
-```
-
-Checklist review:
-
-| Kiểm tra | Quy tắc | Cách kiểm tra |
+| Kiểm tra | Quy tắc | Tự động bởi |
 | --- | --- | --- |
-| Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong feature | lệnh tìm thứ nhất |
-| Độ dài scenario | Tối đa 7 step | đọc từng feature |
-| Truy vết | Mọi feature có tag nhóm chức năng | `behave --dry-run --tags=@cart`; đối chiếu ma trận truy vết của Day 1 |
-| Tái sử dụng step | Không có step thừa, mơ hồ hoặc gần trùng | `behave --dry-run` + đọc `tests/steps/` |
-| Ổn định | Không `sleep()` trong steps hoặc pages | lệnh tìm thứ hai |
-| Tách dữ liệu | Không gõ cứng giá trong code step | lệnh tìm thứ ba |
-| Rủi ro dẫn dắt phạm vi | Mọi rủi ro Critical/High trong bảng rủi ro Day 1 có scenario | đối chiếu Day 1 mục 2 |
+| Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong step | `test_no_url_selector_click_or_wait_in_steps` |
+| Độ dài scenario | Tối đa 7 step (tính cả background) | `test_scenarios_stay_short` |
+| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | `test_traceability.py`; `reports/traceability.md` mỗi lần chạy |
+| Tái sử dụng step, không trùng lặp | Không step thừa hoặc chưa định nghĩa; không có hai câu step chỉ khác tham số hoặc chữ s số nhiều (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
+| Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator ở cuối | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
+| Ổn định | Không `sleep()` trong steps, pages, helper, hook | `test_no_fixed_waits` |
+| Tách dữ liệu | Không gõ cứng giá trong code step | `test_no_prices_in_step_code` |
+| Rủi ro dẫn dắt phạm vi | Yêu cầu Critical/High nào cũng có scenario chạy mặc định (không chỉ `@manual` / `@data-creating`) | `test_every_critical_and_high_requirement_runs_by_default` |
 
 ### 2. Rubric
 
@@ -1057,10 +1051,10 @@ Checklist review:
 | Rủi ro dẫn dắt phạm vi | R01–R05 (Critical/High) đều có scenario; R08 để backlog, R09/R10 kiểm thủ công có lý do | 2 |
 | Gherkin declarative | 0 step imperative | 2 |
 | Độc lập | Trình duyệt mới mỗi scenario (`before_scenario`) | 2 |
-| Tái sử dụng step | 0 thừa, 0 mơ hồ, 0 gần trùng sau F1 | 2 |
-| Truy vết | 8/8 requirement, mọi scenario có tag; một danh sách requirement (Day 1 mục 6) sau F5 | 2 |
+| Tái sử dụng step | 0 thừa, 0 chưa định nghĩa, 0 gần trùng (có test kiểm tra từ F12) | 2 |
+| Truy vết | 8/8 requirement, mỗi scenario một tag yêu cầu; ma trận sinh ở mỗi lần chạy (`reports/traceability.md`); một danh sách requirement (`dataset/requirements.json`) sau F5 | 2 |
 | Tách dữ liệu khỏi code | Tên, handle, giá nằm trong `dataset/products.json` / Examples | 2 |
-| Báo cáo | HTML, JSON, JUnit, Allure, ảnh khi fail | 2 |
+| Báo cáo | Một lần chạy sinh HTML, JSON, JUnit và ma trận truy vết; Allure tùy chọn; ảnh khi fail | 2 |
 | Ổn định | Chỉ explicit wait; chưa chứng minh qua 3 lần chạy trên site thật (F3) | 1 |
 | **Tổng** | | **15 / 16** |
 
@@ -1072,10 +1066,15 @@ Checklist review:
 | F2 | Locator viết theo cấu trúc Shopify chuẩn, chưa đối chiếu theme thật | Chạy trên site thật; nếu lệch chỉ sửa `pages/` | Mở |
 | F3 | Chưa đo độ ổn định trên site thật | Chạy `behave` 3 lần và so kết quả; tiếp tục ở Unit 2 Day 8 | Mở → Unit 2 Day 8 |
 | F4 | Case đăng ký `@data-creating` mặc định không chạy | Xin trainer cho phép hoặc store riêng | Mở (trainer) |
-| F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Chỉ giữ ở một chỗ: bảng requirement của Day 1 (mục 6) | Đã sửa |
+| F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Một danh mục máy đọc được, `dataset/requirements.json` (tag → mã REQ, tiêu đề, rủi ro); bảng Day 1 mô tả nó | Đã sửa |
 | F6 | Checkout dừng ở trang checkout | Thanh toán kiểm thủ công; Unit 2 thêm kiểm tra mức network | Chấp nhận |
 | F7 | Với theme không có ô số lượng, thêm N sản phẩm có thể làm hủy request POST trước đó (phát hiện khi kiểm tra lại cùng Unit 2) | `ProductPage._submit()` chờ chuyển sang `/cart` sau mỗi lần bấm | Đã sửa |
 | F8 | Update / Check Out / Sign In: step sau mở `/cart` trước khi POST của form chạy xong, nên đôi khi giỏ hàng giữ số lượng cũ (gặp 2 trong khoảng 15 lần chạy; ảnh chụp lỗi cho thấy `My Cart (1)` sau khi đổi thành 2) | Thêm `BasePage.submit()` chờ trang cũ bị thay thế (Selenium `staleness_of`); Unit 2 sửa tương tự (`expect_navigation`) | Đã sửa; 0 lỗi trong 10 lần chạy lặp |
+| F9 | Step gọi thẳng Selenium: kết quả tìm kiếm (`find_elements(By.CSS_SELECTOR ...)`) và phần chờ checkout (`EC.url_contains`) | Thêm `SearchPage` và `CheckoutPage`; có test cấm `context.driver`, `By.` và import Selenium trong step | Đã sửa |
+| F10 | "Search with no matching products" dùng `zzqxnotaproduct`, site thật vẫn khớp (4 sản phẩm, qua chữ "product") | Từ khóa `zzqqxx`; step chờ thêm thông báo "No results found" của store | Đã sửa |
+| F11 | Trên site thật, theme thêm vào giỏ bằng AJAX (jQuery): trang đứng yên, nên chờ chuyển sang `/cart` (F7) sẽ timeout | `ProductPage._add()` chờ số trên header tăng HOẶC trang `/cart`; có unit test với driver giả cho cả hai kiểu theme | Đã sửa |
+| F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | `tests/unit/test_framework_review.py` chạy nó ở mỗi thay đổi | Đã sửa |
+| F13 | Cơ chế chống bot (CAPTCHA) của store chặn form đăng nhập và đăng ký: không gửi request, không hiện lỗi (kiểm tra 2026-11-25) | Hai lượt đăng nhập sai và "đăng ký thiếu email" thành `@manual`; scenario reset mật khẩu vẫn tự động phủ REQ-05 | Chấp nhận (môi trường) |
 
 Code sửa F1:
 
@@ -1096,14 +1095,15 @@ use_step_matcher("parse")
 ### 4. Ghi chú bảo trì
 
 - Locator chỉ nằm trong `pages/`: đổi giao diện chỉ sửa một file, không đụng feature.
-- Step gọi Page Object; còn hai kiểm tra tìm kiếm gọi thẳng Selenium (nên chuyển vào `SearchPage`, Unit 2 đã làm).
+- Step chỉ gọi Page Object (F9): đổi locator không bao giờ phải sửa file step.
 - Hooks giữ setup/teardown ngoài step; tag quyết định chạy gì ở đâu.
 
 ### 5. Chuyển tiếp sang Unit 2
 
 | Kết quả Unit 1 | Unit 2 dùng thế nào |
 | --- | --- |
-| Feature file | Chạy nguyên vẹn trên Playwright qua pytest-bdd |
+| Yêu cầu và tag của chúng | `dataset/requirements.json` (cùng file); mỗi tag thành một marker pytest (`@pytest.mark.add_to_cart`) trên test Playwright thuần |
+| Scenario | Viết lại thành test pytest thường (Unit 2 là Playwright thuần; BDD + Playwright là mock project ở Unit 5) |
 | `dataset/products.json` | Chép sang repo Unit 2 |
 | Mẫu Page Object | Cùng tên class, locator Playwright |
 | F3 còn mở (ổn định) | Phát hiện flaky tự động ở Day 8 |

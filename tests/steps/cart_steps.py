@@ -1,8 +1,7 @@
 """Cart and checkout steps (REQ-01, REQ-02, REQ-03)."""
 from behave import given, then, use_step_matcher, when
-from selenium.webdriver.support import expected_conditions as EC
 
-from pages import CartPage, ProductPage, money_to_float
+from pages import CartPage, CheckoutPage, ProductPage, money_to_float
 from helper_utility.helpers import page, product
 
 
@@ -72,11 +71,9 @@ def step_cart_empty(context):
 
 @then("the checkout page should be shown")
 def step_checkout_shown(context):
-    cart = page(context, CartPage)
-    cart.wait.until(EC.url_contains("checkout"))
+    assert page(context, CheckoutPage).is_shown()
 
 
 @then('the checkout should list "{name}"')
 def step_checkout_lists(context, name):
-    cart = page(context, CartPage)
-    cart.wait.until(lambda d: name in cart.body_text())
+    assert page(context, CheckoutPage).lists(name)

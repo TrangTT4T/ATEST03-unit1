@@ -20,24 +20,33 @@ class ProductPage(BasePage):
         return button.is_enabled() and "sold out" not in label and "unavailable" not in label
 
     def add_to_cart(self, quantity: int = 1):
-        qty = self.find_all(*self._quantity)
+        qty = [box for box in self.find_all(*self._quantity) if box.is_displayed()]
         if qty:
             qty[0].clear()
             qty[0].send_keys(str(quantity))
-            self._submit()
-        else:
-            # Theme without a quantity box: add the product N times.
-            product_url = self.url
-            for i in range(quantity):
-                if i:
-                    self.driver.get(product_url)
-                self._submit()
+            self._add(expected_increase=quantity)
+            return
+        # Theme without a visible quantity box: add the product N times.
+        product_url = self.url
+        for _ in range(quantity):
+            if "/products/" not in self.url:  # a non-AJAX theme moved to /cart after the last add
+                self.driver.get(product_url)
+            self._add(expected_increase=1)
 
-    def _submit(self):
-        # Wait for each POST to finish (redirect to /cart) before the next action;
-        # without this the next driver.get() can cancel the request (found in the Unit 2 re-check).
-        self.submit(*self._add_button)
-        self.wait.until(lambda d: "/cart" in d.current_url and "/products/" not in d.current_url)
+    def _add(self, expected_increase: int):
+        """Click Add to Cart and wait until the store has taken the product.
+
+        The live theme adds with AJAX: jQuery posts /cart/add.js, updates the header and the page
+        stays (Day 4 finding F11). Without JavaScript the form posts and the browser lands on /cart
+        (finding F7). Wait for whichever happens - never for time, and never only for a navigation
+        that an AJAX theme does not make.
+        """
+        before = self.mini_cart_count()
+        self.click(*self._add_button)
+        self.wait.until(
+            lambda d: ("/cart" in d.current_url and "/products/" not in d.current_url)
+            or (self.mini_cart_count_now() or 0) >= before + expected_increase
+        )
 
     # --- Locators -------------------------------------------------------------
     _title = (By.TAG_NAME, "h1")

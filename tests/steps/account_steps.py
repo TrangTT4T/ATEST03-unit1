@@ -3,7 +3,7 @@ import uuid
 
 from behave import then, when
 
-from pages import LoginPage, RegisterPage
+from pages import BasePage, LoginPage, RegisterPage
 from helper_utility.helpers import page
 
 
@@ -35,7 +35,7 @@ def step_login_error(context):
 
 @then("the customer should not be logged in")
 def step_not_logged_in(context):
-    url = context.driver.current_url
+    url = page(context, BasePage).url
     assert "/account/login" in url or not url.rstrip("/").endswith("/account"), f"Unexpectedly logged in: {url}"
 
 

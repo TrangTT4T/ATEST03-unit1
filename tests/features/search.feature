@@ -14,5 +14,5 @@ Feature: Product search
   @negative @regression @search_products
   Scenario: Search with no matching products
     Given the customer is on the home page
-    When the customer searches for "zzqxnotaproduct"
+    When the customer searches for "zzqqxx"
     Then no products should be shown in the results

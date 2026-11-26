@@ -1002,8 +1002,9 @@ One `behave` run writes every report (`behave.ini` sets the formatters; `after_a
 | Check | Result |
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
-| `behave` | 6 features, 21 scenarios passed, 1 skipped (`@data-creating`), 70 steps passed |
-| Traceability | `reports/traceability.md`: REQ-01 … REQ-08 all PASS (the `@data-creating` scenario of REQ-07 is listed as NOT RUN); `python -m unittest discover -s tests/unit` OK |
+| `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
+| `python -m unittest discover -s tests/unit` | 21 tests OK: page-object layout, traceability, the Day 4 review checklist, add-to-cart waits |
+| Traceability | `reports/traceability.md`: REQ-01 … REQ-06 and REQ-08 PASS; REQ-07 NOT RUN (both registration scenarios are excluded: `@manual`, `@data-creating`) |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
 
@@ -1019,36 +1020,29 @@ Verified against a local Shopify-structured mock of the store. On the live Sauce
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 min · Hybrid · Code: repo `ATEST03-unit1`
 
-The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list) and the re-check with Unit 2 (F7, F8 form-submit races); the remaining open items need the live store or trainer input.
+The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F13: layering, live-store behaviour, the checklist automated as tests); the remaining open items need a run on the live store or trainer input.
 
 ### 1. How the review is run
 
 ```bash
 cd ATEST03-unit1
+python -m unittest discover -s tests/unit          # the automated checklist below (no browser)
 behave --dry-run                                   # undefined or ambiguous steps
-behave --dry-run --tags=@checkout                  # scenarios of one feature area (repeat per area)
-behave                                             # full run
+behave                                             # full run + reports/traceability.md
 ```
 
-Quick searches for the checklist (PowerShell; use `grep -rnE` in Git Bash):
+A rule that only lives in a review document erodes; a rule that fails the run does not. Every checklist rule that code can check is a test in `tests/unit/` (`test_framework_review.py` unless noted). What stays a human review: whether a scenario is the right example for its requirement, and naming.
 
-```powershell
-Select-String -Path tests\features\*.feature -Pattern 'https?://|click|wait|xpath|css|seconds'   # imperative Gherkin
-Select-String -Path tests\steps\*.py, pages\*.py -Pattern 'sleep\('                            # fixed waits
-Select-String -Path tests\steps\*.py -Pattern '£\d'                                            # prices in step code
-```
-
-Review checklist:
-
-| Check | Rule | How |
+| Check | Rule | Automated by |
 | --- | --- | --- |
-| Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in feature files | first search above |
-| Scenario size | At most 7 steps | read each feature |
-| Traceability | Every feature has a feature-area tag | `behave --dry-run --tags=@cart`; compare with the Day 1 traceability matrix |
-| Step reuse | No unused, ambiguous or near-duplicate step definitions | `behave --dry-run` + read `tests/steps/` |
-| Stability | No `sleep()` in steps or pages | second search above |
-| Data separation | No prices hard-coded in step code | third search above |
-| Risk drives scope | Every Critical/High risk in the Day 1 risk table has a scenario | compare with Day 1 section 2 |
+| Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in a step | `test_no_url_selector_click_or_wait_in_steps` |
+| Scenario size | At most 7 steps (background included) | `test_scenarios_stay_short` |
+| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | `test_traceability.py`; `reports/traceability.md` per run |
+| Step reuse, no duplication | No unused or undefined step; no two step texts that differ only by parameters or a plural s (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
+| Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locators at the bottom | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
+| Stability | No `sleep()` in steps, pages, helpers or hooks | `test_no_fixed_waits` |
+| Data separation | No prices hard-coded in step code | `test_no_prices_in_step_code` |
+| Risk drives scope | Every Critical/High requirement has a scenario that runs by default (not only `@manual` / `@data-creating`) | `test_every_critical_and_high_requirement_runs_by_default` |
 
 ### 2. Rubric
 
@@ -1057,10 +1051,10 @@ Review checklist:
 | Risk drives scope | R01–R05 (Critical/High) all have scenarios; R08 backlog, R09/R10 manual with reasons | 2 |
 | Declarative Gherkin | 0 imperative steps | 2 |
 | Independence | Fresh browser per scenario (`before_scenario`) | 2 |
-| Step reuse | 0 unused, 0 ambiguous, 0 near-duplicates after F1 | 2 |
-| Traceability | 8/8 requirements, every scenario tagged; one requirement list (Day 1 section 6) after F5 | 2 |
+| Step reuse | 0 unused, 0 undefined, 0 near-duplicates (checked by a test since F12) | 2 |
+| Traceability | 8/8 requirements, every scenario has one requirement tag; matrix generated on every run (`reports/traceability.md`); one requirement list (`dataset/requirements.json`) after F5 | 2 |
 | Data separated from code | Names, handles, prices in `dataset/products.json` / Examples | 2 |
-| Reporting | HTML, JSON, JUnit, Allure, screenshot on failure | 2 |
+| Reporting | One run writes HTML, JSON, JUnit and the traceability matrix; Allure opt-in; screenshot on failure | 2 |
 | Stability | Explicit waits only; not yet proven on 3 live runs (F3) | 1 |
 | **Total** | | **15 / 16** |
 
@@ -1072,10 +1066,15 @@ Review checklist:
 | F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store; fix only `pages/` if needed | Open |
 | F3 | Stability not measured on the live site | Run `behave` 3 times and compare the results; continued in Unit 2 Day 8 | Open → Unit 2 Day 8 |
 | F4 | `@data-creating` registration excluded by default | Ask trainer for permission or a disposable store | Open (trainer) |
-| F5 | Requirement list kept in more than one place (code and the Day 1 document) | Kept in one place: the Day 1 requirement table (section 6) | Fixed |
+| F5 | Requirement list kept in more than one place (code and the Day 1 document) | One machine-readable registry, `dataset/requirements.json` (tag → REQ id, title, risk); the Day 1 tables describe it | Fixed |
 | F6 | Checkout stops at the checkout page | Payment stays manual; network-level checks added in Unit 2 | Accepted |
 | F7 | On a theme without a quantity box, adding N items could cancel the previous POST (found when re-checking with Unit 2) | `ProductPage._submit()` now waits for the redirect to `/cart` after every click | Fixed |
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
+| F9 | Steps called Selenium directly: search results (`find_elements(By.CSS_SELECTOR ...)`) and the checkout waits (`EC.url_contains`) | New `SearchPage` and `CheckoutPage`; a test forbids `context.driver`, `By.` and Selenium imports in steps | Fixed |
+| F10 | "Search with no matching products" used `zzqxnotaproduct`, which the live store still matches (4 products, through the word "product") | Keyword `zzqqxx`; the step also waits for the store's "No results found" message | Fixed |
+| F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; unit-tested with a fake driver for both themes | Fixed |
+| F12 | The review checklist was a manual routine (searches, reading) | `tests/unit/test_framework_review.py` runs it on every change | Fixed |
+| F13 | The store's bot protection (CAPTCHA) stops the login and registration forms: no request, no error message (checked 2026-11-25) | The two invalid-login runs and "registration without an email" are `@manual`; the password-reset scenario still covers REQ-05 automatically | Accepted (environment) |
 
 F1 fix:
 
@@ -1096,14 +1095,15 @@ use_step_matcher("parse")
 ### 4. Maintainability notes
 
 - Locators exist only in `pages/`: a UI change touches one file, never a feature file.
-- Steps call Page Objects; two read-only search checks still use Selenium directly (move to a `SearchPage`, as Unit 2 does).
+- Steps call Page Objects only (F9): a locator change never touches a step file.
 - Hooks keep setup and teardown out of steps; tags decide what runs where.
 
 ### 5. Carried into Unit 2
 
 | Unit 1 result | How Unit 2 uses it |
 | --- | --- |
-| Feature files | Run unchanged on Playwright via pytest-bdd |
+| Requirements and their tags | `dataset/requirements.json` (same file); each tag becomes a pytest marker (`@pytest.mark.add_to_cart`) on plain Playwright tests |
+| Scenarios | Rewritten as plain pytest tests (Unit 2 is pure Playwright; BDD + Playwright is the Unit 5 mock project) |
 | `dataset/products.json` | Copied into the Unit 2 repo |
 | Page Object pattern | Same class names, Playwright locators |
 | Open F3 (stability) | Automated flaky detection on Day 8 |

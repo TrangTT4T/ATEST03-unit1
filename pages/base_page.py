@@ -7,6 +7,7 @@ A locator is a ``(By, value)`` tuple; a value that depends on data is a template
 """
 import re
 
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -78,6 +79,14 @@ class BasePage:
     def mini_cart_count(self) -> int:
         link = self.find(*self._mini_cart)
         return int(re.search(r"\((\d+)\)", link.text).group(1))
+
+    def mini_cart_count_now(self) -> int | None:
+        """The header count right now, or None while the page changes. No wait: for wait conditions."""
+        try:
+            match = re.search(r"\((\d+)\)", self.driver.find_element(*self._mini_cart).text)
+        except (NoSuchElementException, StaleElementReferenceException):
+            return None
+        return int(match.group(1)) if match else None
 
     def search(self, keyword: str):
         box = self.type(*self._search_box, keyword)

@@ -4,7 +4,8 @@ Feature: Customer registration
   I want to create an account
   So that I can log in next time
 
-  @negative @regression @create_account
+  # @manual on the public demo store: the CAPTCHA stops the form (as for login, checked 2026-11-25).
+  @negative @regression @manual @create_account
   Scenario: Registration is rejected without an email
     Given the customer is on the registration page
     When the customer registers without an email address

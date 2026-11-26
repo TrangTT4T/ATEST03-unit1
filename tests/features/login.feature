@@ -7,7 +7,9 @@ Feature: Customer login
   Background:
     Given the customer is on the login page
 
-  @high @negative @regression @secure_login
+  # @manual on the public demo store: its bot protection (CAPTCHA) stops the login form - no request
+  # is sent and no error is shown (checked 2026-11-25). Run it where there is no CAPTCHA.
+  @high @negative @regression @manual @secure_login
   Scenario Outline: Login is rejected with invalid credentials
     When the customer logs in with email "<email>" and password "<password>"
     Then a login error should be shown
