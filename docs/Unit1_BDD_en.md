@@ -31,7 +31,7 @@ The Day 1 deliverable selects the five highest-risk business flows of Sauce Demo
 | Day / LO                     | Day 1 · LO1 (Concept/Lecture, 120 min)                                                                                           |
 | Topic                        | Risk-based automation strategy, testability analysis, BDD principles                                                             |
 | AUT (Application Under Test) | [Sauce Demo](https://sauce-demo.myshopify.com/) – a Shopify demo store, prices in GBP (£)                                        |
-| Proposed stack               | Python 3.11+, behave (Cucumber for Python), Selenium WebDriver 4 (Chrome/Firefox), Allure or behave-html-formatter for reporting |
+| Proposed stack               | Python 3.12, behave (Cucumber for Python), Selenium WebDriver 4 (Chrome/Firefox), Allure or behave-html-formatter for reporting |
 | Day 1 outputs                | Risk-based automation strategy, testability analysis, sample requirements + Gherkin, initial traceability matrix                 |
 
 Why behave: the course requires Cucumber or SpecFlow; behave is the closest Cucumber equivalent in Python (Gherkin feature files, step definitions, hooks in `environment.py`, tags). pytest-bdd is an alternative if the class prefers running inside pytest.
@@ -138,7 +138,7 @@ Sauce Demo is a Shopify store: the team has no source code or internal API, so t
 
 #### 3.4 Entry and exit criteria
 
-- Entry: the home page responds, the catalog holds the test data in section 1, Python 3.11+ and Chromium are available.
+- Entry: the home page responds, the catalog holds the test data in section 1, Python 3.12 and Chromium are available.
 
 - Exit: 100% of `@critical` scenarios pass, ≥ 95% of `@regression` pass, every failure has a screenshot and is classified (product defect or script defect).
 
@@ -443,7 +443,7 @@ Day 2 turns the Day 1 Gherkin specs into a runnable behave + Selenium framework:
 | Day / LO         | Day 2 · LO2 (Concept/Lecture, 120 min, Virtual)                                                                                                                     |
 | Topic            | Cucumber/SpecFlow architecture, feature design, step definitions, hooks, tags, reporting patterns                                                                   |
 | AUT              | [Sauce Demo](https://sauce-demo.myshopify.com/)                                                                                                                     |
-| Stack            | Python 3.11+, behave 1.3 (Cucumber for Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                                          |
+| Stack            | Python 3.12, behave 1.3 (Cucumber for Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                                          |
 | Input from Day 1 | Risk register, REQ-01…REQ-08, draft features tagged with risk levels (`@critical`, `@high`)                                                                          |
 | Day 2 output     | A runnable starter framework; `behave --dry-run` reports no undefined steps; cart + login run for real                                                              |
 | Scope            | REQ-01, REQ-02 (cart, R01 Critical) and REQ-05 (login, R04 High) – the two highest risks that can be fully automated. The remaining requirements are done on Day 3. |
@@ -897,7 +897,7 @@ behave tests/features/cart.feature tests/features/login.feature   # 3. Day 2 sco
 behave -D headless=false         # watch the browser
 ```
 
-Requires Python 3.11+ and Chrome; Selenium Manager downloads chromedriver automatically.
+Requires Python 3.12 and Chrome; Selenium Manager downloads chromedriver automatically.
 
 #### 7.2 Expected results
 

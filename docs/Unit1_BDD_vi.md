@@ -31,7 +31,7 @@ Bài Day 1 chọn 5 luồng nghiệp vụ rủi ro cao nhất của Sauce Demo �
 | Day / LO                     | Day 1 · LO1 (Concept/Lecture, 120 phút)                                                                                         |
 | Chủ đề                       | Risk-based automation strategy, testability analysis, BDD principles                                                            |
 | AUT (Application Under Test) | [Sauce Demo](https://sauce-demo.myshopify.com/) – cửa hàng Shopify demo, tiền tệ GBP (£)                                        |
-| Ngôn ngữ / stack đề xuất     | Python 3.11+, behave (Cucumber cho Python), Selenium WebDriver 4 (Chrome/Firefox), Allure hoặc behave-html-formatter để báo cáo |
+| Ngôn ngữ / stack đề xuất     | Python 3.12, behave (Cucumber cho Python), Selenium WebDriver 4 (Chrome/Firefox), Allure hoặc behave-html-formatter để báo cáo |
 | Đầu ra Day 1                 | Chiến lược automation theo rủi ro, phân tích testability, sample requirements + Gherkin, ma trận truy vết sơ bộ                 |
 
 Vì sao chọn behave: tài liệu khóa yêu cầu Cucumber hoặc SpecFlow; behave là bản Cucumber chính thức hơn cả trong hệ Python (feature file Gherkin, step definitions, hooks trong `environment.py`, tags). pytest-bdd là phương án thay thế nếu lớp muốn chạy chung với pytest.
@@ -138,7 +138,7 @@ Sauce Demo là store Shopify, nhóm test không có mã nguồn hay API nội b�
 
 #### 3.4 Tiêu chí vào/ra
 
-- Vào: site phản hồi trang chủ, catalog có đủ dữ liệu test ở mục 1, có Python 3.11+ và trình duyệt Chromium.
+- Vào: site phản hồi trang chủ, catalog có đủ dữ liệu test ở mục 1, có Python 3.12 và trình duyệt Chromium.
 
 - Ra: 100% scenario `@critical` pass, ≥ 95% `@regression` pass, mọi fail đều có ảnh chụp và lỗi đã phân loại (lỗi sản phẩm hay lỗi script).
 
@@ -443,7 +443,7 @@ Day 2 biến các đặc tả Gherkin của Day 1 thành một framework behave 
 | Day / LO         | Day 2 · LO2 (Concept/Lecture, 120 phút, Virtual)                                                                                                     |
 | Chủ đề           | Kiến trúc Cucumber/SpecFlow, thiết kế feature, step definitions, hooks, tags, reporting patterns                                                     |
 | AUT              | [Sauce Demo](https://sauce-demo.myshopify.com/)                                                                                                      |
-| Stack            | Python 3.11+, behave 1.3 (Cucumber cho Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                           |
+| Stack            | Python 3.12, behave 1.3 (Cucumber cho Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                           |
 | Đầu vào từ Day 1 | Risk register, REQ-01…REQ-08, feature nháp có tag mức rủi ro (`@critical`, `@high`)                                                              |
 | Đầu ra Day 2     | Framework khởi đầu chạy được; `behave --dry-run` không còn step thiếu; cart + login chạy thật                                                        |
 | Phạm vi          | REQ-01, REQ-02 (giỏ hàng, R01 Critical) và REQ-05 (đăng nhập, R04 High) – hai rủi ro cao nhất có thể automate trọn vẹn. Các REQ còn lại làm ở Day 3. |
@@ -898,7 +898,7 @@ behave tests/features/cart.feature tests/features/login.feature   # 3. phần Da
 behave -D headless=false         # xem trình duyệt chạy
 ```
 
-Yêu cầu: Python 3.11+ và Chrome; Selenium Manager tự tải chromedriver.
+Yêu cầu: Python 3.12 và Chrome; Selenium Manager tự tải chromedriver.
 
 #### 7.2 Kết quả mong đợi
 

@@ -31,6 +31,8 @@ ATEST03-unit1/
 
 ## Run
 
+Requires **Python 3.12**: the version in `.python-version` (PyCharm, VS Code, pyenv and uv pick it up), the same in every ATEST03 repository.
+
 ```bash
 pip install -r requirements.txt
 behave --dry-run                    # every step implemented?
