@@ -7,12 +7,12 @@ class CheckoutPage(BasePage):
     # Order summary methods
     # Scope: Checkout > Order summary
     ############################################################################
-    def shows_checkout_page(self) -> bool:
+    def is_checkout_page_open(self) -> bool:
         """Wait until the checkout page is open."""
         self.wait_until_url_contains("checkout")
         return True
 
-    def lists_product(self, product_name: str) -> bool:
+    def is_product_in_order_summary(self, product_name: str) -> bool:
         """Wait until the order summary shows ``product_name``."""
         self.page_should_contain_text(product_name, f"The checkout does not list {product_name!r}")
         return True

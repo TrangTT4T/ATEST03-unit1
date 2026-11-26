@@ -1,20 +1,20 @@
 """Base Page Object (Selenium WebDriver): navigation and the custom element methods every page uses.
 
-Locators are STRINGS with a strategy prefix, so pages never import ``By``:
+Locators are STRINGS with a strategy prefix, so pages never import ``By``. Team rule: XPath first.
 
-    _search_box = "name=q"
-    _mini_cart  = "xpath=//a[contains(., 'My Cart')]"
-    _tile       = "css=a[href*='/products/{path_name}']"  # a template, filled with locator()
+    _search_box = "xpath=//input[@name='q']"
+    _cart_form  = "xpath=//*[@id='cart']"
+    _tile       = "xpath=//a[contains(@href,'/products/{path_name}')]"  # a template, filled with fill_locator()
 
 ``parse_locator()`` below turns the string into the ``(By, value)`` pair Selenium needs.
-Prefixes: css, xpath, id, name, tag, link, partial_link, class. No prefix: a value starting with
-"//", "(/" or "./" is XPath, anything else is CSS.
+It also accepts css, id, name, tag, link, partial_link and class, and a value with no prefix
+(XPath when it starts with "//", "(/" or "./", CSS otherwise), but pages use ``xpath=``.
 
 Pages never call ``driver.find_element`` or ``WebDriverWait`` themselves. They pass a locator
 string to the BasePage methods, which parse it, wait for the right state, log what they do and
 fail with a message that names the locator. No method sleeps: every wait is for a state.
 
-Layout of every page object (one class per file), checked by tests/unit/test_page_objects.py:
+Layout of every page object (one class per file):
 
 * methods grouped under ``####`` banners that name the area of the page (``# Scope: ...``);
 * a docstring on every public method;
@@ -124,15 +124,15 @@ class BasePage:
     # Scope: Every page > locator strings -> elements
     ############################################################################
     @staticmethod
-    def locator(template: str, **values) -> str:
-        """Fill a locator template: ``locator(self._tile, path_name="grey-jacket")``.
+    def fill_locator(template: str, **values) -> str:
+        """Fill a locator template: ``fill_locator(self._tile, path_name="grey-jacket")``.
 
         :param template: locator string with ``{name}`` fields
         :return: the locator string with the fields filled in
         """
         return template.format(**values)
 
-    def find_element(self, locator: str, timeout: int | None = None):
+    def wait_for_element(self, locator: str, timeout: int | None = None):
         """Wait until the element is in the page and return it.
 
         :param locator: locator string, e.g. "css=#cart"
@@ -142,7 +142,7 @@ class BasePage:
         return self.wait_until(EC.presence_of_element_located(self.parse_locator(locator)),
                                f"Element {locator!r} not found", timeout)
 
-    def find_elements(self, locator: str) -> list:
+    def find_elements_now(self, locator: str) -> list:
         """All elements matching ``locator`` right now (no wait; an empty list is a valid answer).
 
         :param locator: locator string
@@ -152,7 +152,7 @@ class BasePage:
 
     def is_element_present(self, locator: str, driver=None) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""
-        return bool(self.find_elements(locator))
+        return bool(self.find_elements_now(locator))
 
     ############################################################################
     # Action methods
@@ -178,7 +178,7 @@ class BasePage:
         :param locator: locator string of the submit button
         :return: this page
         """
-        old_page = self.find_element(self._html)
+        old_page = self.wait_for_element(self._html)
         self.click_element(locator)
         self.wait_until(EC.staleness_of(old_page), f"Clicking {locator!r} did not load a new page")
         return self
@@ -193,7 +193,7 @@ class BasePage:
         :return: the input element
         """
         self.logger.info("Type %r into %s", "***" if secret else text, locator)
-        element = self.find_element(locator)
+        element = self.wait_for_element(locator)
         if clear:
             element.clear()
         element.send_keys(text)
@@ -205,7 +205,7 @@ class BasePage:
         :param locator: locator string of the input
         :return: this page
         """
-        self.find_element(locator).send_keys(Keys.ENTER)
+        self.wait_for_element(locator).send_keys(Keys.ENTER)
         return self
 
     ############################################################################
@@ -234,7 +234,7 @@ class BasePage:
         return self.wait_until(EC.visibility_of_element_located(self.parse_locator(locator)),
                                f"Element {locator!r} never became visible", timeout)
 
-    def get_text(self, locator: str) -> str:
+    def get_element_text(self, locator: str) -> str:
         """Visible text of the element; waits until the element shows some text.
 
         Selenium's ``.text`` is "" while an element is hidden or still off-screen, e.g. a catalog
@@ -242,43 +242,43 @@ class BasePage:
         exists, or as soon as it counts as "visible", can return "" (Day 4 finding F15).
         """
         return self.wait_until(
-            partial(self.text_of_first_match, locator),
+            partial(self.first_match_text_if_shown, locator),
             f"Element {locator!r} never showed any text",
         )
 
-    def text_of_first_match(self, locator: str, driver=None) -> str | bool:
+    def first_match_text_if_shown(self, locator: str, driver=None) -> str | bool:
         """Text of the first match, or False while it is missing, blank, or being redrawn."""
         try:
-            elements = self.find_elements(locator)
+            elements = self.find_elements_now(locator)
             return elements[0].text.strip() if elements else False
         except StaleElementReferenceException:
             return False
 
-    def get_all_texts(self, locator: str) -> list[str]:
+    def get_all_element_texts(self, locator: str) -> list[str]:
         """Visible text of every match, once each one shows its text; [] when nothing matches."""
         ready = self.wait_until(
-            partial(self.texts_when_every_match_shown, locator),
+            partial(self.all_match_texts_if_shown, locator),
             f"Some {locator!r} never showed their text",
         )
         return ready[0]
 
-    def texts_when_every_match_shown(self, locator: str, driver=None) -> tuple[list[str]] | bool:
+    def all_match_texts_if_shown(self, locator: str, driver=None) -> tuple[list[str]] | bool:
         """A one-item tuple of the texts once every match has text, or False while they are loading."""
         try:
-            texts = [element.text.strip() for element in self.find_elements(locator)]
+            texts = [element.text.strip() for element in self.find_elements_now(locator)]
         except StaleElementReferenceException:
             return False
         if not all(texts):
             return False
         return (texts,)
 
-    def get_attribute(self, locator: str, name: str) -> str | None:
+    def get_element_attribute(self, locator: str, name: str) -> str | None:
         """Attribute ``name`` of the element (waits for it to exist)."""
-        return self.find_element(locator).get_attribute(name)
+        return self.wait_for_element(locator).get_attribute(name)
 
-    def body_text(self) -> str:
+    def get_page_text(self) -> str:
         """All visible text of the page."""
-        return self.get_text(self._body)
+        return self.get_element_text(self._body)
 
     def is_element_visible(self, locator: str, timeout: int = 0) -> bool:
         """True when the element is visible, waiting up to ``timeout`` seconds (0: check now).
@@ -294,7 +294,7 @@ class BasePage:
             return False
         return True
 
-    def element_is_enabled(self, locator: str, driver=None) -> bool:
+    def is_element_enabled_now(self, locator: str, driver=None) -> bool:
         """True when the element exists and is enabled. The wait passes the driver in."""
         return self.driver.find_element(*self.parse_locator(locator)).is_enabled()
 
@@ -306,7 +306,7 @@ class BasePage:
         :return: True or False, never an exception
         """
         try:
-            self.wait_until(partial(self.element_is_enabled, locator), "", timeout)
+            self.wait_until(partial(self.is_element_enabled_now, locator), "", timeout)
         except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
             self.logger.info("Element %s is disabled or missing", locator)
             return False
@@ -335,7 +335,7 @@ class BasePage:
         :param error_msg: message to fail with; default names the locator
         :return: this page
         """
-        if self.find_element(locator).is_enabled():
+        if self.wait_for_element(locator).is_enabled():
             raise AssertionError(error_msg or f"Element {locator!r} is not disabled")
         return self
 
@@ -350,7 +350,7 @@ class BasePage:
         try:
             self.wait_until(EC.text_to_be_present_in_element(self.parse_locator(locator), text), "")
         except TimeoutException:
-            matches = self.find_elements(locator)
+            matches = self.find_elements_now(locator)
             actual = matches[0].text if matches else "<no element>"
             raise AssertionError(error_msg or f"Element {locator!r} shows {actual!r}, expected to contain {text!r}")
         return self
@@ -368,34 +368,34 @@ class BasePage:
     # Header methods
     # Scope: Every page > Header (mini-cart, search box)
     ############################################################################
-    def mini_cart_count(self) -> int:
+    def get_header_cart_count(self) -> int:
         """N in "My Cart (N)". Reads textContent: the desktop link is often hidden, and Selenium's .text is then empty."""
-        return self.wait_until(self.header_cart_count, "The header never showed a cart count")
+        return self.wait_until(self.header_cart_count_if_shown, "The header never showed a cart count")
 
-    def header_cart_count(self, driver=None) -> int | bool:
+    def header_cart_count_if_shown(self, driver=None) -> int | bool:
         """The number in the header cart link, or False until that number is on the page."""
-        match = re.search(r"\((\d+)\)", self._header_cart_text() or "")
+        match = re.search(r"\((\d+)\)", self._read_header_cart_text() or "")
         return int(match.group(1)) if match else False
 
-    def mini_cart_count_now(self) -> int | None:
+    def read_header_cart_count_now(self) -> int | None:
         """The header count right now, or None while the page changes. No wait: for wait conditions."""
         try:
-            match = re.search(r"\((\d+)\)", self._header_cart_text() or "")
+            match = re.search(r"\((\d+)\)", self._read_header_cart_text() or "")
         except Exception:
             return None
         return int(match.group(1)) if match else None
 
-    def _header_cart_text(self) -> str:
-        _by, css = self.parse_locator(self._header_cart_link)
+    def _read_header_cart_text(self) -> str:
+        _by, xpath = self.parse_locator(self._header_cart_link)
         return self.driver.execute_script(
-            "var nodes=document.querySelectorAll(arguments[0]);"
+            "var found=document.evaluate(arguments[0], document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);"
             "var text='';"
-            "for (var i=0;i<nodes.length;i++){ text += ' ' + (nodes[i].textContent||''); }"
+            "for (var i=0;i<found.snapshotLength;i++){ text += ' ' + (found.snapshotItem(i).textContent||''); }"
             "return text;",
-            css,
+            xpath,
         ) or ""
 
-    def search_for(self, keyword: str):
+    def open_search_results(self, keyword: str):
         """Open the search results for ``keyword``.
 
         The results page has ``#keyword`` ("Showing results..." or "No results found...").
@@ -405,7 +405,7 @@ class BasePage:
 
         self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
         self.wait_until(
-            self.search_page_is_ready,
+            self.is_search_page_loaded,
             f"Search results for {keyword!r} never loaded (now {self.current_url})",
         )
         if "Verify you are human" in (self.driver.title or ""):
@@ -414,14 +414,14 @@ class BasePage:
             )
         return self
 
-    def search_page_is_ready(self, driver) -> bool:
+    def is_search_page_loaded(self, driver) -> bool:
         """True when the results banner is in the page, or Cloudflare is asking for a human check."""
         return self.is_element_present(self._search_banner) or "Verify you are human" in (driver.title or "")
 
     # --- Locators -------------------------------------------------------------
-    _html = "tag=html"
-    _body = "tag=body"
+    _html = "xpath=/html"
+    _body = "xpath=/html/body"
     # Header (on every page). textContent, not .text: the desktop link is often hidden.
-    _header_cart_link = "css=a.cart, a.toggle-drawer"
-    _search_box = "name=q"
-    _search_banner = "css=#keyword"
+    _header_cart_link = "xpath=//a[contains(concat(' ',normalize-space(@class),' '),' cart ') or contains(concat(' ',normalize-space(@class),' '),' toggle-drawer ')]"
+    _search_box = "xpath=//input[@name='q']"
+    _search_banner = "xpath=//*[@id='keyword']"

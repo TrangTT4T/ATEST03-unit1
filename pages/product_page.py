@@ -12,17 +12,17 @@ class ProductPage(BasePage):
     # Product detail methods
     # Scope: Product page > Name, price, stock
     ############################################################################
-    def open_product(self, path_name: str):
+    def open_product_page(self, path_name: str):
         """Open /products/<path_name>; ``path_name`` comes from dataset/products.json, e.g. "grey-jacket"."""
         return self.open_page(self.URL_TEMPLATE.format(path_name=path_name))
 
-    def product_name(self) -> str:
+    def get_product_name(self) -> str:
         """The product name."""
-        return self.get_text(self._title)
+        return self.get_element_text(self._title)
 
     def can_add_to_cart(self) -> bool:
         """False for a sold-out product: no button, a disabled one, or one labelled "Sold Out"."""
-        buttons = self.find_elements(self._add_button)
+        buttons = self.find_elements_now(self._add_button)
         if not buttons:
             return False
         button = buttons[0]
@@ -59,7 +59,7 @@ class ProductPage(BasePage):
             " jQuery('form.quickAdd').off('submit');"
             "}"
         )
-        old_page = self.find_element(self._html)
+        old_page = self.wait_for_element(self._html)
         try:
             self.click_element(self._add_button)
         except TimeoutException:
@@ -78,7 +78,7 @@ class ProductPage(BasePage):
 
     # --- Locators -------------------------------------------------------------
     # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).
-    _title = "css=[itemprop='name']"
+    _title = "xpath=//*[@itemprop='name']"
     # The standard Shopify add-to-cart form
-    _add_button = "css=form[action*='/cart/add'] [type='submit']"
-    _quantity = "css=form[action*='/cart/add'] input[name='quantity']"
+    _add_button = "xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"
+    _quantity = "xpath=//form[contains(@action,'/cart/add')]//input[@name='quantity']"

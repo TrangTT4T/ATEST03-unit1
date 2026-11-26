@@ -152,7 +152,7 @@ Sauce Demo has medium testability: product data is stable and URLs are clear, bu
 |------------------------------------|-------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | Controllability – setting up state | Medium      | No API to reset the cart; cart is stored in cookies                                               | Each scenario runs in a fresh browser context (clean cookies) via the `before_scenario` hook                                |
 | Observability – reading results    | Good        | Price, product name, "My Cart (n)", Sold Out label are all visible text                           | Assert on visible text; screenshot on failure in `after_step`                                                               |
-| Locators                           | Medium–weak | Old theme, no `data-testid`; standard Shopify names/classes may exist (e.g. the `/cart/add` form) | Prefer standard Shopify text/name locators (`link=...`, `name=...`), then stable attributes; keep them in Page Objects   |
+| Locators                           | Medium–weak | Old theme, no `data-testid`; standard Shopify names/classes may exist (e.g. the `/cart/add` form) | XPath first, on standard Shopify text/name (`//a[normalize-space()='...']`, `//input[@name='q']`), then stable attributes; keep them in Page Objects   |
 | Test data                          | Good        | 7 products, fixed prices, 2 sold out                                                              | Keep in `dataset/products.json`, never hard-coded in steps                                                                |
 | URL identity                       | Trap        | Black heels has the path-name `flower-print-jeans`                                                | Map name → `path-name` in test data; never derive URLs from names                                                           |
 | Environment                        | Weak        | Only a shared production demo, no staging                                                         | No load testing; limit parallelism; tag account-creating cases `@data-creating`                                             |
@@ -594,28 +594,28 @@ Each Gherkin line matches exactly one Python function through `@given / @when / 
 
 ```python
 """Cart steps (REQ-01, REQ-02)."""
-from behave import given, then, when
+from behave import given, then, use_step_matcher, when
 
 from pages import BasePage, CartPage, ProductPage
-from helper_utility.helpers import page, product
+from helper_utility.helpers import create_page_object, get_product_from_dataset
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
-    product_page = page(context, ProductPage)
-    product_page.open_product(product(context, name)["path-name"])
+    product_page = create_page_object(context, ProductPage)
+    product_page.open_product_page(get_product_from_dataset(context, name)["path-name"])
     product_page.add_to_cart(quantity)
 
 
 @when("the customer adds the product to the cart")
 def step_add_current(context):
-    page(context, ProductPage).add_to_cart(1)
+    create_page_object(context, ProductPage).add_to_cart(1)
 
 
 @when('the customer changes the quantity of "{name}" to {quantity:d}')
 def step_change_qty(context, name, quantity):
-    cart = page(context, CartPage).open()
-    cart.set_quantity(name, quantity)
+    cart = create_page_object(context, CartPage).open_page()
+    cart.change_quantity(name, quantity)
 
 
 # Day 4 (finding F1) merged "item"/"items" into one regex step:
@@ -625,16 +625,19 @@ use_step_matcher("re")
 @then(r"the cart should contain (?P<count>\d+) items?")
 def step_cart_count(context, count):
     count = int(count)
-    cart = page(context, CartPage).open()
-    actual = cart.total_quantity()
+    cart = create_page_object(context, CartPage).open_page()
+    actual = cart.count_items_in_cart()
     assert actual == count, f"Expected {count} item(s) in the cart, found {actual}"
-    assert cart.mini_cart_count() == count, f"Mini-cart shows {cart.mini_cart_count()}, expected {count}"
+    assert cart.get_header_cart_count() == count, f"Mini-cart shows {cart.get_header_cart_count()}, expected {count}"
+
+
+use_step_matcher("parse")
 
 
 @then('the cart total should be "{expected}"')
 def step_cart_total(context, expected):
-    cart = page(context, CartPage).open()
-    actual = cart.total()
+    cart = create_page_object(context, CartPage).open_page()
+    actual = cart.get_cart_total()
     assert actual == BasePage.money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
 ```
 
@@ -666,19 +669,19 @@ class ProductPage(BasePage):
         """Add ``quantity`` items and wait until the store has taken every one."""
         if self.is_element_visible(self._quantity):
             self.type_text(self._quantity, str(quantity))
-            self._add(expected_increase=quantity)
-        else:  # theme without a quantity box: add the product N times
-            ...
+            self._submit_add_to_cart()
+            return
+        ...  # theme without a quantity box: add the product N times
 
-    def _add(self, expected_increase: int):
-        before = self.mini_cart_count()
+    def _submit_add_to_cart(self):
+        """Click Add to Cart and wait until the browser has loaded the next page (shortened)."""
+        old_page = self.wait_for_element(self._html)
         self.click_element(self._add_button)
-        self.wait_until(lambda d: ... or (self.mini_cart_count_now() or 0) >= before + expected_increase,
-                        f"The cart never took the product (header count stayed at {before})")
+        self.wait_until(EC.staleness_of(old_page), "The add did not open the cart", timeout=8)
 
     # --- Locators -------------------------------------------------------------
-    _add_button = "css=form[action*='/cart/add'] [type='submit']"
-    _quantity = "css=form[action*='/cart/add'] input[name='quantity']"
+    _add_button = "xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"
+    _quantity = "xpath=//form[contains(@action,'/cart/add')]//input[@name='quantity']"
 ```
 
 Step-writing rules:
@@ -697,24 +700,40 @@ Step-writing rules:
 
 A locator is a STRING with a strategy prefix, declared at the bottom of the page class; `BasePage.parse_locator()` turns it into the `(By, value)` pair Selenium needs, so no page imports `By`:
 
-| Locator string | Selenium |
+Team rule: **XPath first**. Every locator in `pages/` is `xpath=...`:
+
+| What to find | XPath in `pages/` |
 | --- | --- |
-| `"css=#cart"` | `(By.CSS_SELECTOR, "#cart")` |
-| `"xpath=//a[contains(., 'My Cart')]"` | `(By.XPATH, ...)` |
-| `"id=cart"`, `"name=q"`, `"tag=html"`, `"class=errors"` | `By.ID`, `By.NAME`, `By.TAG_NAME`, `By.CLASS_NAME` |
-| `"link=Forgot your password?"`, `"partial_link=Forgot"` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
-| `"//h1"` (no prefix) / `"input[name='q']"` (no prefix) | XPath / CSS |
-| `"css=a[href*='/products/{path_name}']"` | a template: `self.locator(self._tile, path_name="grey-jacket")` |
+| By id | `"xpath=//*[@id='cart']"`, `"xpath=//*[@id='checkout']"` |
+| By attribute | `"xpath=//input[@name='q']"`, `"xpath=//*[@itemprop='name']"` |
+| Attribute contains | `"xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
+| By link text | `"xpath=//a[normalize-space()='Forgot your password?']"` |
+| By one CSS class | `"xpath=//section[contains(concat(' ',normalize-space(@class),' '),' product-grid ')]"` (exact class, not a substring) |
+| Template | `"xpath=//a[contains(@href,'/products/{path_name}')]"`, filled with `self.fill_locator(self._tile, path_name="grey-jacket")` |
+
+`parse_locator()` still accepts `css=`, `id=`, `name=`, `tag=`, `link=`, `partial_link=`, `class=` (and a value with no prefix: XPath when it starts with `//`, otherwise CSS), but the pages do not use them.
 
 Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePage` methods, which parse the locator, wait for the right state, log the action (shown by behave when a step fails; passwords are logged as `***`) and fail with a message that names the locator:
 
 | Group | Methods |
 | --- | --- |
 | Navigation | `open(path)`, `url`, `wait_for_url_contains(fragment)` |
-| Locators | `locator(template, **values)`, `find_element(locator)`, `find_elements(locator)`, `is_element_present(locator)` |
+| Locators | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
 | Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
-| Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
+| Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_element_text`, `get_all_element_texts`, `get_element_attribute`, `get_page_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
 | Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — each takes an optional `error_msg` |
+
+Method names say what the method does and whether it waits:
+
+| Name starts or ends with | Meaning | Examples |
+| --- | --- | --- |
+| `get_…` | Waits until the value is shown, then returns it | `get_element_text`, `get_cart_total`, `get_search_result_names` |
+| `read_…_now`, `…_now` | Reads at once, no wait | `read_quantity_boxes_now`, `find_elements_now`, `read_product_tile_text_now` |
+| `…_if_shown`, `…_if_loaded` | A wait condition: the value, or `False` so `wait_until` keeps waiting | `first_match_text_if_shown`, `tile_text_if_price_shown` |
+| `is_…`, `can_…` | Answers True or False | `is_cart_empty`, `is_checkout_page_open`, `can_add_to_cart` |
+| `wait_for_…`, `wait_until…` | Waits for a state | `wait_for_element`, `wait_until_url_contains` |
+| `open_…`, `click_…`, `change_…`, `type_…` | Does something on the page | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
+| `…_should_…` | Check: raises `AssertionError` with a readable message | `element_should_be_visible` |
 
 `is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `parse_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
 
@@ -1090,9 +1109,9 @@ Read the checklist against the feature files, steps and page objects. What stays
 | F10 | "Search with no matching products" used `zzqxnotaproduct`, which the live store still matches (4 products, through the word "product") | Keyword `zzqqxx`; the step also waits for the store's "No results found" message | Fixed |
 | F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; checked on the live store (2026-11-26) | Fixed |
 | F12 | The review checklist was a manual routine (searches, reading) | Kept as the Day 4 checklist in this document; the suite itself is `behave` | Accepted |
-| F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_text()` waits until the element shows text; `get_all_texts()` waits until every result does | Fixed |
+| F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_element_text()` waits until the element shows text; `get_all_element_texts()` waits until every result does | Fixed |
 | F16 | Same run: the cart counted 2 items for 1 and could not change a quantity; the hidden mini-cart drawer repeats every cart row and quantity box | Every `CartPage` locator is scoped to `#cart`, as in Unit 2 | Fixed |
-| F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `css=[itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
+| F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `xpath=//*[@itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
 | F13 | The store's bot protection (CAPTCHA) stops the login and registration forms: no request, no error message (checked 2026-11-25) | The two invalid-login runs and "registration without an email" are `@manual`; the password-reset scenario still covers REQ-05 automatically | Accepted (environment) |
 
 F1 fix:

@@ -14,7 +14,7 @@ def step_home(context):
 @given('the customer is viewing the product "{name}"')
 def step_view_product(context, name):
     context.current_product = name
-    create_page_object(context, ProductPage).open_product(get_product_from_dataset(context, name)["path-name"])
+    create_page_object(context, ProductPage).open_product_page(get_product_from_dataset(context, name)["path-name"])
 
 
 @given("the customer is on the login page")

@@ -152,7 +152,7 @@ Sauce Demo kiểm thử được ở mức trung bình: dữ liệu sản phẩm
 |-----------------------------------------|----------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | Controllability – điều khiển trạng thái | Trung bình     | Không có API reset giỏ hàng; giỏ lưu theo cookie                                                  | Mỗi scenario chạy trong browser context mới (cookie sạch) qua hook `before_scenario`                                        |
 | Observability – quan sát kết quả        | Tốt            | Giá, tên SP, "My Cart (n)", nhãn Sold Out đều hiển thị dạng text                                  | Assert trên text hiển thị; chụp ảnh khi fail trong `after_step`                                                             |
-| Locator                                 | Trung bình–yếu | Theme cũ, không có `data-testid`; có thể có class/name chuẩn của Shopify (ví dụ form `/cart/add`) | Ưu tiên locator theo text/name chuẩn của Shopify (`link=...`, `name=...`), sau đó attribute ổn định; gom vào Page Object |
+| Locator                                 | Trung bình–yếu | Theme cũ, không có `data-testid`; có thể có class/name chuẩn của Shopify (ví dụ form `/cart/add`) | Ưu tiên XPath, theo text/name chuẩn của Shopify (`//a[normalize-space()='...']`, `//input[@name='q']`), sau đó attribute ổn định; gom vào Page Object |
 | Test data                               | Tốt            | 7 sản phẩm, giá cố định, 2 SP Sold Out                                                            | Giữ trong `dataset/products.json`, không hard-code trong step                                                             |
 | Định danh URL                           | Có bẫy         | Path-name của Black heels là `flower-print-jeans`                                                 | Map tên → `path-name` trong test data, không suy URL từ tên                                                                 |
 | Môi trường                              | Yếu            | Chỉ có production demo, dùng chung với người khác, không có staging                               | Không chạy tải; giới hạn song song; tag `@data-creating` cho case tạo tài khoản                                             |
@@ -594,28 +594,28 @@ Mỗi câu Gherkin khớp với đúng một hàm Python qua decorator `@given /
 
 ```python
 """Cart steps (REQ-01, REQ-02)."""
-from behave import given, then, when
+from behave import given, then, use_step_matcher, when
 
 from pages import BasePage, CartPage, ProductPage
-from helper_utility.helpers import page, product
+from helper_utility.helpers import create_page_object, get_product_from_dataset
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
-    product_page = page(context, ProductPage)
-    product_page.open_product(product(context, name)["path-name"])
+    product_page = create_page_object(context, ProductPage)
+    product_page.open_product_page(get_product_from_dataset(context, name)["path-name"])
     product_page.add_to_cart(quantity)
 
 
 @when("the customer adds the product to the cart")
 def step_add_current(context):
-    page(context, ProductPage).add_to_cart(1)
+    create_page_object(context, ProductPage).add_to_cart(1)
 
 
 @when('the customer changes the quantity of "{name}" to {quantity:d}')
 def step_change_qty(context, name, quantity):
-    cart = page(context, CartPage).open()
-    cart.set_quantity(name, quantity)
+    cart = create_page_object(context, CartPage).open_page()
+    cart.change_quantity(name, quantity)
 
 
 # Day 4 (phát hiện F1) gộp "item"/"items" thành một step regex:
@@ -625,16 +625,19 @@ use_step_matcher("re")
 @then(r"the cart should contain (?P<count>\d+) items?")
 def step_cart_count(context, count):
     count = int(count)
-    cart = page(context, CartPage).open()
-    actual = cart.total_quantity()
+    cart = create_page_object(context, CartPage).open_page()
+    actual = cart.count_items_in_cart()
     assert actual == count, f"Expected {count} item(s) in the cart, found {actual}"
-    assert cart.mini_cart_count() == count, f"Mini-cart shows {cart.mini_cart_count()}, expected {count}"
+    assert cart.get_header_cart_count() == count, f"Mini-cart shows {cart.get_header_cart_count()}, expected {count}"
+
+
+use_step_matcher("parse")
 
 
 @then('the cart total should be "{expected}"')
 def step_cart_total(context, expected):
-    cart = page(context, CartPage).open()
-    actual = cart.total()
+    cart = create_page_object(context, CartPage).open_page()
+    actual = cart.get_cart_total()
     assert actual == BasePage.money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
 ```
 
@@ -666,19 +669,19 @@ class ProductPage(BasePage):
         """Add ``quantity`` items and wait until the store has taken every one."""
         if self.is_element_visible(self._quantity):
             self.type_text(self._quantity, str(quantity))
-            self._add(expected_increase=quantity)
-        else:  # theme without a quantity box: add the product N times
-            ...
+            self._submit_add_to_cart()
+            return
+        ...  # theme without a quantity box: add the product N times
 
-    def _add(self, expected_increase: int):
-        before = self.mini_cart_count()
+    def _submit_add_to_cart(self):
+        """Click Add to Cart and wait until the browser has loaded the next page (shortened)."""
+        old_page = self.wait_for_element(self._html)
         self.click_element(self._add_button)
-        self.wait_until(lambda d: ... or (self.mini_cart_count_now() or 0) >= before + expected_increase,
-                        f"The cart never took the product (header count stayed at {before})")
+        self.wait_until(EC.staleness_of(old_page), "The add did not open the cart", timeout=8)
 
     # --- Locators -------------------------------------------------------------
-    _add_button = "css=form[action*='/cart/add'] [type='submit']"
-    _quantity = "css=form[action*='/cart/add'] input[name='quantity']"
+    _add_button = "xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"
+    _quantity = "xpath=//form[contains(@action,'/cart/add')]//input[@name='quantity']"
 ```
 
 Quy tắc viết step:
@@ -698,24 +701,40 @@ Quy tắc viết step:
 
 Locator là một CHUỖI có tiền tố chiến lược, khai ở cuối class page; `BasePage.parse_locator()` đổi chuỗi đó thành cặp `(By, value)` mà Selenium cần, nên không page nào import `By`:
 
-| Chuỗi locator | Selenium |
+Quy ước của team: **ưu tiên XPath**. Mọi locator trong `pages/` đều là `xpath=...`:
+
+| Cần tìm | XPath trong `pages/` |
 | --- | --- |
-| `"css=#cart"` | `(By.CSS_SELECTOR, "#cart")` |
-| `"xpath=//a[contains(., 'My Cart')]"` | `(By.XPATH, ...)` |
-| `"id=cart"`, `"name=q"`, `"tag=html"`, `"class=errors"` | `By.ID`, `By.NAME`, `By.TAG_NAME`, `By.CLASS_NAME` |
-| `"link=Forgot your password?"`, `"partial_link=Forgot"` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
-| `"//h1"` (không tiền tố) / `"input[name='q']"` (không tiền tố) | XPath / CSS |
-| `"css=a[href*='/products/{path_name}']"` | template: `self.locator(self._tile, path_name="grey-jacket")` |
+| Theo id | `"xpath=//*[@id='cart']"`, `"xpath=//*[@id='checkout']"` |
+| Theo attribute | `"xpath=//input[@name='q']"`, `"xpath=//*[@itemprop='name']"` |
+| Attribute có chứa | `"xpath=//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
+| Theo chữ của link | `"xpath=//a[normalize-space()='Forgot your password?']"` |
+| Theo một class CSS | `"xpath=//section[contains(concat(' ',normalize-space(@class),' '),' product-grid ')]"` (khớp đúng class, không khớp chuỗi con) |
+| Template | `"xpath=//a[contains(@href,'/products/{path_name}')]"`, điền bằng `self.fill_locator(self._tile, path_name="grey-jacket")` |
+
+`parse_locator()` vẫn nhận `css=`, `id=`, `name=`, `tag=`, `link=`, `partial_link=`, `class=` (và chuỗi không tiền tố: XPath nếu bắt đầu bằng `//`, còn lại là CSS), nhưng các page không dùng.
 
 Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọi các method của `BasePage`. Các method này đọc locator, chờ đúng trạng thái, ghi log thao tác (behave in ra khi step fail; mật khẩu được ghi là `***`) và báo lỗi có tên locator:
 
 | Nhóm | Method |
 | --- | --- |
 | Điều hướng | `open(path)`, `url`, `wait_for_url_contains(fragment)` |
-| Locator | `locator(template, **values)`, `find_element(locator)`, `find_elements(locator)`, `is_element_present(locator)` |
+| Locator | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
 | Thao tác | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (nút submit form, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
-| Chờ và đọc | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
+| Chờ và đọc | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_element_text`, `get_all_element_texts`, `get_element_attribute`, `get_page_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
 | Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — đều nhận `error_msg` tùy chọn |
+
+Tên method cho biết method làm gì và có chờ hay không:
+
+| Tên bắt đầu / kết thúc bằng | Nghĩa | Ví dụ |
+| --- | --- | --- |
+| `get_…` | Chờ tới khi giá trị hiện ra rồi trả về | `get_element_text`, `get_cart_total`, `get_search_result_names` |
+| `read_…_now`, `…_now` | Đọc ngay, không chờ | `read_quantity_boxes_now`, `find_elements_now`, `read_product_tile_text_now` |
+| `…_if_shown`, `…_if_loaded` | Điều kiện chờ: trả về giá trị, hoặc `False` để `wait_until` chờ tiếp | `first_match_text_if_shown`, `tile_text_if_price_shown` |
+| `is_…`, `can_…` | Trả lời True/False | `is_cart_empty`, `is_checkout_page_open`, `can_add_to_cart` |
+| `wait_for_…`, `wait_until…` | Chờ một trạng thái | `wait_for_element`, `wait_until_url_contains` |
+| `open_…`, `click_…`, `change_…`, `type_…` | Thao tác trên trang | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
+| `…_should_…` | Kiểm tra: raise `AssertionError` với thông điệp dễ đọc | `element_should_be_visible` |
 
 `is_element_enabled(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Hàm phụ như `parse_locator`, `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
 
@@ -1091,9 +1110,9 @@ behave                                             # chạy toàn bộ
 | F10 | "Search with no matching products" dùng `zzqxnotaproduct`, site thật vẫn khớp (4 sản phẩm, qua chữ "product") | Từ khóa `zzqqxx`; step chờ thêm thông báo "No results found" của store | Đã sửa |
 | F11 | Trên site thật, theme thêm vào giỏ bằng AJAX (jQuery): trang đứng yên, nên chờ chuyển sang `/cart` (F7) sẽ timeout | `ProductPage._add()` chờ số trên header tăng HOẶC trang `/cart`; đã kiểm trên site thật (2026-11-26) | Đã sửa |
 | F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | Giữ trong checklist Day 4 của tài liệu này; suite chạy bằng `behave` | Chấp nhận |
-| F15 | Lần đầu chạy trên site thật bằng ChromeDriver thật: ô sản phẩm ở catalog và kết quả tìm kiếm hiện dần (`fadeInUpBig`), còn `.text` của Selenium trả về `""` khi phần tử chưa lên màn hình, nên đọc ra ô trống (sản phẩm nào lỗi thay đổi giữa các lần chạy) | `BasePage.get_text()` chờ tới khi phần tử có chữ; `get_all_texts()` chờ tới khi mọi kết quả có chữ | Đã sửa |
+| F15 | Lần đầu chạy trên site thật bằng ChromeDriver thật: ô sản phẩm ở catalog và kết quả tìm kiếm hiện dần (`fadeInUpBig`), còn `.text` của Selenium trả về `""` khi phần tử chưa lên màn hình, nên đọc ra ô trống (sản phẩm nào lỗi thay đổi giữa các lần chạy) | `BasePage.get_element_text()` chờ tới khi phần tử có chữ; `get_all_element_texts()` chờ tới khi mọi kết quả có chữ | Đã sửa |
 | F16 | Cùng lần chạy đó: giỏ đếm 2 món khi chỉ có 1 và không đổi được số lượng; mini-cart ẩn lặp lại mọi dòng và ô số lượng của giỏ | Mọi locator của `CartPage` giới hạn trong `#cart`, giống Unit 2 | Đã sửa |
-| F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `css=[itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
+| F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `xpath=//*[@itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
 | F13 | Cơ chế chống bot (CAPTCHA) của store chặn form đăng nhập và đăng ký: không gửi request, không hiện lỗi (kiểm tra 2026-11-25) | Hai lượt đăng nhập sai và "đăng ký thiếu email" thành `@manual`; scenario reset mật khẩu vẫn tự động phủ REQ-05 | Chấp nhận (môi trường) |
 
 Code sửa F1:
