@@ -1,8 +1,6 @@
-"""Readable HTML report. Same behave-html-formatter data, easier to scan."""
+"""Readable HTML report, applied from tests/environment.py after behave has started."""
 
 import xml.etree.ElementTree as ET
-
-from behave_html_formatter.html import HTMLFormatter
 
 _CSS = """
 body { background: #eef1f4; margin: 0; }
@@ -136,41 +134,60 @@ body { background: #eef1f4; margin: 0; }
 """
 
 
-class ReadableHTMLFormatter(HTMLFormatter):
-    """HTMLFormatter plus spacing, tag chips, and scenarios grouped under their feature."""
-
-    title = "Unit 1 — Test Report"
-
-    def __init__(self, stream_opener, config):
-        super().__init__(stream_opener, config)
-        style = ET.SubElement(self.html.find("head"), "style", {"type": "text/css"})
+def install(context):
+    """Style the stock HTML formatter. behave loads that class before the project is on sys.path."""
+    runner = getattr(context, "_runner", None)
+    if runner is None:
+        return
+    for formatter in runner.formatters:
+        if type(formatter).__name__ != "HTMLFormatter" or getattr(formatter, "_readable", False):
+            continue
+        formatter._readable = True
+        style = ET.SubElement(formatter.html.find("head"), "style", {"type": "text/css"})
         style.text = _CSS
+        title = formatter.html.find("head/title")
+        if title is not None:
+            title.text = "Unit 1 — Test Report"
+        if getattr(formatter, "title_el", None) is not None:
+            formatter.title_el.text = "Unit 1 — Test Report"
+        _patch(formatter)
 
-    def feature(self, feature):
-        super().feature(feature)
-        self._chips(self.current_feature)
 
-    def background(self, background):
-        super().background(background)
-        self._nest(self.current_background)
+def _patch(formatter):
+    orig_feature = formatter.feature
+    orig_background = formatter.background
+    orig_scenario = formatter.scenario
 
-    def scenario(self, scenario):
-        super().scenario(scenario)
-        self._chips(self.scenario_el)
-        self._nest(self.scenario_el)
+    def feature(feature):
+        orig_feature(feature)
+        _chips(formatter.current_feature)
 
-    def _nest(self, element):
-        feature = getattr(self, "current_feature", None)
-        if feature is not None and element in list(self.suite):
-            self.suite.remove(element)
-            feature.append(element)
+    def background(background):
+        orig_background(background)
+        _nest(formatter, formatter.current_background)
 
-    @staticmethod
-    def _chips(element):
-        for span in list(element):
-            if span.tag != "span" or span.get("class") != "tag" or not span.text:
-                continue
-            names = [part.strip() for part in span.text.split(",") if part.strip()]
-            span.text = None
-            for name in names:
-                ET.SubElement(span, "span").text = name
+    def scenario(scenario):
+        orig_scenario(scenario)
+        _chips(formatter.scenario_el)
+        _nest(formatter, formatter.scenario_el)
+
+    formatter.feature = feature
+    formatter.background = background
+    formatter.scenario = scenario
+
+
+def _nest(formatter, element):
+    feature = getattr(formatter, "current_feature", None)
+    if feature is not None and element in list(formatter.suite):
+        formatter.suite.remove(element)
+        feature.append(element)
+
+
+def _chips(element):
+    for span in list(element):
+        if span.tag != "span" or span.get("class") != "tag" or not span.text:
+            continue
+        names = [part.strip() for part in span.text.split(",") if part.strip()]
+        span.text = None
+        for name in names:
+            ET.SubElement(span, "span").text = name

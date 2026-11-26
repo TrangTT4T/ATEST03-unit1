@@ -48,6 +48,8 @@ def before_all(context):
     with open(ROOT / "dataset" / "products.json", encoding="utf-8") as fh:  # same file in the Unit 2 repo
         context.products = json.load(fh)["products"]
     SCREENSHOTS.mkdir(parents=True, exist_ok=True)
+    from html_report import install
+    install(context)
 
 
 def before_scenario(context, scenario):
