@@ -399,8 +399,7 @@ ATEST03-unit1/
 ├── tests/
 │   ├── features/         # cart.feature, product.feature, login.feature, search.feature, ...
 │   ├── steps/            # reusable step definitions
-│   ├── test_setup.py     # hooks: before_all, before_scenario, after_step, after_scenario
-│   └── environment.py    # entry point behave requires: imports the hooks
+│   └── environment.py    # hooks: before_all, before_scenario, after_step, after_scenario
 ├── dataset/products.json # test data (Unit 2 keeps a copy in its dataset/)
 ├── reports/              # HTML/JSON/Allure + failure screenshots
 ├── behave.ini
@@ -461,7 +460,7 @@ The framework has 4 layers and each layer only knows the one below it: feature f
 | Step definitions | `tests/steps/*.py`                   | Match Gherkin text, extract parameters, call Page Objects, assert | Locators, `find_element` |
 | Page Object      | `pages/*.py`                            | Locators and actions per page, explicit waits                     | Business assertions      |
 | Driver           | Selenium WebDriver                      | Drives Chrome/Firefox                                             | –                        |
-| Hooks            | `tests/test_setup.py`                | Open/close the browser, skip tags, screenshot on failure          | Business logic           |
+| Hooks            | `tests/environment.py`               | Open/close the browser, skip tags, screenshot on failure          | Business logic           |
 | Config / data    | `behave.ini`, `dataset/products.json` | Default tags, base_url, browser; product names, handles, prices   | –                        |
 
 Folder structure:
@@ -479,8 +478,7 @@ ATEST03-unit1/
 │   │   ├── common_steps.py    # shared navigation
 │   │   ├── cart_steps.py
 │   │   └── account_steps.py
-│   ├── test_setup.py          # hooks
-│   └── environment.py         # entry point behave requires: imports the hooks
+│   └── environment.py         # hooks
 ├── helper_utility/helpers.py  # page(), product(): helpers shared by steps
 ├── dataset/products.json      # test data (Unit 2 keeps a copy in its dataset/)
 └── reports/
@@ -702,7 +700,7 @@ Step-writing rules:
 
 ### 4. Hooks
 
-Hooks live in `tests/test_setup.py` and handle all setup and teardown, so features and steps only talk about the business. The Day 2 framework uses 4 hooks.
+Hooks live in `tests/environment.py` and handle all setup and teardown, so features and steps only talk about the business. The Day 2 framework uses 4 hooks.
 
 The order in which behave calls hooks during one run:
 
@@ -725,9 +723,7 @@ The order in which behave calls hooks during one run:
 | `after_step`      | Failed step → screenshot into `reports/screenshots/`, attached to Allure                                             | Evidence to classify product vs script defects              |
 | `after_scenario`  | Quits the browser                                                                                                    | No leaked resources, no shared state                        |
 
-behave loads hooks only from a file named `environment.py`, so `tests/environment.py` is a short entry point that imports them from `tests/test_setup.py`.
-
-Code: `tests/test_setup.py`
+Code: `tests/environment.py`
 
 ```python
 import json

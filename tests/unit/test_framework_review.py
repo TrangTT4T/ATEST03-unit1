@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FEATURES = sorted((ROOT / "tests" / "features").glob("*.feature"))
 STEP_FILES = sorted((ROOT / "tests" / "steps").glob("*.py"))
 CODE_FILES = [*STEP_FILES, *sorted((ROOT / "pages").glob("*.py")), *sorted((ROOT / "helper_utility").glob("*.py")),
-              ROOT / "tests" / "test_setup.py", ROOT / "tests" / "environment.py"]
+              ROOT / "tests" / "environment.py"]
 EXCLUDED_BY_DEFAULT = {"manual", "wip", "data-creating"}  # behave.ini: tags = not @manual and ...
 MAX_STEPS = 7
 

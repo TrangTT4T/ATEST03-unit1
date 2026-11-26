@@ -399,8 +399,7 @@ ATEST03-unit1/
 ├── tests/
 │   ├── features/         # cart.feature, product.feature, login.feature, search.feature, ...
 │   ├── steps/            # step definitions dùng lại được
-│   ├── test_setup.py     # hooks: before_all, before_scenario, after_step, after_scenario
-│   └── environment.py    # điểm vào mà behave yêu cầu: nạp hook từ test_setup.py
+│   └── environment.py    # hooks: before_all, before_scenario, after_step, after_scenario
 ├── dataset/products.json # dữ liệu test (Unit 2 có bản sao trong dataset/ của nó)
 ├── reports/              # HTML/JSON/Allure + ảnh chụp lỗi
 ├── behave.ini
@@ -467,7 +466,7 @@ Khi theme đổi giao diện, chỉ lớp Page Object phải sửa; feature và 
 | Step definitions   | `tests/steps/*.py`                   | Khớp câu Gherkin, lấy tham số, gọi Page Object, assert     | Locator, `find_element` |
 | Page Object        | `pages/*.py`                            | Locator và thao tác trên từng trang, explicit wait         | Assert nghiệp vụ        |
 | Driver             | Selenium WebDriver                      | Điều khiển Chrome/Firefox                                  | –                       |
-| Hooks              | `tests/test_setup.py`                | Mở/đóng trình duyệt, bỏ qua tag, chụp ảnh khi fail         | Logic nghiệp vụ         |
+| Hooks              | `tests/environment.py`               | Mở/đóng trình duyệt, bỏ qua tag, chụp ảnh khi fail         | Logic nghiệp vụ         |
 | Cấu hình / dữ liệu | `behave.ini`, `dataset/products.json` | Tag mặc định, base_url, browser; tên, handle, giá sản phẩm | –                       |
 
 Cấu trúc thư mục:
@@ -485,8 +484,7 @@ ATEST03-unit1/
 │   │   ├── common_steps.py    # điều hướng dùng chung
 │   │   ├── cart_steps.py
 │   │   └── account_steps.py
-│   ├── test_setup.py          # hooks
-│   └── environment.py         # điểm vào mà behave yêu cầu: nạp hook từ test_setup.py
+│   └── environment.py         # hooks
 ├── helper_utility/helpers.py  # page(), product(): hàm dùng chung cho steps
 ├── dataset/products.json      # dữ liệu test (Unit 2 có bản sao trong dataset/ của nó)
 └── reports/
@@ -702,7 +700,7 @@ Quy tắc viết step:
 
 ### 4. Hooks
 
-Hooks nằm trong `tests/test_setup.py` và lo mọi việc setup/teardown, nhờ đó feature và step chỉ còn nói về nghiệp vụ. Framework Day 2 dùng 4 hook.
+Hooks nằm trong `tests/environment.py` và lo mọi việc setup/teardown, nhờ đó feature và step chỉ còn nói về nghiệp vụ. Framework Day 2 dùng 4 hook.
 
 Thứ tự behave gọi hook trong một lần chạy:
 
@@ -725,9 +723,7 @@ Thứ tự behave gọi hook trong một lần chạy:
 | `after_step`      | Step fail → chụp ảnh vào `reports/screenshots/`, đính kèm Allure                                           | Bằng chứng để phân loại lỗi sản phẩm hay lỗi script   |
 | `after_scenario`  | Đóng trình duyệt                                                                                           | Không rò tài nguyên, không dùng chung trạng thái      |
 
-behave chỉ nạp hook từ file tên đúng là `environment.py`, nên `tests/environment.py` là điểm vào vài dòng, nạp hook từ `tests/test_setup.py`.
-
-Code `tests/test_setup.py`:
+Code `tests/environment.py`:
 
 ```python
 import json
