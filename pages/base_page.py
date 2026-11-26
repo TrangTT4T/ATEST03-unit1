@@ -387,27 +387,6 @@ class BasePage:
             "return text;"
         ) or ""
 
-    def cart_count(self) -> int | None:
-        """How many items the store has in the cart, or None while the page is changing.
-
-        A click that submits the add-to-cart form navigates, and /cart.js then returns the
-        HTML of the new page for a moment. That is not a failure.
-        """
-        try:
-            value = self.driver.execute_script(
-                "try {"
-                " var xhr=new XMLHttpRequest();"
-                " xhr.open('GET','/cart.js',false);"
-                " xhr.send(null);"
-                " var body=xhr.responseText||'';"
-                " if(body.charAt(0)!=='{') return null;"
-                " return JSON.parse(body).item_count;"
-                "} catch(e){ return null; }"
-            )
-        except Exception:
-            return None
-        return None if value is None else int(value)
-
     def search(self, keyword: str):
         """Open the search results for ``keyword``.
 
