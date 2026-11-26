@@ -1,14 +1,17 @@
 """Helpers shared by step modules (kept outside tests/steps so behave never loads them twice)."""
 
 
-def product_data(context, name):
-    """Look up one product in dataset/products.json. Fails if the name is not there."""
+def get_product_from_dataset(context, product_name):
+    """Return the test data of one product from dataset/products.json: path-name, price, status.
+git diff --stat
+    Fails the step with a clear message when the name is not in the file.
+    """
     try:
-        return context.products[name]
+        return context.products[product_name]
     except KeyError:
-        raise AssertionError(f"Unknown product {name!r}: add it to dataset/products.json")
+        raise AssertionError(f"Unknown product {product_name!r}: add it to dataset/products.json")
 
 
-def page_object(context, cls):
-    """Build the page object for this scenario's browser."""
-    return cls(context.driver, context.base_url, context.timeout)
+def create_page_object(context, page_class):
+    """Create a page object (e.g. CartPage) bound to this scenario's browser, base URL and timeout."""
+    return page_class(context.driver, context.base_url, context.timeout)
