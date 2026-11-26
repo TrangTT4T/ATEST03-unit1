@@ -8,8 +8,8 @@ class SearchPage(BasePage):
     # Scope: Search > Results page
     ############################################################################
     def result_names(self) -> list[str]:
-        """Names of the products found (no wait: use after the results page has loaded)."""
-        return [link.text for link in self.find_elements(self._result_links)]
+        """Names (and prices) of the products found; waits until the results have faded in."""
+        return self.get_all_texts(self._result_links)
 
     def no_results_shown(self) -> bool:
         """Wait for the store's "No results found for ..." message (an empty list alone proves nothing)."""

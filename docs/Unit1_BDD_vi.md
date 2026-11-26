@@ -717,7 +717,7 @@ Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọ
 | Chờ và đọc | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
 | Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — đều nhận `error_msg` tùy chọn |
 
-`is_element_enabled(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. `tests/unit/test_page_objects.py` làm lần chạy fail nếu có code nằm ngoài class page (hàm phụ như `parse_locator`, `money_to_float` là method của `BasePage`), nếu trong `pages/` có `By` hay locator dạng tuple, có lời gọi driver ngoài `BasePage`, thiếu banner hoặc docstring; `tests/unit/test_base_page_methods.py` kiểm tra các method bằng driver giả.
+`is_element_enabled(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. `tests/unit/test_page_objects.py` làm lần chạy fail nếu có code nằm ngoài class page (hàm phụ như `parse_locator`, `money_to_float` là method của `BasePage`), nếu trong `pages/` có `By` hay locator dạng tuple, có lời gọi driver ngoài `BasePage`, thiếu banner hoặc docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
 
 ### 4. Hooks
 
@@ -908,7 +908,7 @@ Yêu cầu: Python 3.12 và Chrome; Selenium Manager tự tải chromedriver.
 | `behave`                                             | 2 feature, 8 scenario, 30 step pass                                        |
 | Tái sử dụng step | Cặp gần trùng `item`/`items` mà buổi review Day 4 tìm ra đã được gộp thành một step regex (phát hiện F1) |
 
-Các số trên đã chạy trên một site giả lập cấu trúc Shopify. Chạy trên Sauce Demo thật nếu có step lỗi do locator, chỉ sửa trong `pages/`.
+Các số trên là kết quả chạy trên Sauce Demo thật (2026-11-26, Chrome và ChromeDriver 153). Nếu có step lỗi do locator, chỉ sửa trong `pages/`.
 
 #### 7.3 Câu hỏi ôn tập
 
@@ -1023,10 +1023,10 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
-| `python -m unittest discover -s tests/unit` | 23 test OK: cấu trúc page object, method của BasePage, checklist review Day 4, cách chờ khi thêm vào giỏ |
+| `python -m unittest discover -s tests/unit` | 10 test OK: cấu trúc page object, checklist review Day 4 |
 | Truy vết | `behave --dry-run --tags=@add_to_cart` … `@search_products`: yêu cầu nào cũng liệt kê được ít nhất một scenario |
 
-Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
+Đã chạy trên site thật ngày 2026-11-26 (Chrome và ChromeDriver 153): 18 scenario pass, 4 bỏ qua, 59 step. Nếu theme đổi làm lệch locator thì chỉ sửa trong `pages/`.
 
 ### 7. Bài tập lab
 
@@ -1040,7 +1040,7 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 phút · Hybrid · Code: repo `ATEST03-unit1`
 
-Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F14: phân lớp, hành vi của site thật, checklist được tự động hóa thành test); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
+Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F16: phân lớp, hành vi của site thật, checklist được tự động hóa thành test); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
 
 ### 1. Cách review
 
@@ -1083,7 +1083,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | ID | Phát hiện | Hành động | Trạng thái |
 | --- | --- | --- | --- |
 | F1 | `the cart should contain {count:d} item` và `... items` là hai định nghĩa | Gộp thành một step regex `items?` trong `tests/steps/cart_steps.py` | Đã sửa |
-| F2 | Locator viết theo cấu trúc Shopify chuẩn, chưa đối chiếu theme thật | Chạy trên site thật; nếu lệch chỉ sửa `pages/` | Mở |
+| F2 | Locator viết theo cấu trúc Shopify chuẩn, chưa đối chiếu theme thật | Đã chạy trên site thật (2026-11-26): tìm ra F15, F16 và sửa trong `pages/`; 18/18 scenario pass | Đã sửa |
 | F3 | Chưa đo độ ổn định trên site thật | Chạy `behave` 3 lần và so kết quả; tiếp tục ở Unit 2 Day 8 | Mở → Unit 2 Day 8 |
 | F4 | Case đăng ký `@data-creating` mặc định không chạy | Xin trainer cho phép hoặc store riêng | Mở (trainer) |
 | F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Chỉ giữ ở một chỗ: bảng requirement của Day 1 (mục 6) | Đã sửa |
@@ -1092,8 +1092,10 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | F8 | Update / Check Out / Sign In: step sau mở `/cart` trước khi POST của form chạy xong, nên đôi khi giỏ hàng giữ số lượng cũ (gặp 2 trong khoảng 15 lần chạy; ảnh chụp lỗi cho thấy `My Cart (1)` sau khi đổi thành 2) | Thêm `BasePage.submit()` chờ trang cũ bị thay thế (Selenium `staleness_of`); Unit 2 sửa tương tự (`expect_navigation`) | Đã sửa; 0 lỗi trong 10 lần chạy lặp |
 | F9 | Step gọi thẳng Selenium: kết quả tìm kiếm (`find_elements(By.CSS_SELECTOR ...)`) và phần chờ checkout (`EC.url_contains`) | Thêm `SearchPage` và `CheckoutPage`; có test cấm `context.driver`, `By.` và import Selenium trong step | Đã sửa |
 | F10 | "Search with no matching products" dùng `zzqxnotaproduct`, site thật vẫn khớp (4 sản phẩm, qua chữ "product") | Từ khóa `zzqqxx`; step chờ thêm thông báo "No results found" của store | Đã sửa |
-| F11 | Trên site thật, theme thêm vào giỏ bằng AJAX (jQuery): trang đứng yên, nên chờ chuyển sang `/cart` (F7) sẽ timeout | `ProductPage._add()` chờ số trên header tăng HOẶC trang `/cart`; có unit test với driver giả cho cả hai kiểu theme | Đã sửa |
+| F11 | Trên site thật, theme thêm vào giỏ bằng AJAX (jQuery): trang đứng yên, nên chờ chuyển sang `/cart` (F7) sẽ timeout | `ProductPage._add()` chờ số trên header tăng HOẶC trang `/cart`; đã kiểm trên site thật (2026-11-26) | Đã sửa |
 | F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | `tests/unit/test_framework_review.py` chạy nó ở mỗi thay đổi | Đã sửa |
+| F15 | Lần đầu chạy trên site thật bằng ChromeDriver thật: ô sản phẩm ở catalog và kết quả tìm kiếm hiện dần (`fadeInUpBig`), còn `.text` của Selenium trả về `""` khi phần tử chưa lên màn hình, nên đọc ra ô trống (sản phẩm nào lỗi thay đổi giữa các lần chạy) | `BasePage.get_text()` chờ tới khi phần tử có chữ; `get_all_texts()` chờ tới khi mọi kết quả có chữ | Đã sửa |
+| F16 | Cùng lần chạy đó: giỏ đếm 2 món khi chỉ có 1 và không đổi được số lượng; mini-cart ẩn lặp lại mọi dòng và ô số lượng của giỏ | Mọi locator của `CartPage` giới hạn trong `#cart`, giống Unit 2 | Đã sửa |
 | F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `css=[itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
 | F13 | Cơ chế chống bot (CAPTCHA) của store chặn form đăng nhập và đăng ký: không gửi request, không hiện lỗi (kiểm tra 2026-11-25) | Hai lượt đăng nhập sai và "đăng ký thiếu email" thành `@manual`; scenario reset mật khẩu vẫn tự động phủ REQ-05 | Chấp nhận (môi trường) |
 

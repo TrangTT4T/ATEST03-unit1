@@ -716,7 +716,7 @@ Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePa
 | Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
 | Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — each takes an optional `error_msg` |
 
-`is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. `tests/unit/test_page_objects.py` fails the run on any code outside the page class (helpers such as `parse_locator` and `money_to_float` are `BasePage` methods), on a `By` or a tuple locator in `pages/`, a driver call outside `BasePage`, a missing banner or docstring; `tests/unit/test_base_page_methods.py` checks the methods with a fake driver.
+`is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. `tests/unit/test_page_objects.py` fails the run on any code outside the page class (helpers such as `parse_locator` and `money_to_float` are `BasePage` methods), on a `By` or a tuple locator in `pages/`, a driver call outside `BasePage`, a missing banner or docstring. The methods themselves are exercised by the `behave` run on the live store.
 
 ### 4. Hooks
 
@@ -907,7 +907,7 @@ Requires Python 3.12 and Chrome; Selenium Manager downloads chromedriver automat
 | `behave`                                               | 2 features, 8 scenarios, 30 steps passed                              |
 | Step reuse | The `item`/`items` duplicate found in the Day 4 review is already merged into one regex step (finding F1) |
 
-These numbers come from a run against a local Shopify-structured mock store. On the live Sauce Demo, if a step fails because of a locator, fix it only in `pages/`.
+These numbers come from a run on the live Sauce Demo store (2026-11-26, Chrome and ChromeDriver 153). If a step fails because of a locator, fix it only in `pages/`.
 
 #### 7.3 Review questions
 
@@ -1022,10 +1022,10 @@ One `behave` run writes every report (`behave.ini` sets the formatters):
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
-| `python -m unittest discover -s tests/unit` | 23 tests OK: page-object layout, BasePage methods, the Day 4 review checklist, add-to-cart waits |
+| `python -m unittest discover -s tests/unit` | 10 tests OK: page-object layout, the Day 4 review checklist |
 | Traceability | `behave --dry-run --tags=@add_to_cart` … `@search_products`: every requirement lists at least one scenario |
 
-Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
+Verified on the live store on 2026-11-26 (Chrome and ChromeDriver 153): 18 scenarios passed, 4 skipped, 59 steps. A locator mismatch after a theme change is fixed only in `pages/`.
 
 ### 7. Lab exercises
 
@@ -1039,7 +1039,7 @@ Verified against a local Shopify-structured mock of the store. On the live Sauce
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 min · Hybrid · Code: repo `ATEST03-unit1`
 
-The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F14: layering, live-store behaviour, the checklist automated as tests); the remaining open items need a run on the live store or trainer input.
+The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F16: layering, live-store behaviour, the checklist automated as tests); the remaining open items need a run on the live store or trainer input.
 
 ### 1. How the review is run
 
@@ -1082,7 +1082,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | ID | Finding | Action | Status |
 | --- | --- | --- | --- |
 | F1 | `the cart should contain {count:d} item` and `... items` were two definitions | Merged into one regex step `items?` in `tests/steps/cart_steps.py` | Fixed |
-| F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store; fix only `pages/` if needed | Open |
+| F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store (2026-11-26): F15, F16 found and fixed in `pages/`; 18 of 18 scenarios pass | Fixed |
 | F3 | Stability not measured on the live site | Run `behave` 3 times and compare the results; continued in Unit 2 Day 8 | Open → Unit 2 Day 8 |
 | F4 | `@data-creating` registration excluded by default | Ask trainer for permission or a disposable store | Open (trainer) |
 | F5 | Requirement list kept in more than one place (code and the Day 1 document) | Kept in one place: the Day 1 requirement table (section 6) | Fixed |
@@ -1091,8 +1091,10 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
 | F9 | Steps called Selenium directly: search results (`find_elements(By.CSS_SELECTOR ...)`) and the checkout waits (`EC.url_contains`) | New `SearchPage` and `CheckoutPage`; a test forbids `context.driver`, `By.` and Selenium imports in steps | Fixed |
 | F10 | "Search with no matching products" used `zzqxnotaproduct`, which the live store still matches (4 products, through the word "product") | Keyword `zzqqxx`; the step also waits for the store's "No results found" message | Fixed |
-| F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; unit-tested with a fake driver for both themes | Fixed |
+| F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; checked on the live store (2026-11-26) | Fixed |
 | F12 | The review checklist was a manual routine (searches, reading) | `tests/unit/test_framework_review.py` runs it on every change | Fixed |
+| F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_text()` waits until the element shows text; `get_all_texts()` waits until every result does | Fixed |
+| F16 | Same run: the cart counted 2 items for 1 and could not change a quantity; the hidden mini-cart drawer repeats every cart row and quantity box | Every `CartPage` locator is scoped to `#cart`, as in Unit 2 | Fixed |
 | F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `css=[itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |
 | F13 | The store's bot protection (CAPTCHA) stops the login and registration forms: no request, no error message (checked 2026-11-25) | The two invalid-login runs and "registration without an email" are `@manual`; the password-reset scenario still covers REQ-05 automatically | Accepted (environment) |
 

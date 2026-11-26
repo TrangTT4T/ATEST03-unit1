@@ -27,9 +27,10 @@ def _parsed():
     return [parse_file(str(path)) for path in FEATURES]
 
 
-class DeclarativeGherkin(unittest.TestCase):
-    """Feature files say WHAT the customer does, never HOW the browser does it."""
+class FrameworkReview(unittest.TestCase):
+    """The Day 4 checklist: declarative Gherkin, reusable steps, layering, stability."""
 
+    # --- Declarative Gherkin: feature files say WHAT the customer does, never HOW ---------------
     IMPERATIVE = re.compile(r"https?://|\bclicks?\b|\bwaits?\b|\bxpath\b|\bcss\b|\bseconds?\b|#\w|//", re.IGNORECASE)
 
     def test_no_url_selector_click_or_wait_in_steps(self):
@@ -50,10 +51,7 @@ class DeclarativeGherkin(unittest.TestCase):
         ]
         self.assertEqual(too_long, [], f"at most {MAX_STEPS} steps (background included)")
 
-
-class StepDefinitions(unittest.TestCase):
-    """Reuse without duplication: every step is defined once, used, and talks only to page objects."""
-
+    # --- Step definitions: defined once, used, and talking only to page objects ----------------
     @classmethod
     def setUpClass(cls):
         with tempfile.TemporaryDirectory() as folder:
@@ -95,8 +93,7 @@ class StepDefinitions(unittest.TestCase):
         offenders = [p.name for p in STEP_FILES if re.search(r"£\s?\d", p.read_text(encoding="utf-8"))]
         self.assertEqual(offenders, [], "prices come from the feature file or dataset/products.json")
 
-
-class Stability(unittest.TestCase):
+    # --- Stability -------------------------------------------------------------------------------
     def test_no_fixed_waits(self):
         offenders = [p.name for p in CODE_FILES if re.search(r"\bsleep\(", p.read_text(encoding="utf-8"))]
         self.assertEqual(offenders, [], "wait for a state (WebDriverWait), never for time")

@@ -234,8 +234,42 @@ class BasePage:
                                f"Element {locator!r} never became visible", timeout)
 
     def get_text(self, locator: str) -> str:
-        """Visible text of the element (waits for it to exist)."""
-        return self.find_element(locator).text
+        """Visible text of the element; waits until the element shows some text.
+
+        Selenium's ``.text`` is "" while an element is hidden or still off-screen, e.g. a catalog
+        tile sliding in (the theme animates tiles with ``fadeInUpBig``): reading it as soon as it
+        exists, or as soon as it counts as "visible", can return "" (Day 4 finding F15).
+
+        :param locator: locator string
+        :return: the element's visible text
+        :raises TimeoutException: when the element never shows any text
+        """
+        def first_match_text(driver) -> str | bool:
+            try:
+                elements = self.find_elements(locator)
+                return elements[0].text.strip() if elements else False  # "" = not shown yet: keep waiting
+            except StaleElementReferenceException:
+                return False
+
+        return self.wait_until(first_match_text, f"Element {locator!r} never showed any text")
+
+    def get_all_texts(self, locator: str) -> list[str]:
+        """Visible text of every match, once each one shows its text; [] when nothing matches.
+
+        :param locator: locator string of the items, e.g. the search result links
+        :return: their texts, in page order
+        """
+        texts: list[str] = []
+
+        def every_item_shows_text(driver) -> bool:
+            try:
+                texts[:] = [element.text.strip() for element in self.find_elements(locator)]
+            except StaleElementReferenceException:  # the list re-rendered: read again
+                return False
+            return all(texts)  # also True for no match at all
+
+        self.wait_until(every_item_shows_text, f"Some {locator!r} never showed their text")
+        return texts
 
     def get_attribute(self, locator: str, name: str) -> str | None:
         """Attribute ``name`` of the element (waits for it to exist)."""
@@ -311,7 +345,8 @@ class BasePage:
         try:
             self.wait_until(EC.text_to_be_present_in_element(self.parse_locator(locator), text), "")
         except TimeoutException:
-            actual = self.get_text(locator) if self.is_element_present(locator) else "<no element>"
+            matches = self.find_elements(locator)
+            actual = matches[0].text if matches else "<no element>"
             raise AssertionError(error_msg or f"Element {locator!r} shows {actual!r}, expected to contain {text!r}")
         return self
 

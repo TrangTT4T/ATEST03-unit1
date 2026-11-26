@@ -40,7 +40,7 @@ behave                              # default suite (not @manual / @wip / @data-
 behave --tags=@smoke
 behave --tags=@checkout             # every scenario of one feature area
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout, BasePage methods, the Day 4 review checklist (no browser)
+python -m unittest discover -s tests/unit    # page-object layout, the Day 4 review checklist (no browser)
 ```
 
 ## Page objects
@@ -64,7 +64,7 @@ Each scenario carries one **requirement tag** that names what it proves, e.g. `@
 
 Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 18 scenarios passed, 4 skipped (`@manual` ×3: the public store's CAPTCHA stops the login and registration forms; `@data-creating` ×1).
 
-Verified against a local mock with the standard Shopify page structure; the live-store behaviour (AJAX add to cart, CAPTCHA on account forms, partial-word search) was checked with a browser on 2026-11-25 and is handled (Day 4 findings F10, F11, F13). If a locator differs on the live theme, fix it in `pages/` only.
+Verified on the live store on 2026-11-26 (Chrome and ChromeDriver 153): 18 scenarios passed, 4 skipped (`@manual` ×3, `@data-creating` ×1), 59 steps. Live-store behaviour handled in the code: AJAX add to cart, CAPTCHA on account forms, partial-word search, tiles that fade in, the hidden mini-cart (Day 4 findings F10, F11, F13, F15, F16). If a locator differs after a theme change, fix it in `pages/` only.
 
 ## ATEST03 course repositories
 

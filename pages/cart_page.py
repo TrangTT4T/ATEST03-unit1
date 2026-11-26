@@ -5,6 +5,9 @@ from .base_page import BasePage
 
 
 class CartPage(BasePage):
+    """Every locator is scoped to #cart: each page also holds a HIDDEN mini-cart drawer with the same
+    rows and quantity boxes, which would otherwise be counted twice (or typed into, and fail)."""
+
     path = "/cart"
     TOTAL_PATTERN = re.compile(r"(sub)?total[^£]{0,40}£\s?([\d,]+\.\d{2})", re.IGNORECASE)  # text, not a locator
 
@@ -53,13 +56,13 @@ class CartPage(BasePage):
         self.click_and_wait_for_new_page(self._checkout_button)
 
     # --- Locators -------------------------------------------------------------
-    _cart_form = "css=form[action*='/cart']"
-    _quantity_inputs = "css=input[name^='updates']"
+    _cart_form = "css=#cart"
+    _quantity_inputs = "css=#cart input[name^='updates']"
     # The quantity box in the same cart row as the product link
     _line_quantity = (
-        "xpath=//a[normalize-space()='{name}']"
+        "xpath=//*[@id='cart']//a[normalize-space()='{name}']"
         "/ancestor::*[.//input[starts-with(@name,'updates')]][1]"
         "//input[starts-with(@name,'updates')]"
     )
-    _update_button = "css=[name='update']"
-    _checkout_button = "css=[name='checkout']"
+    _update_button = "css=#cart [name='update']"
+    _checkout_button = "css=#cart [name='checkout']"
