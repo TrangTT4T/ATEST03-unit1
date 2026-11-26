@@ -9,7 +9,7 @@ class CheckoutPage(BasePage):
     ############################################################################
     def shows_checkout_page(self) -> bool:
         """Wait until the checkout page is open."""
-        self.wait_for_url_contains("checkout")
+        self.wait_until_url_contains("checkout")
         return True
 
     def lists_product(self, product_name: str) -> bool:

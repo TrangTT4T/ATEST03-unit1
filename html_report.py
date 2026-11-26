@@ -154,26 +154,33 @@ def install(context):
 
 
 def _patch(formatter):
-    orig_feature = formatter.feature
-    orig_background = formatter.background
-    orig_scenario = formatter.scenario
+    readable = _ReadableHooks(formatter)
+    formatter.feature = readable.feature
+    formatter.background = readable.background
+    formatter.scenario = readable.scenario
 
-    def feature(feature):
-        orig_feature(feature)
-        _chips(formatter.current_feature)
 
-    def background(background):
-        orig_background(background)
-        _nest(formatter, formatter.current_background)
+class _ReadableHooks:
+    """Wrap the stock HTML formatter so tags and sections keep the custom layout."""
 
-    def scenario(scenario):
-        orig_scenario(scenario)
-        _chips(formatter.scenario_el)
-        _nest(formatter, formatter.scenario_el)
+    def __init__(self, formatter):
+        self.formatter = formatter
+        self.orig_feature = formatter.feature
+        self.orig_background = formatter.background
+        self.orig_scenario = formatter.scenario
 
-    formatter.feature = feature
-    formatter.background = background
-    formatter.scenario = scenario
+    def feature(self, feature):
+        self.orig_feature(feature)
+        _chips(self.formatter.current_feature)
+
+    def background(self, background):
+        self.orig_background(background)
+        _nest(self.formatter, self.formatter.current_background)
+
+    def scenario(self, scenario):
+        self.orig_scenario(scenario)
+        _chips(self.formatter.scenario_el)
+        _nest(self.formatter, self.formatter.scenario_el)
 
 
 def _nest(formatter, element):

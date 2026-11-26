@@ -1,4 +1,6 @@
 """Catalog page: /collections/all"""
+from functools import partial
+
 from .base_page import BasePage
 
 
@@ -18,7 +20,7 @@ class CatalogPage(BasePage):
         except Exception:
             return ""
 
-    def text_when_product_price_shown(self, path_name: str) -> str | bool:
+    def text_when_product_price_shown(self, path_name: str, driver=None) -> str | bool:
         """The tile text when its £ price is visible, otherwise False so the wait keeps looking."""
         text = self.product_tile_text(path_name)
         return text if "£" in text else False
@@ -30,7 +32,7 @@ class CatalogPage(BasePage):
         and reading at that moment misses it.
         """
         return self.wait_until(
-            lambda driver: self.text_when_product_price_shown(path_name),
+            partial(self.text_when_product_price_shown, path_name),
             f"Product {path_name!r} never showed its price",
         )
 

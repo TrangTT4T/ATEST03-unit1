@@ -40,9 +40,9 @@ class ProductPage(BasePage):
             self._submit_add_to_cart()
             return
         # Theme without a visible quantity box: add the product N times.
-        product_url = self.url
+        product_url = self.current_url
         for _ in range(quantity):
-            if "/products/" not in self.url:  # a non-AJAX theme moved to /cart after the last add
+            if "/products/" not in self.current_url:  # a non-AJAX theme moved to /cart after the last add
                 self.driver.get(product_url)
             self._submit_add_to_cart()
 
@@ -74,7 +74,7 @@ class ProductPage(BasePage):
             self.driver.execute_script(
                 "var form=document.getElementById('product-form'); if (form) form.submit();"
             )
-            self.wait_for_url_contains("/cart")
+            self.wait_until_url_contains("/cart")
 
     # --- Locators -------------------------------------------------------------
     # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).

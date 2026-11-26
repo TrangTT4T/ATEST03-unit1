@@ -2,40 +2,40 @@
 from behave import then, when
 
 from pages import CatalogPage, ProductPage
-from helper_utility.helpers import page, product
+from helper_utility.helpers import page_object, product_data
 
 
 @when("the customer browses the full catalog")
 def step_browse_catalog(context):
-    page(context, CatalogPage).open_page()
+    page_object(context, CatalogPage).open_page()
 
 
 @then('the product "{name}" should be listed at its catalog price')
 def step_listed_price(context, name):
-    data = product(context, name)
-    text = page(context, CatalogPage).shows_product_price(data["path-name"])
+    data = product_data(context, name)
+    text = page_object(context, CatalogPage).shows_product_price(data["path-name"])
     assert name in text, f"Tile for {name!r} not found, got: {text!r}"
     assert data["price"] in text, f"Expected {data['price']} for {name}, tile says: {text!r}"
 
 
 @then('the product "{name}" should be shown as "{status}"')
 def step_listed_status(context, name, status):
-    text = page(context, CatalogPage).shows_product_price(product(context, name)["path-name"])
+    text = page_object(context, CatalogPage).shows_product_price(product_data(context, name)["path-name"])
     sold_out = "sold out" in text.lower()
     assert sold_out == (status == "sold out"), f"{name} expected {status!r}, tile says: {text!r}"
 
 
 @then('the product page should show the name "{name}"')
 def step_detail_name(context, name):
-    actual = page(context, ProductPage).product_name()
+    actual = page_object(context, ProductPage).product_name()
     assert actual.strip() == name, f"Expected title {name!r}, found {actual!r}"
 
 
 @then('the product page should show the price "{price}"')
 def step_detail_price(context, price):
-    assert price in page(context, ProductPage).body_text(), f"Price {price} not shown on product page"
+    assert price in page_object(context, ProductPage).body_text(), f"Price {price} not shown on product page"
 
 
 @then("the customer should not be able to add it to the cart")
 def step_cannot_add(context):
-    assert not page(context, ProductPage).can_add_to_cart(), "Sold-out product can still be added to the cart"
+    assert not page_object(context, ProductPage).can_add_to_cart(), "Sold-out product can still be added to the cart"

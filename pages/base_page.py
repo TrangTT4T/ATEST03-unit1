@@ -22,6 +22,7 @@ Layout of every page object (one class per file), checked by tests/unit/test_pag
 """
 import logging
 import re
+from functools import partial
 
 from selenium.common.exceptions import (
     NoSuchElementException,
@@ -105,18 +106,17 @@ class BasePage:
         return self
 
     @property
-    def url(self) -> str:
-        """The current URL."""
+    def current_url(self) -> str:
+        """The address the browser is on now."""
         return self.driver.current_url
 
-    def wait_for_url_contains(self, fragment: str, timeout: int | None = None):
-        """Wait until the URL contains ``fragment``.
-
-        :param fragment: text the URL must contain, e.g. "/search"
-        :param timeout: seconds; default is the page timeout
-        :return: this page
-        """
-        self.wait_until(EC.url_contains(fragment), f"URL never contained {fragment!r} (now {self.url})", timeout)
+    def wait_until_url_contains(self, fragment: str, timeout: int | None = None):
+        """Wait until the address contains ``fragment``, for example "/cart"."""
+        self.wait_until(
+            EC.url_contains(fragment),
+            f"URL never contained {fragment!r} (now {self.current_url})",
+            timeout,
+        )
         return self
 
     ############################################################################
@@ -150,7 +150,7 @@ class BasePage:
         """
         return self.driver.find_elements(*self.parse_locator(locator))
 
-    def is_element_present(self, locator: str) -> bool:
+    def is_element_present(self, locator: str, driver=None) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""
         return bool(self.find_elements(locator))
 
@@ -240,37 +240,37 @@ class BasePage:
         Selenium's ``.text`` is "" while an element is hidden or still off-screen, e.g. a catalog
         tile sliding in (the theme animates tiles with ``fadeInUpBig``): reading it as soon as it
         exists, or as soon as it counts as "visible", can return "" (Day 4 finding F15).
-
-        :param locator: locator string
-        :return: the element's visible text
-        :raises TimeoutException: when the element never shows any text
         """
-        def first_match_text(driver) -> str | bool:
-            try:
-                elements = self.find_elements(locator)
-                return elements[0].text.strip() if elements else False  # "" = not shown yet: keep waiting
-            except StaleElementReferenceException:
-                return False
+        return self.wait_until(
+            partial(self.text_of_first_match, locator),
+            f"Element {locator!r} never showed any text",
+        )
 
-        return self.wait_until(first_match_text, f"Element {locator!r} never showed any text")
+    def text_of_first_match(self, locator: str, driver=None) -> str | bool:
+        """Text of the first match, or False while it is missing, blank, or being redrawn."""
+        try:
+            elements = self.find_elements(locator)
+            return elements[0].text.strip() if elements else False
+        except StaleElementReferenceException:
+            return False
 
     def get_all_texts(self, locator: str) -> list[str]:
-        """Visible text of every match, once each one shows its text; [] when nothing matches.
+        """Visible text of every match, once each one shows its text; [] when nothing matches."""
+        ready = self.wait_until(
+            partial(self.texts_when_every_match_shown, locator),
+            f"Some {locator!r} never showed their text",
+        )
+        return ready[0]
 
-        :param locator: locator string of the items, e.g. the search result links
-        :return: their texts, in page order
-        """
-        texts: list[str] = []
-
-        def every_item_shows_text(driver) -> bool:
-            try:
-                texts[:] = [element.text.strip() for element in self.find_elements(locator)]
-            except StaleElementReferenceException:  # the list re-rendered: read again
-                return False
-            return all(texts)  # also True for no match at all
-
-        self.wait_until(every_item_shows_text, f"Some {locator!r} never showed their text")
-        return texts
+    def texts_when_every_match_shown(self, locator: str, driver=None) -> tuple[list[str]] | bool:
+        """A one-item tuple of the texts once every match has text, or False while they are loading."""
+        try:
+            texts = [element.text.strip() for element in self.find_elements(locator)]
+        except StaleElementReferenceException:
+            return False
+        if not all(texts):
+            return False
+        return (texts,)
 
     def get_attribute(self, locator: str, name: str) -> str | None:
         """Attribute ``name`` of the element (waits for it to exist)."""
@@ -294,6 +294,10 @@ class BasePage:
             return False
         return True
 
+    def element_is_enabled(self, locator: str, driver=None) -> bool:
+        """True when the element exists and is enabled. The wait passes the driver in."""
+        return self.driver.find_element(*self.parse_locator(locator)).is_enabled()
+
     def is_element_enabled(self, locator: str, timeout: int = 0) -> bool:
         """True when the element exists and is enabled, waiting up to ``timeout`` seconds (0: check now).
 
@@ -302,7 +306,7 @@ class BasePage:
         :return: True or False, never an exception
         """
         try:
-            self.wait_until(lambda d: d.find_element(*self.parse_locator(locator)).is_enabled(), "", timeout)
+            self.wait_until(partial(self.element_is_enabled, locator), "", timeout)
         except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
             self.logger.info("Element %s is disabled or missing", locator)
             return False
@@ -366,11 +370,12 @@ class BasePage:
     ############################################################################
     def mini_cart_count(self) -> int:
         """N in "My Cart (N)". Reads textContent: the desktop link is often hidden, and Selenium's .text is then empty."""
-        def read(driver) -> int | bool:
-            match = re.search(r"\((\d+)\)", self._header_cart_text() or "")
-            return int(match.group(1)) if match else False
+        return self.wait_until(self.header_cart_count, "The header never showed a cart count")
 
-        return self.wait_until(read, "The header never showed a cart count")
+    def header_cart_count(self, driver=None) -> int | bool:
+        """The number in the header cart link, or False until that number is on the page."""
+        match = re.search(r"\((\d+)\)", self._header_cart_text() or "")
+        return int(match.group(1)) if match else False
 
     def mini_cart_count_now(self) -> int | None:
         """The header count right now, or None while the page changes. No wait: for wait conditions."""
@@ -398,15 +403,18 @@ class BasePage:
 
         self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
         self.wait_until(
-            lambda d: self.is_element_present(self._search_banner)
-            or "Verify you are human" in (d.title or ""),
-            f"Search results for {keyword!r} never loaded (now {self.url})",
+            self.search_page_is_ready,
+            f"Search results for {keyword!r} never loaded (now {self.current_url})",
         )
         if "Verify you are human" in (self.driver.title or ""):
             raise AssertionError(
                 "Cloudflare asked to verify a human, so the search page did not open"
             )
         return self
+
+    def search_page_is_ready(self, driver) -> bool:
+        """True when the results banner is in the page, or Cloudflare is asking for a human check."""
+        return self.is_element_present(self._search_banner) or "Verify you are human" in (driver.title or "")
 
     # --- Locators -------------------------------------------------------------
     _html = "tag=html"

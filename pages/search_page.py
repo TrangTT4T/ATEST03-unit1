@@ -13,17 +13,15 @@ class SearchPage(BasePage):
         An empty grid right after navigation is not a result: the tiles are still loading
         (or still in fadeInUpBig, so their text is blank). Keep waiting.
         """
-        found: dict[str, list[str]] = {}
+        ready = self.wait_until(self.search_results_are_ready, "Search results never finished loading")
+        return ready[0]
 
-        def results_are_ready(driver) -> bool:
-            ready = self.loaded_search_results()
-            if ready is None:
-                return False
-            found["names"] = ready
-            return True
-
-        self.wait_until(results_are_ready, "Search results never finished loading")
-        return found["names"]
+    def search_results_are_ready(self, driver=None) -> tuple[list[str]] | bool:
+        """A one-item tuple of the names once the grid has settled, or False while it is loading."""
+        ready = self.loaded_search_results()
+        if ready is None:
+            return False
+        return (ready,)
 
     def loaded_search_results(self) -> list[str] | None:
         """Names on the results grid, [] when nothing matched, None while the grid is still loading."""

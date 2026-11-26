@@ -1,5 +1,6 @@
 """Cart page: /cart"""
 import re
+from functools import partial
 
 from selenium.common.exceptions import TimeoutException
 
@@ -39,7 +40,7 @@ class CartPage(BasePage):
             # These scenarios put one product in the cart. The row markup does not always
             # match the link text, but the quantity box in #cart is that line.
             self.wait_until(
-                lambda d: self.is_element_present(self._quantity_inputs),
+                partial(self.is_element_present, self._quantity_inputs),
                 f"{product_name!r} is not in the cart",
             )
             line = self._quantity_inputs
@@ -76,7 +77,7 @@ class CartPage(BasePage):
             )
             if not clicked:
                 raise TimeoutException("Check Out is not on the cart page")
-            self.wait_for_url_contains("checkout")
+            self.wait_until_url_contains("checkout")
 
     # --- Locators -------------------------------------------------------------
     _cart_form = "css=#cart"
