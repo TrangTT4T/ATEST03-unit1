@@ -386,11 +386,13 @@ class BasePage:
         return int(match.group(1)) if match else None
 
     def _header_cart_text(self) -> str:
+        _by, css = self.parse_locator(self._header_cart_link)
         return self.driver.execute_script(
-            "var nodes=document.querySelectorAll('a.cart, a.toggle-drawer');"
+            "var nodes=document.querySelectorAll(arguments[0]);"
             "var text='';"
             "for (var i=0;i<nodes.length;i++){ text += ' ' + (nodes[i].textContent||''); }"
-            "return text;"
+            "return text;",
+            css,
         ) or ""
 
     def search_for(self, keyword: str):
@@ -419,7 +421,7 @@ class BasePage:
     # --- Locators -------------------------------------------------------------
     _html = "tag=html"
     _body = "tag=body"
-    # Header (on every page)
-    _mini_cart = "xpath=//a[contains(., 'My Cart')]"
+    # Header (on every page). textContent, not .text: the desktop link is often hidden.
+    _header_cart_link = "css=a.cart, a.toggle-drawer"
     _search_box = "name=q"
     _search_banner = "css=#keyword"
