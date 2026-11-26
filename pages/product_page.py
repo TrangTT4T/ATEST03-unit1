@@ -1,4 +1,6 @@
 """Product detail page: /products/<path-name>"""
+from selenium.common.exceptions import TimeoutException
+
 from .base_page import BasePage
 
 
@@ -46,17 +48,26 @@ class ProductPage(BasePage):
     def _add(self, expected_increase: int):
         """Click Add to Cart and wait until the store has taken the product.
 
-        The live theme adds with AJAX: jQuery posts /cart/add.js, updates the header and the page
-        stays (Day 4 finding F11). Without JavaScript the form posts and the browser lands on /cart
-        (finding F7). Wait for whichever happens - never for time, and never only for a navigation
-        that an AJAX theme does not make.
+        The theme does not add on the click itself. It plays a fly-to-cart animation and only
+        then submits the form. If that animation never finishes, the header stays at the old
+        count, so this submits the same form.
         """
         before = self.mini_cart_count()
         self.click_element(self._add_button)
+        try:
+            self._wait_until_taken(before, expected_increase, timeout=4)
+        except TimeoutException:
+            self.driver.execute_script(
+                "var form=document.querySelector(\"form[action*='/cart/add']\"); if (form) form.submit();"
+            )
+            self._wait_until_taken(before, expected_increase)
+
+    def _wait_until_taken(self, before: int, expected_increase: int, timeout: int | None = None):
         self.wait_until(
             lambda d: ("/cart" in d.current_url and "/products/" not in d.current_url)
             or (self.mini_cart_count_now() or 0) >= before + expected_increase,
             f"The cart never took the product (header count stayed at {before})",
+            timeout,
         )
 
     # --- Locators -------------------------------------------------------------

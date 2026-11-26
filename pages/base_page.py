@@ -3,7 +3,6 @@
 Locators are STRINGS with a strategy prefix, so pages never import ``By``:
 
     _search_box = "name=q"
-    _search_banner = "css=#keyword"
     _mini_cart  = "xpath=//a[contains(., 'My Cart')]"
     _tile       = "css=a[href*='/products/{path_name}']"  # a template, filled with locator()
 
@@ -394,3 +393,4 @@ class BasePage:
     # Header (on every page)
     _mini_cart = "xpath=//a[contains(., 'My Cart')]"
     _search_box = "name=q"
+    _search_banner = "css=#keyword"
