@@ -390,16 +390,14 @@ class BasePage:
     def search(self, keyword: str):
         """Open the search results for ``keyword``.
 
-        Typing in the header box can change the URL to /search without loading the results
-        document. A later get() of that same URL then does nothing, so go via a blank page.
+        The results page has ``#keyword`` ("Showing results..." or "No results found...").
+        That node is in the DOM; the full page source is too big to search reliably.
         """
         from urllib.parse import quote
 
-        url = f"{self.base_url}/search?type=product&q={quote(keyword)}"
-        self.driver.get("about:blank")
-        self.driver.get(url)
+        self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
         self.wait_until(
-            lambda d: 'id="keyword"' in d.page_source,
+            lambda d: self.is_element_present(self._search_banner),
             f"Search results for {keyword!r} never loaded (now {self.url})",
         )
         return self
