@@ -1,5 +1,6 @@
 """Product detail page: /products/<path-name>"""
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support import expected_conditions as EC
 
 from .base_page import BasePage
 
@@ -46,10 +47,11 @@ class ProductPage(BasePage):
             self._add(expected_increase=1)
 
     def _add(self, expected_increase: int):
-        """Click Add to Cart and wait until the browser is on the cart page.
+        """Click Add to Cart and wait until the browser has loaded the next page.
 
         The theme's click handler only submits the form after a fly-to-cart animation, and
         that animation often never finishes. Turn the handler off so the click posts the form.
+        If the button cannot be clicked, submit the form directly.
         """
         self.driver.execute_script(
             "if (window.jQuery) {"
@@ -57,24 +59,22 @@ class ProductPage(BasePage):
             " jQuery('form.quickAdd').off('submit');"
             "}"
         )
+        old_page = self.find_element(self._html)
         try:
             self.click_element(self._add_button)
-        except TimeoutException:
-            pass
-        # /cart/add contains "/cart" while the POST is still in flight. Leaving then
-        # cancels the add, so wait until the path is the cart page itself.
-        try:
-            self.wait_until(lambda d: self._on_cart_page(), "The add did not open the cart", timeout=4)
         except TimeoutException:
             self.driver.execute_script(
                 "var form=document.getElementById('product-form'); if (form) form.submit();"
             )
-            self.wait_until(lambda d: self._on_cart_page(), "The add did not open the cart")
-
-    def _on_cart_page(self) -> bool:
-        from urllib.parse import urlparse
-
-        return urlparse(self.driver.current_url).path.rstrip("/") == "/cart"
+        try:
+            # Stale html means the new document has loaded. URL "/cart" alone is too early:
+            # it also matches /cart/add while the POST is still going out.
+            self.wait_until(EC.staleness_of(old_page), "The add did not open the cart", timeout=8)
+        except TimeoutException:
+            self.driver.execute_script(
+                "var form=document.getElementById('product-form'); if (form) form.submit();"
+            )
+            self.wait_for_url_contains("/cart")
 
     # --- Locators -------------------------------------------------------------
     # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).

@@ -390,16 +390,16 @@ class BasePage:
     def search(self, keyword: str):
         """Open the search results for ``keyword``.
 
-        Submitting the header form can be intercepted: the URL changes to /search but the
-        results document, including #keyword, never loads. A direct navigation does load it.
+        Typing in the header box can change the URL to /search without loading the results
+        document. A later get() of that same URL then does nothing, so go via a blank page.
         """
         from urllib.parse import quote
 
-        self.type_text(self._search_box, keyword)
-        self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
-        # body text can miss the heading; the loaded document always contains it.
+        url = f"{self.base_url}/search?type=product&q={quote(keyword)}"
+        self.driver.get("about:blank")
+        self.driver.get(url)
         self.wait_until(
-            lambda d: "Search Results" in d.page_source,
+            lambda d: 'id="keyword"' in d.page_source,
             f"Search results for {keyword!r} never loaded (now {self.url})",
         )
         return self
