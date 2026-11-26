@@ -7,7 +7,7 @@ Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Obje
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
 | 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `tests/features/` (risk-level tags `@critical`, `@high`, `@medium`) |
-| 2 | Cucumber architecture: features, steps, hooks, tags, reporting | Day 2 section | `tests/features/cart.feature`, `login.feature`, `tests/environment.py`, `behave.ini`, `tests/steps/`, `pages/` |
+| 2 | Cucumber architecture: features, steps, hooks, tags, reporting | Day 2 section | `tests/features/cart.feature`, `login.feature`, `tests/test_setup.py`, `behave.ini`, `tests/steps/`, `pages/` |
 | 3 | Lab: executable specs, reusable steps, traceable reports | Day 3 section | all features, behave formatters |
 | 4 | Framework review | Day 4 section | review checklist + `behave --dry-run` |
 
@@ -21,7 +21,8 @@ ATEST03-unit1/
 │   │   ├── cart.feature  checkout.feature  product.feature
 │   │   └── login.feature register.feature  search.feature
 │   ├── steps/                  # common, cart, product, account, search
-│   └── environment.py          # hooks
+│   ├── test_setup.py           # hooks: browser per scenario, tag handling, screenshot on failure
+│   └── environment.py          # entry point behave requires: imports the hooks from test_setup.py
 ├── dataset/products.json       # test data read by the steps
 ├── dataset/requirements.json   # requirement registry: tag (@add_to_cart ...) -> REQ id, title, risk
 ├── dataset/tags.json           # every other allowed tag (area, risk, suite, type, control)
@@ -44,7 +45,7 @@ python -m unittest discover -s tests/unit    # page-object layout, tags, the Day
 
 ## Reports
 
-Every `behave` run writes all of them (`behave.ini`, `tests/environment.py`):
+Every `behave` run writes all of them (`behave.ini`, `tests/test_setup.py`):
 
 | Output | Path | For |
 | --- | --- | --- |
