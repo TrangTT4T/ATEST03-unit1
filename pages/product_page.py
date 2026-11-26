@@ -57,14 +57,24 @@ class ProductPage(BasePage):
             " jQuery('form.quickAdd').off('submit');"
             "}"
         )
-        self.click_element(self._add_button)
         try:
-            self.wait_for_url_contains("/cart", timeout=4)
+            self.click_element(self._add_button)
+        except TimeoutException:
+            pass
+        # /cart/add contains "/cart" while the POST is still in flight. Leaving then
+        # cancels the add, so wait until the path is the cart page itself.
+        try:
+            self.wait_until(lambda d: self._on_cart_page(), "The add did not open the cart", timeout=4)
         except TimeoutException:
             self.driver.execute_script(
                 "var form=document.getElementById('product-form'); if (form) form.submit();"
             )
-            self.wait_for_url_contains("/cart")
+            self.wait_until(lambda d: self._on_cart_page(), "The add did not open the cart")
+
+    def _on_cart_page(self) -> bool:
+        from urllib.parse import urlparse
+
+        return urlparse(self.driver.current_url).path.rstrip("/") == "/cart"
 
     # --- Locators -------------------------------------------------------------
     # itemprop="name" (schema.org markup) is the product name; the shop's first <h1> is its logo (F14).

@@ -34,7 +34,16 @@ class CartPage(BasePage):
 
         Quantity 0 + Update removes the line (standard Shopify behaviour).
         """
-        self.type_text(self.locator(self._line_quantity, name=product_name), str(quantity))
+        line = self.locator(self._line_quantity, name=product_name)
+        if not self.is_element_present(line):
+            # These scenarios put one product in the cart. The row markup does not always
+            # match the link text, but the quantity box in #cart is that line.
+            self.wait_until(
+                lambda d: self.is_element_present(self._quantity_inputs),
+                f"{product_name!r} is not in the cart",
+            )
+            line = self._quantity_inputs
+        self.type_text(line, str(quantity))
         self.click_and_wait_for_new_page(self._update_button)
 
     def remove(self, product_name: str):
@@ -61,7 +70,12 @@ class CartPage(BasePage):
             )
             self.click_and_wait_for_new_page(self._checkout_button)
         except TimeoutException:
-            self.driver.execute_script("document.querySelector('#checkout').click()")
+            clicked = self.driver.execute_script(
+                "var button=document.querySelector('#checkout');"
+                "if(!button) return false; button.click(); return true;"
+            )
+            if not clicked:
+                raise TimeoutException("Check Out is not on the cart page")
             self.wait_for_url_contains("checkout")
 
     # --- Locators -------------------------------------------------------------

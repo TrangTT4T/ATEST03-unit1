@@ -397,7 +397,11 @@ class BasePage:
 
         self.type_text(self._search_box, keyword)
         self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
-        self.page_should_contain_text("Search Results", f"Search results for {keyword!r} never loaded")
+        # body text can miss the heading; the loaded document always contains it.
+        self.wait_until(
+            lambda d: "Search Results" in d.page_source,
+            f"Search results for {keyword!r} never loaded (now {self.url})",
+        )
         return self
 
     # --- Locators -------------------------------------------------------------
