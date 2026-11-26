@@ -35,17 +35,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 MONEY = re.compile(r"£\s?([\d,]+\.\d{2})")
 
-LOCATOR_STRATEGIES = {
-    "css": By.CSS_SELECTOR,
-    "xpath": By.XPATH,
-    "id": By.ID,
-    "name": By.NAME,
-    "tag": By.TAG_NAME,
-    "link": By.LINK_TEXT,
-    "partial_link": By.PARTIAL_LINK_TEXT,
-    "class": By.CLASS_NAME,
-}
-
 
 def parse_locator(locator: str) -> tuple[str, str]:
     """'name=q' -> (By.NAME, 'q');  "//a[@id='x']" -> (By.XPATH, "//a[@id='x']");  'input.q' -> (By.CSS_SELECTOR, ...)
@@ -53,13 +42,23 @@ def parse_locator(locator: str) -> tuple[str, str]:
     :param locator: a locator string, with or without a strategy prefix
     :return: the (By, value) pair for driver.find_element / expected_conditions
     """
+    strategies = {
+        "css": By.CSS_SELECTOR,
+        "xpath": By.XPATH,
+        "id": By.ID,
+        "name": By.NAME,
+        "tag": By.TAG_NAME,
+        "link": By.LINK_TEXT,
+        "partial_link": By.PARTIAL_LINK_TEXT,
+        "class": By.CLASS_NAME,
+    }
     if not isinstance(locator, str) or not locator.strip():
         raise ValueError(f"A locator is a non-empty string such as 'css=#cart', got {locator!r}")
     prefix, separator, value = locator.partition("=")
-    if separator and prefix.strip() in LOCATOR_STRATEGIES:
+    if separator and prefix.strip() in strategies:
         if not value.strip():
             raise ValueError(f"Locator {locator!r} has a strategy but no value")
-        return LOCATOR_STRATEGIES[prefix.strip()], value.strip()
+        return strategies[prefix.strip()], value.strip()
     if locator.startswith(("//", "(/", "./")):
         return By.XPATH, locator
     return By.CSS_SELECTOR, locator
