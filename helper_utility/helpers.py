@@ -3,6 +3,8 @@
 * get_product_from_dataset, create_page_object: used by the step modules;
 * ElementFinder: used by BasePage to read every locator.
 """
+import re
+
 from selenium.webdriver.common.by import By
 
 
@@ -63,7 +65,7 @@ class ElementFinder:
         prefix = "default" if prefix is None else prefix
         strategy = self._strategies.get(prefix)
         if strategy is None:
-            raise ValueError(f"Element locator with prefix '{prefix}' is not supported")
+            raise ValueError(f"Element locator with prefix '{prefix}' is not supported: {locator!r}")
         return strategy, criteria
 
     def find_element(self, driver, locator: str):
@@ -72,7 +74,7 @@ class ElementFinder:
         :param driver: the WebDriver
         :param locator: locator string
         :return: the WebElement
-        :raises NoSuchElementException: when nothing matches
+        :raises NoSuchElementException: when nothing matches (raised by Selenium; its message names the selector)
         """
         return driver.find_element(*self.by_locator(locator))
 
@@ -86,11 +88,14 @@ class ElementFinder:
         return driver.find_elements(*self.by_locator(locator))
 
     def _parse_locator(self, locator: str) -> tuple[str | None, str]:
-        """("id", "cart") for "id=cart" or "id:cart"; (None, locator) for plain XPath."""
+        """("id", "cart") for "id=cart" or "id:cart"; (None, locator) for plain XPath.
+
+        Any word before the first "=" or ":" is taken as the prefix, so a typo such as "nmae=q"
+        fails in by_locator with a clear message instead of being sent to Selenium as XPath.
+        """
         if locator.startswith(("/", "(")):
             return None, locator
-        for separator in ("=", ":"):
-            prefix, found, criteria = locator.partition(separator)
-            if found and prefix.strip().lower() in self._strategies:
-                return prefix.strip().lower(), criteria.strip()
+        match = re.match(r"([A-Za-z_ ]+?)\s*[=:]\s*(.*)", locator, re.DOTALL)
+        if match:
+            return match.group(1).strip().lower(), match.group(2)
         return None, locator
