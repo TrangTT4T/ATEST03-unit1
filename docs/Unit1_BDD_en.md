@@ -749,7 +749,7 @@ Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePa
 
 | Group | Methods |
 | --- | --- |
-| Navigation | `open_page(path)`, `current_url`, `wait_until_url_contains(fragment)` |
+| Navigation | `open_page(path)`, `wait_until_url_contains(fragment)` |
 | Locators | `find_element(locator)` (waits until it is in the page), `find_elements(locator)` (no wait), `is_element_present(locator)` |
 | Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)` |
 | Wait and read | `wait_until(condition, message)`, `get_element_text(locator)`, `get_page_text()`, `is_element_visible(locator, timeout=0)` |
@@ -761,7 +761,7 @@ Method names say what the method does and whether it waits:
 | Name starts or ends with | Meaning | Examples |
 | --- | --- | --- |
 | `get_…` | Waits until the value is shown, then returns it | `get_element_text`, `get_cart_total`, `get_search_result_names` |
-| `read_…_now`, `…_now` | Reads at once, no wait | `read_quantity_boxes_now`, `read_product_tile_text_now` |
+| `read_…_now`, `…_now` | Reads at once, no wait | `read_product_tile_text_now`, `read_search_result_names_now` |
 | `…_if_shown`, `…_if_loaded` | A wait condition: the value, or `False` so `wait_until` keeps waiting | `first_match_text_if_shown`, `tile_text_if_price_shown` |
 | `is_…`, `can_…` | Answers True or False | `is_cart_empty`, `is_checkout_page_open`, `can_add_to_cart` |
 | `wait_for_…`, `wait_until…` | Waits for a state | `wait_until`, `wait_until_url_contains` |

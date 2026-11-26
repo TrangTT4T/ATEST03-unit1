@@ -76,16 +76,11 @@ class BasePage:
         self.logger.info("Open %s", url)
         self.driver.get(url)
 
-    @property
-    def current_url(self) -> str:
-        """The address the browser is on now."""
-        return self.driver.current_url
-
     def wait_until_url_contains(self, fragment: str, timeout: int | None = None):
         """Wait until the address contains ``fragment``, for example "/cart"."""
         self.wait_until(
             EC.url_contains(fragment),
-            f"URL never contained {fragment!r} (now {self.current_url})",
+            f"URL never contained {fragment!r} (now {self.driver.current_url})",
             timeout,
         )
 
@@ -277,7 +272,7 @@ class BasePage:
         self.driver.get(f"{self.base_url}/search?type=product&q={quote(keyword)}")
         self.wait_until(
             self.is_search_page_loaded,
-            f"Search results for {keyword!r} never loaded (now {self.current_url})",
+            f"Search results for {keyword!r} never loaded (now {self.driver.current_url})",
         )
         if "Verify you are human" in (self.driver.title or ""):
             raise AssertionError(

@@ -750,7 +750,7 @@ Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọ
 
 | Nhóm | Method |
 | --- | --- |
-| Điều hướng | `open_page(path)`, `current_url`, `wait_until_url_contains(fragment)` |
+| Điều hướng | `open_page(path)`, `wait_until_url_contains(fragment)` |
 | Locator | `find_element(locator)` (chờ tới khi có trong trang), `find_elements(locator)` (không chờ), `is_element_present(locator)` |
 | Thao tác | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (nút submit form, F8), `type_text(locator, text, secret=False)` |
 | Chờ và đọc | `wait_until(condition, message)`, `get_element_text(locator)`, `get_page_text()`, `is_element_visible(locator, timeout=0)` |
@@ -762,7 +762,7 @@ Tên method cho biết method làm gì và có chờ hay không:
 | Tên bắt đầu / kết thúc bằng | Nghĩa | Ví dụ |
 | --- | --- | --- |
 | `get_…` | Chờ tới khi giá trị hiện ra rồi trả về | `get_element_text`, `get_cart_total`, `get_search_result_names` |
-| `read_…_now`, `…_now` | Đọc ngay, không chờ | `read_quantity_boxes_now`, `read_product_tile_text_now` |
+| `read_…_now`, `…_now` | Đọc ngay, không chờ | `read_product_tile_text_now`, `read_search_result_names_now` |
 | `…_if_shown`, `…_if_loaded` | Điều kiện chờ: trả về giá trị, hoặc `False` để `wait_until` chờ tiếp | `first_match_text_if_shown`, `tile_text_if_price_shown` |
 | `is_…`, `can_…` | Trả lời True/False | `is_cart_empty`, `is_checkout_page_open`, `can_add_to_cart` |
 | `wait_for_…`, `wait_until…` | Chờ một trạng thái | `wait_until`, `wait_until_url_contains` |

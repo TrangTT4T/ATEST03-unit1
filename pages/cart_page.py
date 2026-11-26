@@ -18,17 +18,13 @@ class CartPage(BasePage):
     # Cart line methods
     # Scope: Cart page > Cart table
     ############################################################################
-    def read_quantity_boxes_now(self) -> list:
-        """The quantity box of every cart line (no wait: an empty cart has none)."""
-        return self.find_elements(self._quantity_inputs)
-
     def count_items_in_cart(self) -> int:
         """Sum of the quantity boxes: the number of items in the cart."""
-        return sum(int(i.get_attribute("value") or 0) for i in self.read_quantity_boxes_now())
+        return sum(int(i.get_attribute("value") or 0) for i in self.find_elements(self._quantity_inputs))
 
     def is_cart_empty(self) -> bool:
         """True when the cart has no lines."""
-        return not self.read_quantity_boxes_now()
+        return not self.find_elements(self._quantity_inputs)
 
     def change_quantity(self, product_name: str, quantity: int):
         """Type ``quantity`` in the line of ``product_name`` and click Update.

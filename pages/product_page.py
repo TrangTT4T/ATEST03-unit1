@@ -40,9 +40,9 @@ class ProductPage(BasePage):
             self._submit_add_to_cart()
             return
         # Theme without a visible quantity box: add the product N times.
-        product_url = self.current_url
+        product_url = self.driver.current_url
         for _ in range(quantity):
-            if "/products/" not in self.current_url:  # a non-AJAX theme moved to /cart after the last add
+            if "/products/" not in self.driver.current_url:  # a non-AJAX theme moved to /cart after the last add
                 self.driver.get(product_url)
             self._submit_add_to_cart()
 
