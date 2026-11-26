@@ -25,8 +25,8 @@ ATEST03-unit1/
 │   └── environment.py          # hooks
 ├── dataset/products.json       # test data read by the steps
 ├── helper_utility/
-│   ├── helpers.py              # get_product_from_dataset(), create_page_object(): helpers shared by steps
-│   └── element_finder.py       # ElementFinder: locator string -> (By, criteria); plain XPath by default
+│   └── helpers.py              # get_product_from_dataset(), create_page_object() for the steps;
+│                               #   ElementFinder: locator string -> (By, criteria), plain XPath by default
 ├── reports/                    # generated
 └── docs/Unit1_BDD_vi.md, Unit1_BDD_en.md (+ images/)
 ```
@@ -46,7 +46,7 @@ behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f p
 
 ## Page objects
 
-Locators are plain XPath strings that describe the element (`"//*[@id='cart']"`, `"//*[@itemprop='name']"`, `"//a[normalize-space()='Forgot your password?']"`), declared at the bottom of each page class under a comment naming the area of the page; a template uses `{}` and `.format()`. Pages never touch `By`, `driver.find_element` or `WebDriverWait`: they call the `BasePage` methods (`wait_for_element`, `click_element`, `type_text`, `wait_until`, `get_element_text`, `element_should_be_visible` …), which parse the locator, wait for a state (never a fixed sleep), log the action and fail with the locator's name. A page file holds only imports and its one class: locators are read by `ElementFinder` (`helper_utility/element_finder.py`: plain XPath by default, or `id=`, `name=`, `css=`, `link=` …), and helpers such as `money_to_float` are `BasePage` methods. In `dataset/products.json`, each product's `path-name` is the last part of its page address (`/products/<path-name>`), never derived from the name. Details: Day 3 section 3.5 of the unit document.
+Locators are plain XPath strings that describe the element (`"//*[@id='cart']"`, `"//*[@itemprop='name']"`, `"//a[normalize-space()='Forgot your password?']"`), declared at the bottom of each page class under a comment naming the area of the page; a template uses `{}` and `.format()`. Pages never touch `By`, `driver.find_element` or `WebDriverWait`: they call the `BasePage` methods (`wait_for_element`, `click_element`, `type_text`, `wait_until`, `get_element_text`, `element_should_be_visible` …), which parse the locator, wait for a state (never a fixed sleep), log the action and fail with the locator's name. A page file holds only imports and its one class: locators are read by `ElementFinder` (in `helper_utility/helpers.py`: plain XPath by default, or `id=`, `name=`, `css=`, `link=` …), and helpers such as `money_to_float` are `BasePage` methods. In `dataset/products.json`, each product's `path-name` is the last part of its page address (`/products/<path-name>`), never derived from the name. Details: Day 3 section 3.5 of the unit document.
 
 ## Reports
 

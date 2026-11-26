@@ -8,7 +8,7 @@ the area of the page, at the bottom of each class:
     # Product tiles
     _tile = "//a[contains(@href,'/products/{}')]"   # a template: self._tile.format(path_name)
 
-``ElementFinder`` (helper_utility/element_finder.py) reads each locator and gives Selenium the
+``ElementFinder`` (helper_utility/helpers.py) reads each locator and gives Selenium the
 ``(By, criteria)`` pair: plain XPath by default, or "id=...", "name=...", "css=..." when needed.
 
 Pages never call ``driver.find_element`` or ``WebDriverWait`` themselves. They pass a locator
@@ -32,7 +32,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from helper_utility.element_finder import ElementFinder
+from helper_utility.helpers import ElementFinder
 
 
 class BasePage:
