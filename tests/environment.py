@@ -4,6 +4,7 @@ Hook order per run:
   before_all -> (before_feature -> (before_tag -> before_scenario -> before_step/after_step ... -> after_scenario) ...) -> after_all
 """
 import json
+import logging
 import os
 import re
 from pathlib import Path
@@ -53,6 +54,11 @@ def before_all(context):
     with open(ROOT / "dataset" / "products.json", encoding="utf-8") as fh:  # same file in the Unit 2 repo
         context.products = json.load(fh)["products"]
     SCREENSHOTS.mkdir(parents=True, exist_ok=True)
+    # Page objects log every open/click/type and every timeout ("Element '...' not found").
+    # behave captures this output and prints it under the failed scenario only.
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    logging.getLogger("selenium").setLevel(logging.WARNING)  # keep Selenium's own HTTP chatter out
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
     from html_report import install
     install(context)
 

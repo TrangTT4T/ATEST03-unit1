@@ -171,10 +171,15 @@ class BasePage:
         :param message: the error message when the time is up (name the locator or the state)
         :param timeout: seconds; default is the page timeout
         :return: the condition's truthy value
-        :raises TimeoutException: with ``message``
+        :raises TimeoutException: with ``message``, also written to the log as an ERROR line
         """
         wait = self.wait if timeout is None else WebDriverWait(self.driver, timeout)
-        return wait.until(condition, message)
+        try:
+            return wait.until(condition, message)
+        except TimeoutException:
+            if message:  # "" = the caller expects a timeout and handles it (is_element_visible)
+                self.logger.error(message)
+            raise
 
     def get_element_text(self, locator: str) -> str:
         """Visible text of the element; waits until the element shows some text.
