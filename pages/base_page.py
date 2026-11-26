@@ -340,14 +340,6 @@ class BasePage:
             actual = matches[0].text if matches else "<no element>"
             raise AssertionError(error_msg or f"Element {locator!r} shows {actual!r}, expected to contain {text!r}")
 
-    def page_should_contain_text(self, text: str, error_msg: str | None = None):
-        """Fail unless the page shows ``text`` within the page timeout.
-
-        :param text: expected text
-        :param error_msg: message to fail with
-        """
-        self.element_should_contain_text(self._body, text, error_msg or f"The page never showed {text!r}")
-
     ############################################################################
     # Header methods
     # Scope: Every page > Header (mini-cart, search box)

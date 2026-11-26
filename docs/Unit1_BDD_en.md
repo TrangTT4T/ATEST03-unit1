@@ -724,7 +724,7 @@ Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePa
 | Locators | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
 | Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
 | Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_element_text`, `get_all_element_texts`, `get_element_attribute`, `get_page_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
-| Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — each takes an optional `error_msg` |
+| Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text` — each takes an optional `error_msg` |
 
 Method names say what the method does and whether it waits:
 

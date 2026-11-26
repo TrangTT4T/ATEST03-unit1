@@ -725,7 +725,7 @@ Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọ
 | Locator | `fill_locator(template, **values)`, `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
 | Thao tác | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (nút submit form, F8), `type_text(locator, text, secret=False)`, `press_enter(locator)` |
 | Chờ và đọc | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_element_text`, `get_all_element_texts`, `get_element_attribute`, `get_page_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
-| Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — đều nhận `error_msg` tùy chọn |
+| Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text` — đều nhận `error_msg` tùy chọn |
 
 Tên method cho biết method làm gì và có chờ hay không:
 
