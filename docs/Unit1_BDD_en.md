@@ -716,7 +716,7 @@ Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePa
 | Wait and read | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
 | Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — each takes an optional `error_msg` |
 
-`is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. `tests/unit/test_page_objects.py` fails the run on any code outside the page class (helpers such as `parse_locator` and `money_to_float` are `BasePage` methods), on a `By` or a tuple locator in `pages/`, a driver call outside `BasePage`, a missing banner or docstring. The methods themselves are exercised by the `behave` run on the live store.
+`is_element_enabled(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `parse_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
 
 ### 4. Hooks
 
@@ -1001,7 +1001,6 @@ behave                                # default suite (behave.ini: not @manual /
 behave --tags=@smoke                  # smoke only
 behave --tags=@data-creating          # creates a real account: only with trainer approval
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout, review checklist (no browser)
 ```
 
 One `behave` run writes every report (`behave.ini` sets the formatters):
@@ -1022,7 +1021,6 @@ One `behave` run writes every report (`behave.ini` sets the formatters):
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
-| `python -m unittest discover -s tests/unit` | 10 tests OK: page-object layout, the Day 4 review checklist |
 | Traceability | `behave --dry-run --tags=@add_to_cart` … `@search_products`: every requirement lists at least one scenario |
 
 Verified on the live store on 2026-11-26 (Chrome and ChromeDriver 153): 18 scenarios passed, 4 skipped, 59 steps. A locator mismatch after a theme change is fixed only in `pages/`.
@@ -1039,28 +1037,27 @@ Verified on the live store on 2026-11-26 (Chrome and ChromeDriver 153): 18 scena
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 min · Hybrid · Code: repo `ATEST03-unit1`
 
-The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F16: layering, live-store behaviour, the checklist automated as tests); the remaining open items need a run on the live store or trainer input.
+The Day 3 framework scores 15/16 on the review rubric after the fixes made during the review (F1 duplicate step, F5 duplicated requirement list), the re-check with Unit 2 (F7, F8 form-submit races) and the second review (F9–F16: layering, live-store behaviour); the remaining open items need a run on the live store or trainer input.
 
 ### 1. How the review is run
 
 ```bash
 cd ATEST03-unit1
-python -m unittest discover -s tests/unit          # the automated checklist below (no browser)
 behave --dry-run                                   # undefined or ambiguous steps
 behave                                             # full run
 ```
 
-A rule that only lives in a review document erodes; a rule that fails the run does not. Every checklist rule that code can check is a test in `tests/unit/` (`test_framework_review.py` unless noted). What stays a human review: whether a scenario is the right example for its requirement, and naming.
+Read the checklist against the feature files, steps and page objects. What stays a human review: whether a scenario is the right example for its requirement, and naming.
 
 | Check | Rule | Checked by |
 | --- | --- | --- |
-| Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in a step | `test_no_url_selector_click_or_wait_in_steps` |
-| Scenario size | At most 7 steps (background included) | `test_scenarios_stay_short` |
-| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | review: `behave --dry-run --tags=@add_to_cart` … for each requirement of the Day 1 table |
-| Step reuse, no duplication | No unused or undefined step; no two step texts that differ only by parameters or a plural s (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
-| Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locator strings at the bottom, no `By` or driver call outside `BasePage` | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
-| Stability | No `sleep()` in steps, pages, helpers or hooks | `test_no_fixed_waits` |
-| Data separation | No prices hard-coded in step code | `test_no_prices_in_step_code` |
+| Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in a step | review the `Given` / `When` / `Then` lines |
+| Scenario size | At most 7 steps (background included) | count steps in each scenario |
+| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | `behave --dry-run --tags=@add_to_cart` … for each requirement of the Day 1 table |
+| Step reuse, no duplication | No unused or undefined step; no two step texts that differ only by parameters or a plural s (finding F1) | `behave --dry-run` and a read of `tests/steps/` |
+| Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locator strings at the bottom, no `By` or driver call outside `BasePage` | read `tests/steps/` and `pages/` |
+| Stability | No `sleep()` in steps, pages, helpers or hooks | search the code for `sleep(` |
+| Data separation | No prices hard-coded in step code | prices come from the feature file or `dataset/products.json` |
 | Risk drives scope | Every Critical/High requirement has a scenario that runs by default (not only `@manual` / `@data-creating`) | review: compare the scenarios with the Day 1 risk table (section 2) |
 
 ### 2. Rubric
@@ -1089,10 +1086,10 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | F6 | Checkout stops at the checkout page | Payment stays manual; network-level checks added in Unit 2 | Accepted |
 | F7 | On a theme without a quantity box, adding N items could cancel the previous POST (found when re-checking with Unit 2) | `ProductPage._submit()` now waits for the redirect to `/cart` after every click | Fixed |
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
-| F9 | Steps called Selenium directly: search results (`find_elements(By.CSS_SELECTOR ...)`) and the checkout waits (`EC.url_contains`) | New `SearchPage` and `CheckoutPage`; a test forbids `context.driver`, `By.` and Selenium imports in steps | Fixed |
+| F9 | Steps called Selenium directly: search results (`find_elements(By.CSS_SELECTOR ...)`) and the checkout waits (`EC.url_contains`) | New `SearchPage` and `CheckoutPage`; steps no longer call `context.driver`, `By.` or Selenium | Fixed |
 | F10 | "Search with no matching products" used `zzqxnotaproduct`, which the live store still matches (4 products, through the word "product") | Keyword `zzqqxx`; the step also waits for the store's "No results found" message | Fixed |
 | F11 | On the live store the theme adds to the cart with AJAX (jQuery): the page stays, so waiting for a redirect to `/cart` (F7) times out | `ProductPage._add()` waits for the header count to rise OR for `/cart`; checked on the live store (2026-11-26) | Fixed |
-| F12 | The review checklist was a manual routine (searches, reading) | `tests/unit/test_framework_review.py` runs it on every change | Fixed |
+| F12 | The review checklist was a manual routine (searches, reading) | Kept as the Day 4 checklist in this document; the suite itself is `behave` | Accepted |
 | F15 | First run on the live store with a real ChromeDriver: catalog tiles and search results fade in (`fadeInUpBig`), and Selenium's `.text` is `""` until they are on screen, so tiles read as empty (which products failed changed from run to run) | `BasePage.get_text()` waits until the element shows text; `get_all_texts()` waits until every result does | Fixed |
 | F16 | Same run: the cart counted 2 items for 1 and could not change a quantity; the hidden mini-cart drawer repeats every cart row and quantity box | Every `CartPage` locator is scoped to `#cart`, as in Unit 2 | Fixed |
 | F14 | `ProductPage` read the product name from the first `<h1>`, which on the live theme is the shop logo (found by Unit 2 on the same store) | Locator `css=[itemprop='name']` (schema.org product name), as in Unit 2 | Fixed |

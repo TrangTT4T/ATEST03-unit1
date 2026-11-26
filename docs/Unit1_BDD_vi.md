@@ -717,7 +717,7 @@ Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọ
 | Chờ và đọc | `wait_until(condition, message)`, `wait_for_element_visible(locator)`, `get_text`, `get_attribute`, `body_text`, `is_element_visible(locator, timeout=0)`, `is_element_enabled(locator, timeout=0)` |
 | Kiểm tra (raise `AssertionError`) | `element_should_be_visible`, `element_should_be_disabled`, `element_should_contain_text`, `page_should_contain_text` — đều nhận `error_msg` tùy chọn |
 
-`is_element_enabled(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. `tests/unit/test_page_objects.py` làm lần chạy fail nếu có code nằm ngoài class page (hàm phụ như `parse_locator`, `money_to_float` là method của `BasePage`), nếu trong `pages/` có `By` hay locator dạng tuple, có lời gọi driver ngoài `BasePage`, thiếu banner hoặc docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
+`is_element_enabled(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Hàm phụ như `parse_locator`, `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
 
 ### 4. Hooks
 
@@ -1002,7 +1002,6 @@ behave                                # bộ mặc định (behave.ini: bỏ @ma
 behave --tags=@smoke                  # chỉ smoke
 behave --tags=@data-creating          # tạo tài khoản thật: chỉ khi trainer cho phép
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # kết quả Allure (tùy chọn)
-python -m unittest discover -s tests/unit    # kiểm tra cấu trúc page object, checklist review (không cần trình duyệt)
 ```
 
 Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatter):
@@ -1023,7 +1022,6 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
-| `python -m unittest discover -s tests/unit` | 10 test OK: cấu trúc page object, checklist review Day 4 |
 | Truy vết | `behave --dry-run --tags=@add_to_cart` … `@search_products`: yêu cầu nào cũng liệt kê được ít nhất một scenario |
 
 Đã chạy trên site thật ngày 2026-11-26 (Chrome và ChromeDriver 153): 18 scenario pass, 4 bỏ qua, 59 step. Nếu theme đổi làm lệch locator thì chỉ sửa trong `pages/`.
@@ -1040,28 +1038,27 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 
 Unit 1 · LO1, LO2 · Guides/Review · 60 phút · Hybrid · Code: repo `ATEST03-unit1`
 
-Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F16: phân lớp, hành vi của site thật, checklist được tự động hóa thành test); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
+Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi review (F1 step trùng, F5 danh sách requirement bị lặp), khi kiểm tra lại cùng Unit 2 (F7, F8 lỗi chờ submit form) và lần review thứ hai (F9–F16: phân lớp, hành vi của site thật); các mục còn mở cần chạy trên site thật hoặc ý kiến trainer.
 
 ### 1. Cách review
 
 ```bash
 cd ATEST03-unit1
-python -m unittest discover -s tests/unit          # checklist tự động bên dưới (không cần trình duyệt)
 behave --dry-run                                   # step chưa có code hoặc bị mơ hồ
 behave                                             # chạy toàn bộ
 ```
 
-Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy tắc làm lượt chạy fail thì không. Quy tắc nào trong checklist kiểm được bằng code đều là một test trong `tests/unit/` (`test_framework_review.py` nếu không ghi khác). Phần vẫn cần người review: scenario có phải ví dụ đúng cho yêu cầu không, và cách đặt tên.
+Đối chiếu checklist với file feature, step và page object. Phần vẫn cần người review: scenario có phải ví dụ đúng cho yêu cầu không, và cách đặt tên.
 
 | Kiểm tra | Quy tắc | Kiểm tra bằng |
 | --- | --- | --- |
-| Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong step | `test_no_url_selector_click_or_wait_in_steps` |
-| Độ dài scenario | Tối đa 7 step (tính cả background) | `test_scenarios_stay_short` |
-| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | review: `behave --dry-run --tags=@add_to_cart` … cho từng yêu cầu trong bảng Day 1 |
-| Tái sử dụng step, không trùng lặp | Không step thừa hoặc chưa định nghĩa; không có hai câu step chỉ khác tham số hoặc chữ s số nhiều (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
-| Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator dạng chuỗi ở cuối, không `By` hay lời gọi driver ngoài `BasePage` | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
-| Ổn định | Không `sleep()` trong steps, pages, helper, hook | `test_no_fixed_waits` |
-| Tách dữ liệu | Không gõ cứng giá trong code step | `test_no_prices_in_step_code` |
+| Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong step | đọc các dòng `Given` / `When` / `Then` |
+| Độ dài scenario | Tối đa 7 step (tính cả background) | đếm step trong từng scenario |
+| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | `behave --dry-run --tags=@add_to_cart` … cho từng yêu cầu trong bảng Day 1 |
+| Tái sử dụng step, không trùng lặp | Không step thừa hoặc chưa định nghĩa; không có hai câu step chỉ khác tham số hoặc chữ s số nhiều (finding F1) | `behave --dry-run` và đọc `tests/steps/` |
+| Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator dạng chuỗi ở cuối, không `By` hay lời gọi driver ngoài `BasePage` | đọc `tests/steps/` và `pages/` |
+| Ổn định | Không `sleep()` trong steps, pages, helper, hook | tìm `sleep(` trong code |
+| Tách dữ liệu | Không gõ cứng giá trong code step | giá lấy từ file feature hoặc `dataset/products.json` |
 | Rủi ro dẫn dắt phạm vi | Yêu cầu Critical/High nào cũng có scenario chạy mặc định (không chỉ `@manual` / `@data-creating`) | review: đối chiếu scenario với bảng rủi ro Day 1 (mục 2) |
 
 ### 2. Rubric
@@ -1090,10 +1087,10 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | F6 | Checkout dừng ở trang checkout | Thanh toán kiểm thủ công; Unit 2 thêm kiểm tra mức network | Chấp nhận |
 | F7 | Với theme không có ô số lượng, thêm N sản phẩm có thể làm hủy request POST trước đó (phát hiện khi kiểm tra lại cùng Unit 2) | `ProductPage._submit()` chờ chuyển sang `/cart` sau mỗi lần bấm | Đã sửa |
 | F8 | Update / Check Out / Sign In: step sau mở `/cart` trước khi POST của form chạy xong, nên đôi khi giỏ hàng giữ số lượng cũ (gặp 2 trong khoảng 15 lần chạy; ảnh chụp lỗi cho thấy `My Cart (1)` sau khi đổi thành 2) | Thêm `BasePage.submit()` chờ trang cũ bị thay thế (Selenium `staleness_of`); Unit 2 sửa tương tự (`expect_navigation`) | Đã sửa; 0 lỗi trong 10 lần chạy lặp |
-| F9 | Step gọi thẳng Selenium: kết quả tìm kiếm (`find_elements(By.CSS_SELECTOR ...)`) và phần chờ checkout (`EC.url_contains`) | Thêm `SearchPage` và `CheckoutPage`; có test cấm `context.driver`, `By.` và import Selenium trong step | Đã sửa |
+| F9 | Step gọi thẳng Selenium: kết quả tìm kiếm (`find_elements(By.CSS_SELECTOR ...)`) và phần chờ checkout (`EC.url_contains`) | Thêm `SearchPage` và `CheckoutPage`; step không còn gọi `context.driver`, `By.` hay Selenium | Đã sửa |
 | F10 | "Search with no matching products" dùng `zzqxnotaproduct`, site thật vẫn khớp (4 sản phẩm, qua chữ "product") | Từ khóa `zzqqxx`; step chờ thêm thông báo "No results found" của store | Đã sửa |
 | F11 | Trên site thật, theme thêm vào giỏ bằng AJAX (jQuery): trang đứng yên, nên chờ chuyển sang `/cart` (F7) sẽ timeout | `ProductPage._add()` chờ số trên header tăng HOẶC trang `/cart`; đã kiểm trên site thật (2026-11-26) | Đã sửa |
-| F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | `tests/unit/test_framework_review.py` chạy nó ở mỗi thay đổi | Đã sửa |
+| F12 | Checklist review là việc làm tay (lệnh tìm, đọc code) | Giữ trong checklist Day 4 của tài liệu này; suite chạy bằng `behave` | Chấp nhận |
 | F15 | Lần đầu chạy trên site thật bằng ChromeDriver thật: ô sản phẩm ở catalog và kết quả tìm kiếm hiện dần (`fadeInUpBig`), còn `.text` của Selenium trả về `""` khi phần tử chưa lên màn hình, nên đọc ra ô trống (sản phẩm nào lỗi thay đổi giữa các lần chạy) | `BasePage.get_text()` chờ tới khi phần tử có chữ; `get_all_texts()` chờ tới khi mọi kết quả có chữ | Đã sửa |
 | F16 | Cùng lần chạy đó: giỏ đếm 2 món khi chỉ có 1 và không đổi được số lượng; mini-cart ẩn lặp lại mọi dòng và ô số lượng của giỏ | Mọi locator của `CartPage` giới hạn trong `#cart`, giống Unit 2 | Đã sửa |
 | F14 | `ProductPage` đọc tên sản phẩm từ `<h1>` đầu tiên, mà trên theme thật đó là logo của shop (Unit 2 phát hiện trên cùng store) | Locator `css=[itemprop='name']` (tên sản phẩm theo schema.org), giống Unit 2 | Đã sửa |
