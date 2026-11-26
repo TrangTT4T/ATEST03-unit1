@@ -485,7 +485,7 @@ ATEST03-unit1/
 │   │   ├── cart_steps.py
 │   │   └── account_steps.py
 │   └── environment.py         # hooks
-├── helper_utility/helpers.py  # page(), product(): hàm dùng chung cho steps
+├── helper_utility/helpers.py  # class Helper: hàm dùng chung cho step + phần đọc locator
 ├── dataset/products.json      # dữ liệu test (Unit 2 có bản sao trong dataset/ của nó)
 └── reports/
 ```
@@ -597,24 +597,25 @@ Mỗi câu Gherkin khớp với đúng một hàm Python qua decorator `@given /
 from behave import given, then, use_step_matcher, when
 
 from pages import BasePage, CartPage, ProductPage
-from helper_utility.helpers import create_page_object, get_product_from_dataset
+from helper_utility.helpers import Helper
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
-    product_page = create_page_object(context, ProductPage)
-    product_page.open_product_page(get_product_from_dataset(context, name)["path-name"])
+    product_page = Helper.create_page_object(context, ProductPage)
+    product = Helper.get_product_from_dataset(context, name)
+    product_page.open_product_page(product["path-name"])
     product_page.add_to_cart(quantity)
 
 
 @when("the customer adds the product to the cart")
 def step_add_current(context):
-    create_page_object(context, ProductPage).add_to_cart(1)
+    Helper.create_page_object(context, ProductPage).add_to_cart(1)
 
 
 @when('the customer changes the quantity of "{name}" to {quantity:d}')
 def step_change_qty(context, name, quantity):
-    cart = create_page_object(context, CartPage)
+    cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     cart.change_quantity(name, quantity)
 
@@ -626,7 +627,7 @@ use_step_matcher("re")
 @then(r"the cart should contain (?P<count>\d+) items?")
 def step_cart_count(context, count):
     count = int(count)
-    cart = create_page_object(context, CartPage)
+    cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     actual = cart.count_items_in_cart()
     assert actual == count, f"Expected {count} item(s) in the cart, found {actual}"
@@ -638,7 +639,7 @@ use_step_matcher("parse")
 
 @then('the cart total should be "{expected}"')
 def step_cart_total(context, expected):
-    cart = create_page_object(context, CartPage)
+    cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     actual = cart.get_cart_total()
     assert actual == BasePage.money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
@@ -647,17 +648,31 @@ def step_cart_total(context, expected):
 #### 3.3 Hàm dùng chung `helper_utility/helpers.py`
 
 ```python
-def product(context, name):
-    """Look up test data by product name; fail loudly on an unknown name."""
-    try:
-        return context.products[name]
-    except KeyError:
-        raise AssertionError(f"Unknown product {name!r}: add it to dataset/products.json")
+class Helper:
+    ############################################################################
+    # Step helpers
+    # Scope: tests/steps > test data, page objects
+    ############################################################################
+    @staticmethod
+    def get_product_from_dataset(context, product_name):
+        """Return the test data of one product from dataset/products.json: path-name, price, status."""
+        try:
+            return context.products[product_name]
+        except KeyError:
+            raise AssertionError(f"Unknown product {product_name!r}: add it to dataset/products.json")
 
+    @staticmethod
+    def create_page_object(context, page_class):
+        """Create a page object (e.g. CartPage) bound to this scenario's browser, base URL and timeout."""
+        return page_class(context.driver, context.base_url, context.timeout)
 
-def page(context, cls):
-    """Build a Page Object bound to this scenario's browser."""
-    return cls(context.driver, context.base_url, context.timeout)
+    ############################################################################
+    # Element finder
+    # Scope: BasePage > locator string -> (By, criteria) -> elements
+    ############################################################################
+    def by_locator(self, locator): ...       # section 3.5
+    def find_element(self, driver, locator): ...
+    def find_elements(self, driver, locator): ...
 ```
 
 #### 3.4 Page Object mà step gọi tới (`pages/product_page.py`, rút gọn)
@@ -702,7 +717,7 @@ Quy tắc viết step:
 
 #### 3.5 Locator dạng chuỗi và các method tự viết của BasePage
 
-Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó), khai ở cuối class page, gom dưới comment ghi khu vực của trang. `ElementFinder` đổi nó thành thứ Selenium cần, nên không page nào import `By`:
+Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó), khai ở cuối class page, gom dưới comment ghi khu vực của trang. Phần đọc locator trong `Helper` đổi nó thành thứ Selenium cần, nên không page nào import `By`:
 
 ```python
     # --- Locators -------------------------------------------------------------
@@ -722,7 +737,7 @@ Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó
 | Theo chữ | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
 | Template | `"//a[contains(@href,'/products/{}')]"`, điền bằng `self._tile.format(path_name)` |
 
-`ElementFinder` (trong `helper_utility/helpers.py`, cùng khung với `selenium_wrapper/elementfinder.py` của team) đọc mọi locator. `by_locator(locator)` tách locator thành prefix và criteria (XPath thì không có prefix), tra prefix trong bảng `strategies` rồi trả về `(By, criteria)`:
+Phần đọc locator của `Helper` (trong `helper_utility/helpers.py`, cùng khung với `selenium_wrapper/elementfinder.py` của team) đọc mọi locator. `by_locator(locator)` tách locator thành prefix và criteria (XPath thì không có prefix), tra prefix trong bảng `strategies` rồi trả về `(By, criteria)`:
 
 | Locator | Prefix | Selenium |
 | --- | --- | --- |
@@ -756,7 +771,7 @@ Tên method cho biết method làm gì và có chờ hay không:
 | `open_…`, `click_…`, `change_…`, `type_…` | Thao tác trên trang | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Kiểm tra: raise `AssertionError` với thông điệp dễ đọc | `element_should_be_visible` |
 
-`is_element_visible(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Chỉ giữ method mà page có dùng; method không dùng thì xoá. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Locator do `ElementFinder` đọc; hàm phụ như `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
+`is_element_visible(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Chỉ giữ method mà page có dùng; method không dùng thì xoá. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Locator do `Helper.by_locator` đọc; hàm phụ như `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
 
 ### 4. Hooks
 

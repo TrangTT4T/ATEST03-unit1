@@ -8,7 +8,7 @@ the area of the page, at the bottom of each class:
     # Product tiles
     _tile = "//a[contains(@href,'/products/{}')]"   # a template: self._tile.format(path_name)
 
-``ElementFinder`` (helper_utility/helpers.py) reads each locator and gives Selenium the
+``Helper`` (helper_utility/helpers.py) reads each locator and gives Selenium the
 ``(By, criteria)`` pair: plain XPath by default, or "id=...", "name=...", "css=..." when needed.
 
 Pages never call ``driver.find_element`` or ``WebDriverWait`` themselves. They pass a locator
@@ -32,7 +32,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from helper_utility.helpers import ElementFinder
+from helper_utility.helpers import Helper
 
 
 class BasePage:
@@ -44,7 +44,7 @@ class BasePage:
         self.timeout = timeout
         self.wait = WebDriverWait(driver, timeout)
         self.logger = logging.getLogger(type(self).__name__)  # behave shows these lines when a step fails
-        self._element_finder = ElementFinder()  # locator string -> (By, criteria)
+        self._helper = Helper()  # reads locators: locator string -> (By, criteria)
 
     ############################################################################
     # Data helpers (no browser needed)
@@ -102,7 +102,7 @@ class BasePage:
         :raises TimeoutException: when the element never appears
         """
         return self.wait_until(
-            partial(self._element_finder.find_element, locator=locator),  # retried while not found
+            partial(self._helper.find_element, locator=locator),  # retried while not found
             f"Element {locator!r} not found",
             timeout,
         )
@@ -113,7 +113,7 @@ class BasePage:
         :param locator: locator string
         :return: list of WebElements
         """
-        return self._element_finder.find_elements(self.driver, locator)
+        return self._helper.find_elements(self.driver, locator)
 
     def is_element_present(self, locator: str, driver=None) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""
@@ -130,7 +130,7 @@ class BasePage:
         :param timeout: seconds; default is the page timeout
         """
         self.logger.info("Click %s", locator)
-        self.wait_until(EC.element_to_be_clickable(self._element_finder.by_locator(locator)),
+        self.wait_until(EC.element_to_be_clickable(self._helper.by_locator(locator)),
                         f"Element {locator!r} never became clickable", timeout).click()
 
     def click_and_wait_for_new_page(self, locator: str):
@@ -208,7 +208,7 @@ class BasePage:
         :return: True or False, never an exception
         """
         try:
-            self.wait_until(EC.visibility_of_element_located(self._element_finder.by_locator(locator)), "", timeout)
+            self.wait_until(EC.visibility_of_element_located(self._helper.by_locator(locator)), "", timeout)
         except TimeoutException:
             self.logger.info("Element %s is not visible", locator)
             return False
@@ -235,7 +235,7 @@ class BasePage:
         :param error_msg: message to fail with; default names the locator and both texts
         """
         try:
-            self.wait_until(EC.text_to_be_present_in_element(self._element_finder.by_locator(locator), text), "")
+            self.wait_until(EC.text_to_be_present_in_element(self._helper.by_locator(locator), text), "")
         except TimeoutException:
             matches = self.find_elements(locator)
             actual = matches[0].text if matches else "<no element>"

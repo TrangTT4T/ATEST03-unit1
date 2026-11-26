@@ -479,7 +479,7 @@ ATEST03-unit1/
 │   │   ├── cart_steps.py
 │   │   └── account_steps.py
 │   └── environment.py         # hooks
-├── helper_utility/helpers.py  # page(), product(): helpers shared by steps
+├── helper_utility/helpers.py  # class Helper: step helpers + element finder
 ├── dataset/products.json      # test data (Unit 2 keeps a copy in its dataset/)
 └── reports/
 ```
@@ -597,24 +597,25 @@ Each Gherkin line matches exactly one Python function through `@given / @when / 
 from behave import given, then, use_step_matcher, when
 
 from pages import BasePage, CartPage, ProductPage
-from helper_utility.helpers import create_page_object, get_product_from_dataset
+from helper_utility.helpers import Helper
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
-    product_page = create_page_object(context, ProductPage)
-    product_page.open_product_page(get_product_from_dataset(context, name)["path-name"])
+    product_page = Helper.create_page_object(context, ProductPage)
+    product = Helper.get_product_from_dataset(context, name)
+    product_page.open_product_page(product["path-name"])
     product_page.add_to_cart(quantity)
 
 
 @when("the customer adds the product to the cart")
 def step_add_current(context):
-    create_page_object(context, ProductPage).add_to_cart(1)
+    Helper.create_page_object(context, ProductPage).add_to_cart(1)
 
 
 @when('the customer changes the quantity of "{name}" to {quantity:d}')
 def step_change_qty(context, name, quantity):
-    cart = create_page_object(context, CartPage)
+    cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     cart.change_quantity(name, quantity)
 
@@ -626,7 +627,7 @@ use_step_matcher("re")
 @then(r"the cart should contain (?P<count>\d+) items?")
 def step_cart_count(context, count):
     count = int(count)
-    cart = create_page_object(context, CartPage)
+    cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     actual = cart.count_items_in_cart()
     assert actual == count, f"Expected {count} item(s) in the cart, found {actual}"
@@ -638,7 +639,7 @@ use_step_matcher("parse")
 
 @then('the cart total should be "{expected}"')
 def step_cart_total(context, expected):
-    cart = create_page_object(context, CartPage)
+    cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     actual = cart.get_cart_total()
     assert actual == BasePage.money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
@@ -647,17 +648,31 @@ def step_cart_total(context, expected):
 #### 3.3 Shared helpers: `helper_utility/helpers.py`
 
 ```python
-def product(context, name):
-    """Look up test data by product name; fail loudly on an unknown name."""
-    try:
-        return context.products[name]
-    except KeyError:
-        raise AssertionError(f"Unknown product {name!r}: add it to dataset/products.json")
+class Helper:
+    ############################################################################
+    # Step helpers
+    # Scope: tests/steps > test data, page objects
+    ############################################################################
+    @staticmethod
+    def get_product_from_dataset(context, product_name):
+        """Return the test data of one product from dataset/products.json: path-name, price, status."""
+        try:
+            return context.products[product_name]
+        except KeyError:
+            raise AssertionError(f"Unknown product {product_name!r}: add it to dataset/products.json")
 
+    @staticmethod
+    def create_page_object(context, page_class):
+        """Create a page object (e.g. CartPage) bound to this scenario's browser, base URL and timeout."""
+        return page_class(context.driver, context.base_url, context.timeout)
 
-def page(context, cls):
-    """Build a Page Object bound to this scenario's browser."""
-    return cls(context.driver, context.base_url, context.timeout)
+    ############################################################################
+    # Element finder
+    # Scope: BasePage > locator string -> (By, criteria) -> elements
+    ############################################################################
+    def by_locator(self, locator): ...       # section 3.5
+    def find_element(self, driver, locator): ...
+    def find_elements(self, driver, locator): ...
 ```
 
 #### 3.4 The Page Object the steps call (`pages/product_page.py`, shortened)
@@ -701,7 +716,7 @@ Step-writing rules:
 
 #### 3.5 Locator strings and the custom BasePage methods
 
-A locator is a plain XPath string that describes the element (its id, an attribute, its text), declared at the bottom of the page class under a comment that names the area of the page. `ElementFinder` turns it into what Selenium needs, so no page imports `By`:
+A locator is a plain XPath string that describes the element (its id, an attribute, its text), declared at the bottom of the page class under a comment that names the area of the page. The element finder in `Helper` turns it into what Selenium needs, so no page imports `By`:
 
 ```python
     # --- Locators -------------------------------------------------------------
@@ -721,7 +736,7 @@ A locator is a plain XPath string that describes the element (its id, an attribu
 | By text | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
 | Template | `"//a[contains(@href,'/products/{}')]"`, filled with `self._tile.format(path_name)` |
 
-`ElementFinder` (in `helper_utility/helpers.py`, the same shape as the team's `selenium_wrapper/elementfinder.py`) reads every locator. `by_locator(locator)` splits it into a prefix and the criteria (no prefix for XPath), looks the prefix up in its `strategies` table and returns `(By, criteria)`:
+The element finder part of `Helper` (in `helper_utility/helpers.py`, the same shape as the team's `selenium_wrapper/elementfinder.py`) reads every locator. `by_locator(locator)` splits it into a prefix and the criteria (no prefix for XPath), looks the prefix up in its `strategies` table and returns `(By, criteria)`:
 
 | Locator | Prefix | Selenium |
 | --- | --- | --- |
@@ -755,7 +770,7 @@ Method names say what the method does and whether it waits:
 | `open_…`, `click_…`, `change_…`, `type_…` | Does something on the page | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Check: raises `AssertionError` with a readable message | `element_should_be_visible` |
 
-`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Locators are read by `ElementFinder`; helpers such as `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
+`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Locators are read by `Helper.by_locator`; helpers such as `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
 
 ### 4. Hooks
 

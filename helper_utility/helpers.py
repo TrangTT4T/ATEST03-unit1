@@ -1,41 +1,19 @@
-"""Helpers shared by the steps and the pages (kept outside tests/steps so behave never loads them twice).
+"""Helper: everything the steps and the pages share, in one class.
 
-* get_product_from_dataset, create_page_object: used by the step modules;
-* ElementFinder: used by BasePage to read every locator.
+* Step helpers: Helper.get_product_from_dataset(context, name), Helper.create_page_object(context, CartPage).
+* Element finder (used by BasePage): reads a locator string and tells Selenium how to find it, the same
+  idea as the team's selenium_wrapper/elementfinder.py. A locator is plain XPath with no prefix (the
+  default, and what every page writes), or "prefix=criteria" / "prefix:criteria": "id=cart", "name=q",
+  "css=#cart", "link=Forgot your password?", "partial link=Forgot", "tag_name=h1", "class_name=errors".
+
+Kept outside tests/steps so behave never loads it twice.
 """
 import re
 
 from selenium.webdriver.common.by import By
 
 
-def get_product_from_dataset(context, product_name):
-    """Return the test data of one product from dataset/products.json: path-name, price, status.
-
-    Fails the step with a clear message when the name is not in the file.
-    """
-    try:
-        return context.products[product_name]
-    except KeyError:
-        raise AssertionError(f"Unknown product {product_name!r}: add it to dataset/products.json")
-
-
-def create_page_object(context, page_class):
-    """Create a page object (e.g. CartPage) bound to this scenario's browser, base URL and timeout."""
-    return page_class(context.driver, context.base_url, context.timeout)
-
-
-class ElementFinder:
-    """Reads a locator string and tells Selenium how to find the element.
-
-    Same idea as the team's selenium_wrapper/elementfinder.py. A locator is either
-
-    * plain XPath with no prefix (the default, and what every page in this project writes):
-      "//*[@id='cart']", "(//a)[1]";
-    * or "prefix=criteria" / "prefix:criteria" for another strategy:
-      "id=cart", "name=q", "css=#cart", "link=Forgot your password?", "partial link=Forgot",
-      "tag_name=h1", "class_name=errors", "xpath=//h1".
-    """
-
+class Helper:
     def __init__(self):
         strategies = {
             "id": By.ID,
@@ -50,6 +28,30 @@ class ElementFinder:
         }
         self._strategies = strategies
 
+    ############################################################################
+    # Step helpers
+    # Scope: tests/steps > test data, page objects
+    ############################################################################
+    @staticmethod
+    def get_product_from_dataset(context, product_name):
+        """Return the test data of one product from dataset/products.json: path-name, price, status.
+
+        Fails the step with a clear message when the name is not in the file.
+        """
+        try:
+            return context.products[product_name]
+        except KeyError:
+            raise AssertionError(f"Unknown product {product_name!r}: add it to dataset/products.json")
+
+    @staticmethod
+    def create_page_object(context, page_class):
+        """Create a page object (e.g. CartPage) bound to this scenario's browser, base URL and timeout."""
+        return page_class(context.driver, context.base_url, context.timeout)
+
+    ############################################################################
+    # Element finder
+    # Scope: BasePage > locator string -> (By, criteria) -> elements
+    ############################################################################
     def by_locator(self, locator: str) -> tuple[str, str]:
         """The (By, criteria) pair Selenium needs for ``locator``.
 
