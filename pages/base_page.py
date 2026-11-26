@@ -250,19 +250,16 @@ class BasePage:
         return self.wait_until(self.header_cart_count_if_shown, "The header never showed a cart count")
 
     def header_cart_count_if_shown(self, driver=None) -> int | bool:
-        """The number in the header cart link, or False until that number is on the page."""
-        match = re.search(r"\((\d+)\)", self._read_header_cart_text() or "")
-        return int(match.group(1)) if match else False
+        """The number in the header cart link, or False until that number is on the page.
 
-    def _read_header_cart_text(self) -> str:
-        _by, xpath = self._element_finder.by_locator(self._header_cart_link)
-        return self.driver.execute_script(
-            "var found=document.evaluate(arguments[0], document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);"
-            "var text='';"
-            "for (var i=0;i<found.snapshotLength;i++){ text += ' ' + (found.snapshotItem(i).textContent||''); }"
-            "return text;",
-            xpath,
-        ) or ""
+        Reads textContent, not .text: the desktop link is often hidden, and .text is then empty.
+        """
+        try:
+            text = " ".join(link.get_attribute("textContent") or "" for link in self.find_elements(self._header_cart_link))
+        except StaleElementReferenceException:  # the header was redrawn while reading: try again
+            return False
+        match = re.search(r"\((\d+)\)", text)
+        return int(match.group(1)) if match else False
 
     def open_search_results(self, keyword: str):
         """Open the search results for ``keyword``.
