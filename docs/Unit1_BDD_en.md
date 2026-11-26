@@ -131,7 +131,7 @@ Sauce Demo is a Shopify store: the team has no source code or internal API, so t
 | `@regression`                     | All automated scenarios                               | Nightly                     |
 | `@critical` / `@high` / `@medium` | Risk level from section 2                             | Filter when time is limited |
 | `@cart`, `@login`, `@checkout` …    | Feature area                                          | Run one area                |
-| `@add_to_cart`, `@secure_login` … | Requirement the scenario proves (REQ-01, REQ-05 …)    | Traceability matrix         |
+| `@add_to_cart`, `@secure_login` … | Requirement the scenario proves (REQ-01, REQ-05 …)    | Run one requirement         |
 | `@negative`                       | Negative case                                         | –                           |
 | `@data-creating`                  | Creates real data on the store                        | Only when permitted         |
 | `@wip`, `@manual`                 | Work in progress / manual only                        | Excluded from the pipeline  |
@@ -411,7 +411,7 @@ ATEST03-unit1/
 | Day   | Work                                                                                                                             | Output                                            |
 |-------|----------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
 | Day 2 | Set up behave + Selenium, Page Objects, step definitions, hooks, tags                                                            | `behave --dry-run` passes with no undefined steps |
-| Day 3 | Lab: complete scenarios for REQ-01 → REQ-08, screenshots on failure, HTML/Allure report, traceability matrix generated from tags | Repo + real run report                            |
+| Day 3 | Lab: complete scenarios for REQ-01 → REQ-08, screenshots on failure, HTML/Allure report, a requirement tag on every scenario | Repo + real run report                            |
 | Day 4 | Review against the rubric below, find duplicate steps, propose improvements                                                      | Review sheet + action list                        |
 
 #### 7.4 Self-review rubric (reused on Day 4)
@@ -803,7 +803,7 @@ Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), an
 | Case type    | `@negative`                         | Invalid login                             |
 | Control      | `@manual`, `@wip`, `@data-creating` | Excluded by default                       |
 | Feature area | `@cart`, `@login`                   | Feature-level tags: run one area           |
-| Requirement  | `@add_to_cart`, `@secure_login` …   | One per scenario: the traceability matrix (Day 3) |
+| Requirement  | `@add_to_cart`, `@secure_login` …   | One per scenario: run one requirement (Day 3) |
 
 Filter expressions (behave 1.3, tag expressions v2):
 
@@ -981,21 +981,20 @@ behave                                # default suite (behave.ini: not @manual /
 behave --tags=@smoke                  # smoke only
 behave --tags=@data-creating          # creates a real account: only with trainer approval
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results (opt-in)
-python -m unittest discover -s tests/unit    # page-object layout + traceability rules (no browser)
+python -m unittest discover -s tests/unit    # page-object layout, tags, review checklist (no browser)
 ```
 
-One `behave` run writes every report (`behave.ini` sets the formatters; `after_all` in `tests/environment.py` writes the matrix):
+One `behave` run writes every report (`behave.ini` sets the formatters):
 
 | Output | Path |
 | --- | --- |
 | HTML report | `reports/report.html` |
 | JSON results | `reports/results.json` |
 | JUnit XML (CI) | `reports/junit/*.xml` |
-| Traceability matrix | `reports/traceability.md`, `reports/traceability.csv` |
 | Allure results (opt-in) | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Screenshots of failed steps | `reports/screenshots/` |
 
-**Traceability matrix generated from tags.** Every scenario carries one requirement tag that names what it proves (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` maps each tag to its Day 1 id (REQ-01 …), title and risk. `helper_utility/traceability.py` groups the run's scenarios by requirement: FAIL if any failed, PASS if every scenario that ran passed, NOT RUN if none ran (`@data-creating`, or another area with `--tags`), NO TEST if no scenario is tagged. `tests/unit/test_traceability.py` fails when a scenario has no requirement tag, a requirement has no scenario, or a tag is in neither `requirements.json` nor `dataset/tags.json` (a typo such as `@add_to_card`).
+**Traceability through tags.** Every scenario carries one requirement tag that names what it proves (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` maps each tag to its Day 1 id (REQ-01 …), title and risk. `behave --tags=@add_to_cart` runs the scenarios of one requirement, and the tags appear in the HTML and JSON reports. `tests/unit/test_tags.py` fails when a scenario has no requirement tag, a requirement has no scenario, or a tag is in neither `requirements.json` nor `dataset/tags.json` (a typo such as `@add_to_card`).
 
 ### 6. Expected results
 
@@ -1003,8 +1002,8 @@ One `behave` run writes every report (`behave.ini` sets the formatters; `after_a
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
-| `python -m unittest discover -s tests/unit` | 21 tests OK: page-object layout, traceability, the Day 4 review checklist, add-to-cart waits |
-| Traceability | `reports/traceability.md`: REQ-01 … REQ-06 and REQ-08 PASS; REQ-07 NOT RUN (both registration scenarios are excluded: `@manual`, `@data-creating`) |
+| `python -m unittest discover -s tests/unit` | 17 tests OK: page-object layout, tags, the Day 4 review checklist, add-to-cart waits |
+| Traceability | `behave --dry-run --tags=@add_to_cart` … `@search_products`: every requirement lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
 
@@ -1028,7 +1027,7 @@ The Day 3 framework scores 15/16 on the review rubric after the fixes made durin
 cd ATEST03-unit1
 python -m unittest discover -s tests/unit          # the automated checklist below (no browser)
 behave --dry-run                                   # undefined or ambiguous steps
-behave                                             # full run + reports/traceability.md
+behave                                             # full run
 ```
 
 A rule that only lives in a review document erodes; a rule that fails the run does not. Every checklist rule that code can check is a test in `tests/unit/` (`test_framework_review.py` unless noted). What stays a human review: whether a scenario is the right example for its requirement, and naming.
@@ -1037,7 +1036,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | --- | --- | --- |
 | Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in a step | `test_no_url_selector_click_or_wait_in_steps` |
 | Scenario size | At most 7 steps (background included) | `test_scenarios_stay_short` |
-| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | `test_traceability.py`; `reports/traceability.md` per run |
+| Traceability | Every scenario has exactly one known requirement tag; every requirement has a scenario; no unknown tag | `test_tags.py`; `behave --tags=@add_to_cart` … |
 | Step reuse, no duplication | No unused or undefined step; no two step texts that differ only by parameters or a plural s (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
 | Layering | Steps call page objects only: no `context.driver`, `By.` or Selenium import in steps; one page class per file, locators at the bottom | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
 | Stability | No `sleep()` in steps, pages, helpers or hooks | `test_no_fixed_waits` |
@@ -1052,9 +1051,9 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | Declarative Gherkin | 0 imperative steps | 2 |
 | Independence | Fresh browser per scenario (`before_scenario`) | 2 |
 | Step reuse | 0 unused, 0 undefined, 0 near-duplicates (checked by a test since F12) | 2 |
-| Traceability | 8/8 requirements, every scenario has one requirement tag; matrix generated on every run (`reports/traceability.md`); one requirement list (`dataset/requirements.json`) after F5 | 2 |
+| Traceability | 8/8 requirements, every scenario has one requirement tag; one requirement list (`dataset/requirements.json`) after F5 | 2 |
 | Data separated from code | Names, handles, prices in `dataset/products.json` / Examples | 2 |
-| Reporting | One run writes HTML, JSON, JUnit and the traceability matrix; Allure opt-in; screenshot on failure | 2 |
+| Reporting | One run writes HTML, JSON and JUnit; Allure opt-in; screenshot on failure | 2 |
 | Stability | Explicit waits only; not yet proven on 3 live runs (F3) | 1 |
 | **Total** | | **15 / 16** |
 

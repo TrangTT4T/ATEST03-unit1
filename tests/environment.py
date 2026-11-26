@@ -1,4 +1,4 @@
-"""behave hooks: browser lifecycle, tag handling, screenshots on failure, traceability.
+"""behave hooks: browser lifecycle, tag handling, screenshots on failure.
 
 Hook order per run:
   before_all -> (before_feature -> (before_tag -> before_scenario -> before_step/after_step ... -> after_scenario) ...) -> after_all
@@ -13,8 +13,6 @@ from selenium import webdriver
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))  # makes pages/ and helper_utility/ importable from steps
-
-from helper_utility.traceability import ScenarioResult, write_reports  # noqa: E402 (needs ROOT on sys.path)
 
 REPORTS = ROOT / "reports"
 SCREENSHOTS = REPORTS / "screenshots"
@@ -79,22 +77,3 @@ def after_scenario(context, scenario):
     if driver:
         driver.quit()
         context.driver = None
-
-
-def after_all(context):
-    """Requirement traceability for THIS run: reports/traceability.md and .csv.
-
-    Every parsed scenario is listed, also the ones the tag filter skipped (they count as NOT RUN,
-    not as missing), so running one area with --tags=@cart does not make the others look untested.
-    """
-    features = getattr(context._runner, "features", [])  # behave keeps every parsed feature here
-    results = [
-        ScenarioResult(Path(feature.filename).name, scenario.name, frozenset(scenario.effective_tags),
-                       scenario.status.name)
-        for feature in features
-        for scenario in feature.walk_scenarios()
-    ]
-    rows = write_reports(ROOT / "dataset" / "requirements.json", results, REPORTS)
-    summary = ", ".join(f"@{row.requirement.tag} {row.status}" for row in rows)
-    # sys.__stdout__: behave captures print() inside hooks.
-    sys.__stdout__.write(f"\nTraceability: {summary}\nReports: {REPORTS.relative_to(ROOT)}/\n")

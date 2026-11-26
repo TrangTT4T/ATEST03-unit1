@@ -131,7 +131,7 @@ Sauce Demo là store Shopify, nhóm test không có mã nguồn hay API nội b�
 | `@regression`                     | Toàn bộ scenario đã automate                               | Hằng đêm                           |
 | `@critical` / `@high` / `@medium` | Mức rủi ro từ bảng mục 2                                   | Lọc khi thời gian chạy bị giới hạn |
 | `@cart`, `@login`, `@checkout` …    | Nhóm chức năng                                             | Chạy một nhóm                      |
-| `@add_to_cart`, `@secure_login` … | Yêu cầu mà scenario chứng minh (REQ-01, REQ-05 …)          | Ma trận truy vết                   |
+| `@add_to_cart`, `@secure_login` … | Yêu cầu mà scenario chứng minh (REQ-01, REQ-05 …)          | Chạy riêng một yêu cầu             |
 | `@negative`                       | Case âm                                                    | –                                  |
 | `@data-creating`                  | Tạo dữ liệu thật trên store                                | Chỉ chạy khi được phép             |
 | `@wip`, `@manual`                 | Đang viết / chỉ kiểm thủ công                              | Loại khỏi pipeline                 |
@@ -411,7 +411,7 @@ ATEST03-unit1/
 | Day   | Việc cần làm                                                                                                   | Đầu ra                                                    |
 |-------|----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
 | Day 2 | Dựng cấu trúc behave + Selenium, Page Object, viết step definitions, hooks, tag                                | Project chạy được `behave --dry-run` không còn step thiếu |
-| Day 3 | Lab: hoàn thiện scenario REQ-01 → REQ-08, chụp ảnh khi fail, báo cáo HTML/Allure, sinh ma trận truy vết từ tag | Repo + báo cáo chạy thật                                  |
+| Day 3 | Lab: hoàn thiện scenario REQ-01 → REQ-08, chụp ảnh khi fail, báo cáo HTML/Allure, mỗi scenario một tag yêu cầu | Repo + báo cáo chạy thật                                  |
 | Day 4 | Review theo rubric dưới, tìm step trùng lặp, đề xuất cải tiến                                                  | Bảng review + danh sách action                            |
 
 #### 7.4 Rubric tự review (dùng lại ở Day 4)
@@ -803,7 +803,7 @@ Tag làm ba việc: chọn scenario sẽ chạy, điều khiển hook (bỏ qua 
 | Loại case  | `@negative`                         | Login sai thông tin                       |
 | Kiểm soát  | `@manual`, `@wip`, `@data-creating` | Bị loại theo mặc định                     |
 | Nhóm chức năng | `@cart`, `@login`               | Tag cấp Feature: chạy một nhóm            |
-| Yêu cầu    | `@add_to_cart`, `@secure_login` …   | Mỗi scenario một tag: ma trận truy vết (Day 3) |
+| Yêu cầu    | `@add_to_cart`, `@secure_login` …   | Mỗi scenario một tag: chạy riêng một yêu cầu (Day 3) |
 
 Biểu thức lọc (behave 1.3, cú pháp tag expression v2):
 
@@ -981,21 +981,20 @@ behave                                # bộ mặc định (behave.ini: bỏ @ma
 behave --tags=@smoke                  # chỉ smoke
 behave --tags=@data-creating          # tạo tài khoản thật: chỉ khi trainer cho phép
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # kết quả Allure (tùy chọn)
-python -m unittest discover -s tests/unit    # kiểm tra cấu trúc page object + truy vết (không cần trình duyệt)
+python -m unittest discover -s tests/unit    # kiểm tra cấu trúc page object, tag, checklist review (không cần trình duyệt)
 ```
 
-Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatter; `after_all` trong `tests/environment.py` ghi ma trận):
+Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatter):
 
 | Đầu ra | Đường dẫn |
 | --- | --- |
 | Báo cáo HTML | `reports/report.html` |
 | Kết quả JSON | `reports/results.json` |
 | JUnit XML (CI) | `reports/junit/*.xml` |
-| Ma trận truy vết | `reports/traceability.md`, `reports/traceability.csv` |
 | Allure (tùy chọn) | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Ảnh step fail | `reports/screenshots/` |
 
-**Ma trận truy vết sinh từ tag.** Mỗi scenario mang đúng một tag yêu cầu, gọi tên điều nó chứng minh (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` nối mỗi tag với mã Day 1 (REQ-01 …), tiêu đề và rủi ro. `helper_utility/traceability.py` gom scenario của lượt chạy theo yêu cầu: FAIL nếu có scenario fail, PASS nếu mọi scenario đã chạy đều pass, NOT RUN nếu không scenario nào chạy (`@data-creating`, hoặc lọc khu vực khác bằng `--tags`), NO TEST nếu chưa scenario nào gắn tag đó. `tests/unit/test_traceability.py` báo lỗi khi scenario thiếu tag yêu cầu, khi một yêu cầu chưa có scenario, hoặc khi feature dùng tag không có trong `requirements.json` lẫn `dataset/tags.json` (gõ sai như `@add_to_card`).
+**Truy vết qua tag.** Mỗi scenario mang đúng một tag yêu cầu, gọi tên điều nó chứng minh (`@add_to_cart`, `@secure_login` …); `dataset/requirements.json` nối mỗi tag với mã Day 1 (REQ-01 …), tiêu đề và rủi ro. `behave --tags=@add_to_cart` chạy riêng các scenario của một yêu cầu, và tag hiện trong báo cáo HTML, JSON. `tests/unit/test_tags.py` báo lỗi khi scenario thiếu tag yêu cầu, khi một yêu cầu chưa có scenario, hoặc khi feature dùng tag không có trong `requirements.json` lẫn `dataset/tags.json` (gõ sai như `@add_to_card`).
 
 ### 6. Kết quả mong đợi
 
@@ -1003,8 +1002,8 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
-| `python -m unittest discover -s tests/unit` | 21 test OK: cấu trúc page object, truy vết, checklist review Day 4, cách chờ khi thêm vào giỏ |
-| Truy vết | `reports/traceability.md`: REQ-01 … REQ-06 và REQ-08 PASS; REQ-07 NOT RUN (cả hai scenario đăng ký đều bị loại: `@manual`, `@data-creating`) |
+| `python -m unittest discover -s tests/unit` | 17 test OK: cấu trúc page object, tag, checklist review Day 4, cách chờ khi thêm vào giỏ |
+| Truy vết | `behave --dry-run --tags=@add_to_cart` … `@search_products`: yêu cầu nào cũng liệt kê được ít nhất một scenario |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
 
@@ -1028,7 +1027,7 @@ Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi re
 cd ATEST03-unit1
 python -m unittest discover -s tests/unit          # checklist tự động bên dưới (không cần trình duyệt)
 behave --dry-run                                   # step chưa có code hoặc bị mơ hồ
-behave                                             # chạy toàn bộ + reports/traceability.md
+behave                                             # chạy toàn bộ
 ```
 
 Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy tắc làm lượt chạy fail thì không. Quy tắc nào trong checklist kiểm được bằng code đều là một test trong `tests/unit/` (`test_framework_review.py` nếu không ghi khác). Phần vẫn cần người review: scenario có phải ví dụ đúng cho yêu cầu không, và cách đặt tên.
@@ -1037,7 +1036,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | --- | --- | --- |
 | Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong step | `test_no_url_selector_click_or_wait_in_steps` |
 | Độ dài scenario | Tối đa 7 step (tính cả background) | `test_scenarios_stay_short` |
-| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | `test_traceability.py`; `reports/traceability.md` mỗi lần chạy |
+| Truy vết | Mỗi scenario có đúng một tag yêu cầu hợp lệ; yêu cầu nào cũng có scenario; không có tag lạ | `test_tags.py`; `behave --tags=@add_to_cart` … |
 | Tái sử dụng step, không trùng lặp | Không step thừa hoặc chưa định nghĩa; không có hai câu step chỉ khác tham số hoặc chữ s số nhiều (finding F1) | `test_no_unused_or_undefined_steps` (behave `steps.usage`), `test_no_near_duplicate_step_texts` |
 | Phân lớp | Step chỉ gọi page object: không `context.driver`, `By.`, import Selenium trong step; mỗi file page một class, locator ở cuối | `test_steps_use_page_objects_not_selenium`, `test_page_objects.py` |
 | Ổn định | Không `sleep()` trong steps, pages, helper, hook | `test_no_fixed_waits` |
@@ -1052,9 +1051,9 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | Gherkin declarative | 0 step imperative | 2 |
 | Độc lập | Trình duyệt mới mỗi scenario (`before_scenario`) | 2 |
 | Tái sử dụng step | 0 thừa, 0 chưa định nghĩa, 0 gần trùng (có test kiểm tra từ F12) | 2 |
-| Truy vết | 8/8 requirement, mỗi scenario một tag yêu cầu; ma trận sinh ở mỗi lần chạy (`reports/traceability.md`); một danh sách requirement (`dataset/requirements.json`) sau F5 | 2 |
+| Truy vết | 8/8 requirement, mỗi scenario một tag yêu cầu; một danh sách requirement (`dataset/requirements.json`) sau F5 | 2 |
 | Tách dữ liệu khỏi code | Tên, handle, giá nằm trong `dataset/products.json` / Examples | 2 |
-| Báo cáo | Một lần chạy sinh HTML, JSON, JUnit và ma trận truy vết; Allure tùy chọn; ảnh khi fail | 2 |
+| Báo cáo | Một lần chạy sinh HTML, JSON và JUnit; Allure tùy chọn; ảnh khi fail | 2 |
 | Ổn định | Chỉ explicit wait; chưa chứng minh qua 3 lần chạy trên site thật (F3) | 1 |
 | **Tổng** | | **15 / 16** |
 

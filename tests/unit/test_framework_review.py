@@ -5,6 +5,7 @@
 A rule that only lives in a review document erodes; a rule that fails the run does not. What stays a
 human review: whether a scenario is the RIGHT example for its requirement, and naming.
 """
+import json
 import re
 import subprocess
 import sys
@@ -13,9 +14,6 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
-
-from helper_utility.traceability import load_requirements  # noqa: E402
 
 FEATURES = sorted((ROOT / "tests" / "features").glob("*.feature"))
 STEP_FILES = sorted((ROOT / "tests" / "steps").glob("*.py"))
@@ -109,7 +107,7 @@ class Stability(unittest.TestCase):
 class RiskDrivesScope(unittest.TestCase):
     def test_every_critical_and_high_requirement_runs_by_default(self):
         """A Critical/High requirement proven only by @manual or @data-creating scenarios is not tested."""
-        requirements = load_requirements(ROOT / "dataset" / "requirements.json")
+        requirements = json.loads((ROOT / "dataset" / "requirements.json").read_text(encoding="utf-8"))["requirements"]
         running = {
             tag
             for feature in _parsed()
@@ -117,7 +115,7 @@ class RiskDrivesScope(unittest.TestCase):
             if not EXCLUDED_BY_DEFAULT & set(scenario.effective_tags)
             for tag in scenario.effective_tags
         }
-        missing = sorted(r.id for tag, r in requirements.items() if r.level in {"Critical", "High"} and tag not in running)
+        missing = sorted(r["id"] for tag, r in requirements.items() if r["level"] in {"Critical", "High"} and tag not in running)
         self.assertEqual(missing, [])
 
 
