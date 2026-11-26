@@ -34,17 +34,56 @@ class ProductPage(BasePage):
     # Scope: Product page > Add to cart form
     ############################################################################
     def add_to_cart(self, quantity: int = 1):
-        """Add ``quantity`` items and wait until the store has taken every one."""
+        """Add ``quantity`` items, then open the cart.
+
+        Clicking Add to Cart on this theme leaves a spinner on the product page and the
+        document never finishes loading. The item is already in the cart, so add it and
+        open the cart ourselves instead of waiting on that spinner.
+        """
         if self.is_element_visible(self._quantity):
             self.type_text(self._quantity, str(quantity))
+        if not self._add_without_leaving(quantity):
             self._add(expected_increase=quantity)
+            if "/cart" not in self.url:
+                self._open_url(f"{self.base_url.rstrip('/')}/cart")
             return
-        # Theme without a visible quantity box: add the product N times.
-        product_url = self.url
-        for _ in range(quantity):
-            if "/products/" not in self.url:  # a non-AJAX theme moved to /cart after the last add
-                self.driver.get(product_url)
-            self._add(expected_increase=1)
+        self._open_url(f"{self.base_url.rstrip('/')}/cart")
+
+    def _add_without_leaving(self, quantity: int) -> bool:
+        """POST /cart/add.js while staying on the product page. True when the store accepted it."""
+        self.driver.set_script_timeout(15)
+        try:
+            return bool(self.driver.execute_async_script(
+                """
+                var done = arguments[arguments.length - 1];
+                var qty = arguments[0];
+                var form = document.getElementById('product-form');
+                if (!form) { done(false); return; }
+                var idInput = form.querySelector('[name="id"]');
+                if (!idInput || !idInput.value) { done(false); return; }
+                fetch('/cart/add.js', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+                  body: JSON.stringify({id: Number(idInput.value), quantity: Number(qty)})
+                }).then(function (response) { done(response.ok); }, function () { done(false); });
+                """,
+                quantity,
+            ))
+        except Exception:
+            return False
+
+    def _open_url(self, url: str):
+        """Open ``url`` and continue even if the theme's spinner never lets the page finish."""
+        self.driver.set_page_load_timeout(8)
+        try:
+            self.driver.get(url)
+        except TimeoutException:
+            try:
+                self.driver.execute_script("window.stop();")
+            except Exception:
+                pass
+        finally:
+            self.driver.set_page_load_timeout(300)
 
     def _add(self, expected_increase: int):
         """Click Add to Cart and wait until the browser has loaded the next page.
