@@ -379,13 +379,6 @@ class BasePage:
             return None
         return int(match.group(1)) if match else None
 
-    def cart_count(self) -> int:
-        """How many items the store has in the cart. The header text is not reliable while it updates."""
-        return int(self.driver.execute_script(
-            "var xhr=new XMLHttpRequest(); xhr.open('GET','/cart.js',false); xhr.send(null);"
-            "return JSON.parse(xhr.responseText).item_count;"
-        ))
-
     def _header_cart_text(self) -> str:
         return self.driver.execute_script(
             "var nodes=document.querySelectorAll('a.cart, a.toggle-drawer');"
@@ -394,17 +387,55 @@ class BasePage:
             "return text;"
         ) or ""
 
-    def search(self, keyword: str):
-        """Search for ``keyword`` and wait until the results page is showing.
+    def cart_count(self) -> int | None:
+        """How many items the store has in the cart, or None while the page is changing.
 
-        Pressing Enter can be swallowed by the theme, which changes the URL without loading
-        the results page. Submitting the form directly loads ``#keyword``.
+        A click that submits the add-to-cart form navigates, and /cart.js then returns the
+        HTML of the new page for a moment. That is not a failure.
         """
-        self.type_text(self._search_box, keyword)
-        self.driver.execute_script("document.querySelector('form.search-form').submit()")
-        self.wait_for_url_contains("/search")
-        self.wait_for_element_visible(self._search_banner)
+        try:
+            value = self.driver.execute_script(
+                "try {"
+                " var xhr=new XMLHttpRequest();"
+                " xhr.open('GET','/cart.js',false);"
+                " xhr.send(null);"
+                " var body=xhr.responseText||'';"
+                " if(body.charAt(0)!=='{') return null;"
+                " return JSON.parse(body).item_count;"
+                "} catch(e){ return null; }"
+            )
+        except Exception:
+            return None
+        return None if value is None else int(value)
+
+    def search(self, keyword: str):
+        """Search for ``keyword`` and wait until the results banner names it.
+
+        The keyword is written into the same form that is submitted. Pressing Enter can
+        leave it behind, and an empty search page has no #keyword.
+        """
+        self.driver.execute_script(
+            "var form=document.querySelector('form.search-form');"
+            "if(!form) return;"
+            "var input=form.querySelector('[name=q]');"
+            "if(input) input.value=arguments[0];"
+            "form.submit();",
+            keyword,
+        )
+        self.wait_for_url_contains(keyword)
+        self.wait_until(
+            lambda d: keyword.lower() in self._search_banner_text().lower(),
+            f"Search results for {keyword!r} never loaded (now {self.url})",
+        )
         return self
+
+    def _search_banner_text(self) -> str:
+        try:
+            return self.driver.execute_script(
+                "var el=document.querySelector('#keyword'); return el ? el.textContent : '';"
+            ) or ""
+        except Exception:
+            return ""
 
     # --- Locators -------------------------------------------------------------
     _html = "tag=html"

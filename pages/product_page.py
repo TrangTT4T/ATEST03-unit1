@@ -52,25 +52,27 @@ class ProductPage(BasePage):
         never finishes, post the form to /cart/add.js. The header link is not used: its text
         disappears while the theme rewrites it.
         """
-        before = self.cart_count()
+        before = self.cart_count() or 0
         self.click_element(self._add_button)
         try:
             self._wait_until_taken(before, expected_increase, timeout=4)
         except TimeoutException:
-            # The fly-to-cart animation never submitted the form. Post the same form.
-            self.driver.execute_script(
-                "var form=document.querySelector(\"form[action*='/cart/add']\");"
-                "if(!form) return;"
-                "var xhr=new XMLHttpRequest();"
-                "xhr.open('POST','/cart/add.js',false);"
-                "xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');"
-                "xhr.send(new URLSearchParams(new FormData(form)).toString());"
-            )
+            try:
+                self.driver.execute_script(
+                    "var form=document.getElementById('product-form');"
+                    "if(!form) return;"
+                    "var xhr=new XMLHttpRequest();"
+                    "xhr.open('POST','/cart/add.js',false);"
+                    "xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');"
+                    "xhr.send(new URLSearchParams(new FormData(form)).toString());"
+                )
+            except Exception:
+                pass
             self._wait_until_taken(before, expected_increase)
 
     def _wait_until_taken(self, before: int, expected_increase: int, timeout: int | None = None):
         self.wait_until(
-            lambda d: self.cart_count() >= before + expected_increase,
+            lambda d: (self.cart_count() or -1) >= before + expected_increase,
             f"The cart never took the product (count stayed at {before})",
             timeout,
         )
