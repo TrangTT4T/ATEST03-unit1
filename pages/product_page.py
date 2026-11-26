@@ -48,25 +48,30 @@ class ProductPage(BasePage):
     def _add(self, expected_increase: int):
         """Click Add to Cart and wait until the store has taken the product.
 
-        The theme does not add on the click itself. It plays a fly-to-cart animation and only
-        then submits the form. If that animation never finishes, the header stays at the old
-        count, so this submits the same form.
+        The theme plays a fly-to-cart animation and only then submits the form. If that animation
+        never finishes, post the form to /cart/add.js. The header link is not used: its text
+        disappears while the theme rewrites it.
         """
-        before = self.mini_cart_count()
+        before = self.cart_count()
         self.click_element(self._add_button)
         try:
             self._wait_until_taken(before, expected_increase, timeout=4)
         except TimeoutException:
+            # The fly-to-cart animation never submitted the form. Post the same form.
             self.driver.execute_script(
-                "var form=document.querySelector(\"form[action*='/cart/add']\"); if (form) form.submit();"
+                "var form=document.querySelector(\"form[action*='/cart/add']\");"
+                "if(!form) return;"
+                "var xhr=new XMLHttpRequest();"
+                "xhr.open('POST','/cart/add.js',false);"
+                "xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');"
+                "xhr.send(new URLSearchParams(new FormData(form)).toString());"
             )
             self._wait_until_taken(before, expected_increase)
 
     def _wait_until_taken(self, before: int, expected_increase: int, timeout: int | None = None):
         self.wait_until(
-            lambda d: ("/cart" in d.current_url and "/products/" not in d.current_url)
-            or (self.mini_cart_count_now() or 0) >= before + expected_increase,
-            f"The cart never took the product (header count stayed at {before})",
+            lambda d: self.cart_count() >= before + expected_increase,
+            f"The cart never took the product (count stayed at {before})",
             timeout,
         )
 

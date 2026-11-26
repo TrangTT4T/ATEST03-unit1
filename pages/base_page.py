@@ -364,25 +364,44 @@ class BasePage:
     # Scope: Every page > Header (mini-cart, search box)
     ############################################################################
     def mini_cart_count(self) -> int:
-        """N in the header link "My Cart (N)" (waits for the link)."""
-        return int(re.search(r"\((\d+)\)", self.get_text(self._mini_cart)).group(1))
+        """N in "My Cart (N)". Reads textContent: the desktop link is often hidden, and Selenium's .text is then empty."""
+        def read(driver) -> int | bool:
+            match = re.search(r"\((\d+)\)", self._header_cart_text() or "")
+            return int(match.group(1)) if match else False
+
+        return self.wait_until(read, "The header never showed a cart count")
 
     def mini_cart_count_now(self) -> int | None:
         """The header count right now, or None while the page changes. No wait: for wait conditions."""
         try:
-            match = re.search(r"\((\d+)\)", self.driver.find_element(*self.parse_locator(self._mini_cart)).text)
-        except (NoSuchElementException, StaleElementReferenceException):
+            match = re.search(r"\((\d+)\)", self._header_cart_text() or "")
+        except Exception:
             return None
         return int(match.group(1)) if match else None
 
-    def search(self, keyword: str):
-        """Search for ``keyword`` from the header and wait until the results banner is on the page.
+    def cart_count(self) -> int:
+        """How many items the store has in the cart. The header text is not reliable while it updates."""
+        return int(self.driver.execute_script(
+            "var xhr=new XMLHttpRequest(); xhr.open('GET','/cart.js',false); xhr.send(null);"
+            "return JSON.parse(xhr.responseText).item_count;"
+        ))
 
-        URL ``/search`` can change before the new document is ready. Reading the grid at that
-        moment finds no product links.
+    def _header_cart_text(self) -> str:
+        return self.driver.execute_script(
+            "var nodes=document.querySelectorAll('a.cart, a.toggle-drawer');"
+            "var text='';"
+            "for (var i=0;i<nodes.length;i++){ text += ' ' + (nodes[i].textContent||''); }"
+            "return text;"
+        ) or ""
+
+    def search(self, keyword: str):
+        """Search for ``keyword`` and wait until the results page is showing.
+
+        Pressing Enter can be swallowed by the theme, which changes the URL without loading
+        the results page. Submitting the form directly loads ``#keyword``.
         """
         self.type_text(self._search_box, keyword)
-        self.press_enter(self._search_box)
+        self.driver.execute_script("document.querySelector('form.search-form').submit()")
         self.wait_for_url_contains("/search")
         self.wait_for_element_visible(self._search_banner)
         return self

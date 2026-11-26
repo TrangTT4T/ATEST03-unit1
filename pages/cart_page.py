@@ -1,6 +1,8 @@
 """Cart page: /cart"""
 import re
 
+from selenium.common.exceptions import TimeoutException
+
 from .base_page import BasePage
 
 
@@ -53,16 +55,23 @@ class CartPage(BasePage):
 
     def checkout(self):
         """Click Check Out and wait for the next page."""
-        self.click_and_wait_for_new_page(self._checkout_button)
+        try:
+            self.driver.execute_script(
+                "var button=document.querySelector('#checkout'); if(button) button.scrollIntoView({block:'center'});"
+            )
+            self.click_and_wait_for_new_page(self._checkout_button)
+        except TimeoutException:
+            self.driver.execute_script("document.querySelector('#checkout').click()")
+            self.wait_for_url_contains("checkout")
 
     # --- Locators -------------------------------------------------------------
     _cart_form = "css=#cart"
     _quantity_inputs = "css=#cart input[name^='updates']"
     # The quantity box in the same cart row as the product link
     _line_quantity = (
-        "xpath=//*[@id='cart']//a[normalize-space()='{name}']"
-        "/ancestor::*[.//input[starts-with(@name,'updates')]][1]"
+        "xpath=//*[@id='cart']//div[contains(@class,'row')]"
+        "[.//a[contains(normalize-space(.), '{name}')]]"
         "//input[starts-with(@name,'updates')]"
     )
-    _update_button = "css=#cart [name='update']"
-    _checkout_button = "css=#cart [name='checkout']"
+    _update_button = "css=#update"
+    _checkout_button = "css=#checkout"
