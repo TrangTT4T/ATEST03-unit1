@@ -12,4 +12,4 @@ def step_reset(context):
 
 @then("the password reset form should be shown")
 def step_reset_shown(context):
-    assert page(context, LoginPage).reset_form_visible()
+    assert page(context, LoginPage).shows_password_reset_form()

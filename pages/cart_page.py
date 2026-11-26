@@ -25,7 +25,7 @@ class CartPage(BasePage):
         """Sum of the quantity boxes: the number of items in the cart."""
         return sum(int(i.get_attribute("value") or 0) for i in self.quantity_inputs())
 
-    def is_empty(self) -> bool:
+    def cart_is_empty(self) -> bool:
         """True when the cart has no lines."""
         return not self.quantity_inputs()
 
@@ -46,7 +46,7 @@ class CartPage(BasePage):
         self.type_text(line, str(quantity))
         self.click_and_wait_for_new_page(self._update_button)
 
-    def remove(self, product_name: str):
+    def remove_product(self, product_name: str):
         """Remove the line of ``product_name`` (quantity 0 + Update)."""
         self.set_quantity(product_name, 0)
 
@@ -54,7 +54,7 @@ class CartPage(BasePage):
     # Total and checkout methods
     # Scope: Cart page > Total, Check Out button
     ############################################################################
-    def total(self) -> float:
+    def cart_total(self) -> float:
         """The cart total in pounds, e.g. 55.0."""
         match = self.TOTAL_PATTERN.search(self.body_text())
         if match:
@@ -62,7 +62,7 @@ class CartPage(BasePage):
         amounts = re.findall(r"£\s?[\d,]+\.\d{2}", self.get_text(self._cart_form))
         return self.money_to_float(amounts[-1])
 
-    def checkout(self):
+    def start_checkout(self):
         """Click Check Out and wait for the next page."""
         try:
             self.driver.execute_script(

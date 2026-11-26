@@ -13,7 +13,7 @@ class LoginPage(BasePage):
         """Click "Forgot your password?" to show the password-reset form."""
         self.click_element(self._forgot_password_link)
 
-    def reset_form_visible(self) -> bool:
+    def shows_password_reset_form(self) -> bool:
         """Wait until the password-reset form is visible."""
         self.element_should_be_visible(self._reset_form, "The password-reset form is not shown")
         return True

@@ -7,7 +7,7 @@ from helper_utility.helpers import page, product
 
 @when("the customer browses the full catalog")
 def step_browse_catalog(context):
-    page(context, CatalogPage).open()
+    page(context, CatalogPage).open_page()
 
 
 @then('the product "{name}" should be listed at its catalog price')
@@ -27,7 +27,7 @@ def step_listed_status(context, name, status):
 
 @then('the product page should show the name "{name}"')
 def step_detail_name(context, name):
-    actual = page(context, ProductPage).title()
+    actual = page(context, ProductPage).product_name()
     assert actual.strip() == name, f"Expected title {name!r}, found {actual!r}"
 
 

@@ -14,9 +14,9 @@ class ProductPage(BasePage):
     ############################################################################
     def open_product(self, path_name: str):
         """Open /products/<path_name>; ``path_name`` comes from dataset/products.json, e.g. "grey-jacket"."""
-        return self.open(self.URL_TEMPLATE.format(path_name=path_name))
+        return self.open_page(self.URL_TEMPLATE.format(path_name=path_name))
 
-    def title(self) -> str:
+    def product_name(self) -> str:
         """The product name."""
         return self.get_text(self._title)
 
@@ -37,16 +37,16 @@ class ProductPage(BasePage):
         """Add ``quantity`` items and wait until the store has taken every one."""
         if self.is_element_visible(self._quantity):
             self.type_text(self._quantity, str(quantity))
-            self._add(expected_increase=quantity)
+            self._submit_add_to_cart()
             return
         # Theme without a visible quantity box: add the product N times.
         product_url = self.url
         for _ in range(quantity):
             if "/products/" not in self.url:  # a non-AJAX theme moved to /cart after the last add
                 self.driver.get(product_url)
-            self._add(expected_increase=1)
+            self._submit_add_to_cart()
 
-    def _add(self, expected_increase: int):
+    def _submit_add_to_cart(self):
         """Click Add to Cart and wait until the browser has loaded the next page.
 
         The theme's click handler only submits the form after a fly-to-cart animation, and

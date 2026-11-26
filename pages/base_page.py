@@ -92,7 +92,7 @@ class BasePage:
     # Navigation methods
     # Scope: Every page
     ############################################################################
-    def open(self, path: str | None = None):
+    def open_page(self, path: str | None = None):
         """Go to ``path`` on the store. With no path, use this page's own path, or the store root.
 
         :param path: path after the domain, e.g. "/cart"
@@ -388,7 +388,7 @@ class BasePage:
             "return text;"
         ) or ""
 
-    def search(self, keyword: str):
+    def search_for(self, keyword: str):
         """Open the search results for ``keyword``.
 
         The results page has ``#keyword`` ("Showing results..." or "No results found...").
