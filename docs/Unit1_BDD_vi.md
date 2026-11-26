@@ -702,7 +702,7 @@ Quy tắc viết step:
 
 #### 3.5 Locator dạng chuỗi và các method tự viết của BasePage
 
-Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó), khai ở cuối class page, gom dưới comment ghi khu vực của trang. `BasePage.to_xpath_locator()` đưa cho Selenium cặp `(By.XPATH, ...)`, nên không page nào import `By`:
+Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó), khai ở cuối class page, gom dưới comment ghi khu vực của trang. `ElementFinder` đổi nó thành thứ Selenium cần, nên không page nào import `By`:
 
 ```python
     # --- Locators -------------------------------------------------------------
@@ -721,6 +721,17 @@ Locator là chuỗi XPath trơn mô tả element (id, attribute, chữ của nó
 | Attribute có chứa | `"//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
 | Theo chữ | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
 | Template | `"//a[contains(@href,'/products/{}')]"`, điền bằng `self._tile.format(path_name)` |
+
+`ElementFinder` (`helper_utility/element_finder.py`, cùng khung với `selenium_wrapper/elementfinder.py` của team) đọc mọi locator. `by_locator(locator)` gọi `_parse_locator()` để tách locator thành prefix và criteria, tra prefix trong bảng `strategies` rồi trả về `(By, criteria)`:
+
+| Locator | Prefix | Selenium |
+| --- | --- | --- |
+| `"//*[@id='cart']"` (không prefix: cách các page đang viết) | `default` | `By.XPATH` |
+| `"id=cart"` hoặc `"id:cart"` | `id` | `By.ID` |
+| `"name=q"`, `"css=#cart"`, `"xpath=//h1"` | `name`, `css`, `xpath` | `By.NAME`, `By.CSS_SELECTOR`, `By.XPATH` |
+| `"link=Forgot your password?"`, `"partial link=Forgot"` | `link`, `partial link` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
+| `"tag_name=h1"`, `"class_name=errors"` | `tag_name`, `class_name` | `By.TAG_NAME`, `By.CLASS_NAME` |
+| `"foo=bar"` | không có | `ValueError: Element locator with prefix 'foo' is not supported` |
 
 Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọi các method của `BasePage`. Các method này đọc locator, chờ đúng trạng thái, ghi log thao tác (behave in ra khi step fail; mật khẩu được ghi là `***`) và báo lỗi có tên locator:
 
@@ -745,7 +756,7 @@ Tên method cho biết method làm gì và có chờ hay không:
 | `open_…`, `click_…`, `change_…`, `type_…` | Thao tác trên trang | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Kiểm tra: raise `AssertionError` với thông điệp dễ đọc | `element_should_be_visible` |
 
-`is_element_visible(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Chỉ giữ method mà page có dùng; method không dùng thì xoá. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Hàm phụ như `to_xpath_locator`, `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
+`is_element_visible(locator, timeout)` chờ TRẠNG THÁI tối đa `timeout` giây và trả về ngay khi đạt; không bao giờ ngủ cố định. Chỉ giữ method mà page có dùng; method không dùng thì xoá. Mỗi page gom method dưới banner `####` có `# Scope: <khu vực của trang>` và method public nào cũng có docstring. Locator do `ElementFinder` đọc; hàm phụ như `money_to_float` là method của `BasePage`. File page không có code ngoài class, không dùng `By` hay locator dạng tuple, không gọi driver ngoài `BasePage`; mỗi nhóm method có banner và method public có docstring. Bản thân các method được kiểm qua lần chạy `behave` trên site thật.
 
 ### 4. Hooks
 

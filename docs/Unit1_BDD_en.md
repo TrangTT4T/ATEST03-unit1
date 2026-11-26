@@ -701,7 +701,7 @@ Step-writing rules:
 
 #### 3.5 Locator strings and the custom BasePage methods
 
-A locator is a plain XPath string that describes the element (its id, an attribute, its text), declared at the bottom of the page class under a comment that names the area of the page. `BasePage.to_xpath_locator()` gives Selenium the `(By.XPATH, ...)` pair, so no page imports `By`:
+A locator is a plain XPath string that describes the element (its id, an attribute, its text), declared at the bottom of the page class under a comment that names the area of the page. `ElementFinder` turns it into what Selenium needs, so no page imports `By`:
 
 ```python
     # --- Locators -------------------------------------------------------------
@@ -720,6 +720,17 @@ A locator is a plain XPath string that describes the element (its id, an attribu
 | Attribute contains | `"//form[contains(@action,'/cart/add')]//*[@type='submit']"` |
 | By text | `"//a[normalize-space()='Forgot your password?']"`, `"//a[contains(normalize-space(),'My Cart')]"` |
 | Template | `"//a[contains(@href,'/products/{}')]"`, filled with `self._tile.format(path_name)` |
+
+`ElementFinder` (`helper_utility/element_finder.py`, the same shape as the team's `selenium_wrapper/elementfinder.py`) reads every locator. `by_locator(locator)` calls `_parse_locator()` to split it into a prefix and the criteria, looks the prefix up in its `strategies` table and returns `(By, criteria)`:
+
+| Locator | Prefix | Selenium |
+| --- | --- | --- |
+| `"//*[@id='cart']"` (no prefix: what the pages write) | `default` | `By.XPATH` |
+| `"id=cart"` or `"id:cart"` | `id` | `By.ID` |
+| `"name=q"`, `"css=#cart"`, `"xpath=//h1"` | `name`, `css`, `xpath` | `By.NAME`, `By.CSS_SELECTOR`, `By.XPATH` |
+| `"link=Forgot your password?"`, `"partial link=Forgot"` | `link`, `partial link` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
+| `"tag_name=h1"`, `"class_name=errors"` | `tag_name`, `class_name` | `By.TAG_NAME`, `By.CLASS_NAME` |
+| `"foo=bar"` | unknown | `ValueError: Element locator with prefix 'foo' is not supported` |
 
 Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePage` methods, which parse the locator, wait for the right state, log the action (shown by behave when a step fails; passwords are logged as `***`) and fail with a message that names the locator:
 
@@ -744,7 +755,7 @@ Method names say what the method does and whether it waits:
 | `open_…`, `click_…`, `change_…`, `type_…` | Does something on the page | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Check: raises `AssertionError` with a readable message | `element_should_be_visible` |
 
-`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Helpers such as `to_xpath_locator` and `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
+`is_element_visible(locator, timeout)` waits FOR THE STATE up to `timeout` seconds and returns at once when it holds; it never sleeps a fixed time. Only methods the pages use are kept; an unused one is deleted. Each page groups its methods under `####` banners with `# Scope: <area of the page>` and gives every public method a docstring. Locators are read by `ElementFinder`; helpers such as `money_to_float` are `BasePage` methods. A page file holds no code outside its class, no `By` or tuple locator, and no driver call outside `BasePage`; every method group has a banner and every public method a docstring. The methods themselves are exercised by the `behave` run on the live store.
 
 ### 4. Hooks
 
