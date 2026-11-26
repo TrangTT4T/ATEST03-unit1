@@ -1023,7 +1023,7 @@ Một lần chạy `behave` sinh mọi báo cáo (`behave.ini` khai báo formatt
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 18 scenario pass, 4 bỏ qua (`@manual` ×3: CAPTCHA ở đăng nhập/đăng ký; `@data-creating` ×1), 59 step pass |
-| `python -m unittest discover -s tests/unit` | 27 test OK: cấu trúc page object, locator dạng chuỗi, method của BasePage, checklist review Day 4, cách chờ khi thêm vào giỏ |
+| `python -m unittest discover -s tests/unit` | 23 test OK: cấu trúc page object, method của BasePage, checklist review Day 4, cách chờ khi thêm vào giỏ |
 | Truy vết | `behave --dry-run --tags=@add_to_cart` … `@search_products`: yêu cầu nào cũng liệt kê được ít nhất một scenario |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.

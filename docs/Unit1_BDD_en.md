@@ -1022,7 +1022,7 @@ One `behave` run writes every report (`behave.ini` sets the formatters):
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 18 scenarios passed, 4 skipped (`@manual` ×3: CAPTCHA on login/registration; `@data-creating` ×1), 59 steps passed |
-| `python -m unittest discover -s tests/unit` | 27 tests OK: page-object layout, locator strings, BasePage methods, the Day 4 review checklist, add-to-cart waits |
+| `python -m unittest discover -s tests/unit` | 23 tests OK: page-object layout, BasePage methods, the Day 4 review checklist, add-to-cart waits |
 | Traceability | `behave --dry-run --tags=@add_to_cart` … `@search_products`: every requirement lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
