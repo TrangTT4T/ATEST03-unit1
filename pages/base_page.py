@@ -35,7 +35,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class BasePage:
-    path: str = "/"  # default page: the store home page, after the domain
     MONEY_PATTERN = re.compile(r"£\s?([\d,]+\.\d{2})")  # a text pattern, not a locator
 
     def __init__(self, driver, base_url: str, timeout: int = 10):
@@ -94,13 +93,15 @@ class BasePage:
     # Scope: Every page
     ############################################################################
     def open(self, path: str | None = None):
-        """Go to ``path`` (default: this page's own path) on the store.
+        """Go to ``path`` on the store. With no path, use this page's own path, or the store root.
 
-        :param path: path after the base URL, e.g. "/cart"
+        :param path: path after the domain, e.g. "/cart"
         :return: this page, for chaining
         """
-        self.logger.info("Open %s", path or self.path)
-        self.driver.get(self.base_url + (path or self.path))
+        target = path if path is not None else getattr(self.__class__, "path", "")
+        url = f"{self.base_url}/{str(target).lstrip('/')}"
+        self.logger.info("Open %s", url)
+        self.driver.get(url)
         return self
 
     @property

@@ -8,7 +8,7 @@ from helper_utility.helpers import page, product
 
 @given("the customer is on the home page")
 def step_home(context):
-    page(context, BasePage).open("/")
+    page(context, BasePage).open()
 
 
 @given('the customer is viewing the product "{name}"')
