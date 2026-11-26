@@ -26,11 +26,11 @@ class SearchPage(BasePage):
     def read_search_result_names_now(self) -> list[str] | None:
         """Names on the results grid, [] when nothing matched, None while the grid is still loading."""
         try:
-            banner = self.find_elements_now(self._keyword)
+            banner = self.find_elements(self._keyword)
             banner_text = banner[0].text if banner else ""
             if "No results found" in banner_text:
                 return []
-            names = [element.text.strip() for element in self.find_elements_now(self._result_names)]
+            names = [element.text.strip() for element in self.find_elements(self._result_names)]
         except Exception:
             return None
         if names and all(names):

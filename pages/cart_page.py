@@ -20,7 +20,7 @@ class CartPage(BasePage):
     ############################################################################
     def read_quantity_boxes_now(self) -> list:
         """The quantity box of every cart line (no wait: an empty cart has none)."""
-        return self.find_elements_now(self._quantity_inputs)
+        return self.find_elements(self._quantity_inputs)
 
     def count_items_in_cart(self) -> int:
         """Sum of the quantity boxes: the number of items in the cart."""

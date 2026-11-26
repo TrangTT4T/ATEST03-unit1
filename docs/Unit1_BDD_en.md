@@ -678,7 +678,7 @@ class ProductPage(BasePage):
 
     def _submit_add_to_cart(self):
         """Click Add to Cart and wait until the browser has loaded the next page (shortened)."""
-        old_page = self.wait_for_element(self._html)
+        old_page = self.find_element(self._page)
         self.click_element(self._add_button)
         self.wait_until(EC.staleness_of(old_page), "The add did not open the cart", timeout=8)
 
@@ -737,7 +737,7 @@ Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePa
 | Group | Methods |
 | --- | --- |
 | Navigation | `open_page(path)`, `current_url`, `wait_until_url_contains(fragment)` |
-| Locators | `wait_for_element(locator)`, `find_elements_now(locator)`, `is_element_present(locator)` |
+| Locators | `find_element(locator)` (waits until it is in the page), `find_elements(locator)` (no wait), `is_element_present(locator)` |
 | Actions | `click_element(locator)`, `click_and_wait_for_new_page(locator)` (form buttons, F8), `type_text(locator, text, secret=False)` |
 | Wait and read | `wait_until(condition, message)`, `get_element_text(locator)`, `get_page_text()`, `is_element_visible(locator, timeout=0)` |
 | Checks (raise `AssertionError`) | `element_should_be_visible`, `element_should_contain_text` — each takes an optional `error_msg` |
@@ -748,10 +748,10 @@ Method names say what the method does and whether it waits:
 | Name starts or ends with | Meaning | Examples |
 | --- | --- | --- |
 | `get_…` | Waits until the value is shown, then returns it | `get_element_text`, `get_cart_total`, `get_search_result_names` |
-| `read_…_now`, `…_now` | Reads at once, no wait | `read_quantity_boxes_now`, `find_elements_now`, `read_product_tile_text_now` |
+| `read_…_now`, `…_now` | Reads at once, no wait | `read_quantity_boxes_now`, `read_product_tile_text_now` |
 | `…_if_shown`, `…_if_loaded` | A wait condition: the value, or `False` so `wait_until` keeps waiting | `first_match_text_if_shown`, `tile_text_if_price_shown` |
 | `is_…`, `can_…` | Answers True or False | `is_cart_empty`, `is_checkout_page_open`, `can_add_to_cart` |
-| `wait_for_…`, `wait_until…` | Waits for a state | `wait_for_element`, `wait_until_url_contains` |
+| `wait_for_…`, `wait_until…` | Waits for a state | `wait_until`, `wait_until_url_contains` |
 | `open_…`, `click_…`, `change_…`, `type_…` | Does something on the page | `open_product_page`, `click_checkout`, `change_quantity`, `type_text` |
 | `…_should_…` | Check: raises `AssertionError` with a readable message | `element_should_be_visible` |
 

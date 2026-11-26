@@ -66,8 +66,18 @@ class ElementFinder:
             raise ValueError(f"Element locator with prefix '{prefix}' is not supported")
         return strategy, criteria
 
-    def find_all(self, driver, locator: str) -> list:
-        """Every element matching ``locator`` right now (no wait; an empty list is a valid answer).
+    def find_element(self, driver, locator: str):
+        """The first element matching ``locator``.
+
+        :param driver: the WebDriver
+        :param locator: locator string
+        :return: the WebElement
+        :raises NoSuchElementException: when nothing matches
+        """
+        return driver.find_element(*self.by_locator(locator))
+
+    def find_elements(self, driver, locator: str) -> list:
+        """Every element matching ``locator`` (an empty list when nothing matches).
 
         :param driver: the WebDriver
         :param locator: locator string

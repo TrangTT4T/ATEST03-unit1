@@ -15,7 +15,7 @@ class CatalogPage(BasePage):
         """Text currently visible on one product tile. The price may not have faded in yet."""
         locator = self._tile.format(path_name)
         try:
-            elements = self.find_elements_now(locator)
+            elements = self.find_elements(locator)
             return elements[0].text.strip() if elements else ""
         except Exception:
             return ""

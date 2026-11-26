@@ -22,7 +22,7 @@ class ProductPage(BasePage):
 
     def can_add_to_cart(self) -> bool:
         """False for a sold-out product: no button, a disabled one, or one labelled "Sold Out"."""
-        buttons = self.find_elements_now(self._add_button)
+        buttons = self.find_elements(self._add_button)
         if not buttons:
             return False
         button = buttons[0]
@@ -59,7 +59,7 @@ class ProductPage(BasePage):
             " jQuery('form.quickAdd').off('submit');"
             "}"
         )
-        old_page = self.wait_for_element(self._page)
+        old_page = self.find_element(self._page)
         try:
             self.click_element(self._add_button)
         except TimeoutException:

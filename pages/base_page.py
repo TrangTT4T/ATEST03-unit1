@@ -93,27 +93,31 @@ class BasePage:
     # Locator methods
     # Scope: Every page > locators -> elements
     ############################################################################
-    def wait_for_element(self, locator: str, timeout: int | None = None):
-        """Wait until the element is in the page and return it.
+    def find_element(self, locator: str, timeout: int | None = None):
+        """Find one element, waiting until it is in the page.
 
-        :param locator: XPath locator, e.g. "//*[@id='cart']"
+        :param locator: locator string, e.g. "//*[@id='cart']"
         :param timeout: seconds; default is the page timeout
         :return: the WebElement
+        :raises TimeoutException: when the element never appears
         """
-        return self.wait_until(EC.presence_of_element_located(self._element_finder.by_locator(locator)),
-                               f"Element {locator!r} not found", timeout)
+        return self.wait_until(
+            partial(self._element_finder.find_element, locator=locator),  # retried while not found
+            f"Element {locator!r} not found",
+            timeout,
+        )
 
-    def find_elements_now(self, locator: str) -> list:
-        """All elements matching ``locator`` right now (no wait; an empty list is a valid answer).
+    def find_elements(self, locator: str) -> list:
+        """Every element matching ``locator`` right now (no wait; an empty list is a valid answer).
 
-        :param locator: XPath locator
+        :param locator: locator string
         :return: list of WebElements
         """
-        return self._element_finder.find_all(self.driver, locator)
+        return self._element_finder.find_elements(self.driver, locator)
 
     def is_element_present(self, locator: str, driver=None) -> bool:
         """True when at least one element matches ``locator`` right now (no wait)."""
-        return bool(self.find_elements_now(locator))
+        return bool(self.find_elements(locator))
 
     ############################################################################
     # Action methods
@@ -136,7 +140,7 @@ class BasePage:
 
         :param locator: XPath locator of the submit button
         """
-        old_page = self.wait_for_element(self._page)
+        old_page = self.find_element(self._page)
         self.click_element(locator)
         self.wait_until(EC.staleness_of(old_page), f"Clicking {locator!r} did not load a new page")
 
@@ -150,7 +154,7 @@ class BasePage:
         :return: the input element
         """
         self.logger.info("Type %r into %s", "***" if secret else text, locator)
-        element = self.wait_for_element(locator)
+        element = self.find_element(locator)
         if clear:
             element.clear()
         element.send_keys(text)
@@ -187,7 +191,7 @@ class BasePage:
     def first_match_text_if_shown(self, locator: str, driver=None) -> str | bool:
         """Text of the first match, or False while it is missing, blank, or being redrawn."""
         try:
-            elements = self.find_elements_now(locator)
+            elements = self.find_elements(locator)
             return elements[0].text.strip() if elements else False
         except StaleElementReferenceException:
             return False
@@ -233,7 +237,7 @@ class BasePage:
         try:
             self.wait_until(EC.text_to_be_present_in_element(self._element_finder.by_locator(locator), text), "")
         except TimeoutException:
-            matches = self.find_elements_now(locator)
+            matches = self.find_elements(locator)
             actual = matches[0].text if matches else "<no element>"
             raise AssertionError(error_msg or f"Element {locator!r} shows {actual!r}, expected to contain {text!r}")
 
