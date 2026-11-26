@@ -67,7 +67,7 @@ class LocatorStrings(unittest.TestCase):
         self.assertEqual(page.driver.lookups[-1], (By.CSS_SELECTOR, "#buy"))
 
     def test_locator_fills_a_template(self):
-        self.assertEqual(BasePage.locator("css=a[href*='{url}']", url="/products/grey-jacket"),
+        self.assertEqual(BasePage.locator("css=a[href*='/products/{path_name}']", path_name="grey-jacket"),
                          "css=a[href*='/products/grey-jacket']")
 
 

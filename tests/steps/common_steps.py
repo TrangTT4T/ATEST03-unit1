@@ -14,7 +14,7 @@ def step_home(context):
 @given('the customer is viewing the product "{name}"')
 def step_view_product(context, name):
     context.current_product = name
-    page(context, ProductPage).open_product(product(context, name)["url"])
+    page(context, ProductPage).open_product(product(context, name)["path-name"])
 
 
 @given("the customer is on the login page")

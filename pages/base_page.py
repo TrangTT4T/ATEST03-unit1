@@ -4,7 +4,7 @@ Locators are STRINGS with a strategy prefix, so pages never import ``By``:
 
     _search_box = "name=q"
     _mini_cart  = "xpath=//a[contains(., 'My Cart')]"
-    _tile       = "css=a[href*='{url}']"                  # a template, filled with locator()
+    _tile       = "css=a[href*='/products/{path_name}']"  # a template, filled with locator()
 
 ``parse_locator()`` below turns the string into the ``(By, value)`` pair Selenium needs.
 Prefixes: css, xpath, id, name, tag, link, partial_link, class. No prefix: a value starting with
@@ -124,7 +124,7 @@ class BasePage:
     ############################################################################
     @staticmethod
     def locator(template: str, **values) -> str:
-        """Fill a locator template: ``locator(self._tile, url="/products/grey-jacket")``.
+        """Fill a locator template: ``locator(self._tile, path_name="grey-jacket")``.
 
         :param template: locator string with ``{name}`` fields
         :return: the locator string with the fields filled in

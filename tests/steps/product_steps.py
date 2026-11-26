@@ -13,14 +13,14 @@ def step_browse_catalog(context):
 @then('the product "{name}" should be listed at its catalog price')
 def step_listed_price(context, name):
     data = product(context, name)
-    text = page(context, CatalogPage).tile_text(data["url"])
+    text = page(context, CatalogPage).tile_text(data["path-name"])
     assert name in text, f"Tile for {name!r} not found, got: {text!r}"
     assert data["price"] in text, f"Expected {data['price']} for {name}, tile says: {text!r}"
 
 
 @then('the product "{name}" should be shown as "{status}"')
 def step_listed_status(context, name, status):
-    text = page(context, CatalogPage).tile_text(product(context, name)["url"])
+    text = page(context, CatalogPage).tile_text(product(context, name)["path-name"])
     sold_out = "sold out" in text.lower()
     assert sold_out == (status == "sold out"), f"{name} expected {status!r}, tile says: {text!r}"
 

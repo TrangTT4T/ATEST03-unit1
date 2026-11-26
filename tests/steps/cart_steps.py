@@ -8,7 +8,7 @@ from helper_utility.helpers import page, product
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
     product_page = page(context, ProductPage)
-    product_page.open_product(product(context, name)["url"])
+    product_page.open_product(product(context, name)["path-name"])
     product_page.add_to_cart(quantity)
 
 

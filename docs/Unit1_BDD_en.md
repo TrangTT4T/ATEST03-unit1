@@ -44,7 +44,7 @@ Sauce Demo has 10 functional areas; the catalog currently holds 7 products, 2 of
 |-----|---------------------|-----------------------------------------------------|---------------------------------------------------------------------------------------------|
 | F01 | Home page           | `/`                                                 | Logo, menu, 3 featured products: Grey jacket £55.00, Noir jacket £60.00, Striped top £50.00 |
 | F02 | Catalog             | `/collections/all`                                  | 7 products, GBP prices, "Sold Out" label on unavailable items                               |
-| F03 | Product detail      | `/products/<name in the URL>`                       | Name, price, image, description, add-to-cart, "You Might Also Like"                         |
+| F03 | Product detail      | `/products/<path-name>`                             | Name, price, image, description, add-to-cart, "You Might Also Like"                         |
 | F04 | Cart                | `/cart`, mini-cart "My Cart (n)" in header          | Add / change quantity / remove, total, Check Out button                                     |
 | F05 | Checkout            | From `/cart` to the Shopify-hosted checkout         | Address, shipping, payment                                                                  |
 | F06 | Login               | `/account/login`                                    | Email Address, Password, "Forgot your password?" opens the Reset Password form              |
@@ -55,17 +55,17 @@ Sauce Demo has 10 functional areas; the catalog currently holds 7 products, 2 of
 
 Product data used as test data:
 
-| Product        | Price  | Status   | `url` in dataset/products.json  |
-|----------------|--------|----------|---------------------------------|
-| Black heels    | £45.00 | In stock | `/products/flower-print-jeans`  |
-| Bronze sandals | £39.99 | In stock | `/products/bronze-sandals`      |
-| Brown Shades   | £20.00 | Sold Out | `/products/brown-shades`        |
-| Grey jacket    | £55.00 | In stock | `/products/grey-jacket`         |
-| Noir jacket    | £60.00 | In stock | `/products/noir-jacket`         |
-| Striped top    | £50.00 | In stock | `/products/striped-top`         |
-| White sandals  | £25.00 | Sold Out | `/products/white-sandals`       |
+| Product        | Price  | Status   | `path-name` (URL: `/products/<path-name>`) |
+|----------------|--------|----------|--------------------------------------------|
+| Black heels    | £45.00 | In stock | `flower-print-jeans`                       |
+| Bronze sandals | £39.99 | In stock | `bronze-sandals`                           |
+| Brown Shades   | £20.00 | Sold Out | `brown-shades`                             |
+| Grey jacket    | £55.00 | In stock | `grey-jacket`                              |
+| Noir jacket    | £60.00 | In stock | `noir-jacket`                              |
+| Striped top    | £50.00 | In stock | `striped-top`                              |
+| White sandals  | £25.00 | Sold Out | `white-sandals`                            |
 
-Note: the page of Black heels is `/products/flower-print-jeans`, which does not match its name — tests must not derive URLs from product names; every product's `url` is written in `dataset/products.json` (see Testability).
+Note: the path-name of Black heels is `flower-print-jeans`, which does not match its name — tests must not derive URLs from product names; every product's `path-name` is written in `dataset/products.json` (see Testability).
 
 ### 2. Risk assessment
 
@@ -154,7 +154,7 @@ Sauce Demo has medium testability: product data is stable and URLs are clear, bu
 | Observability – reading results    | Good        | Price, product name, "My Cart (n)", Sold Out label are all visible text                           | Assert on visible text; screenshot on failure in `after_step`                                                               |
 | Locators                           | Medium–weak | Old theme, no `data-testid`; standard Shopify names/classes may exist (e.g. the `/cart/add` form) | Prefer standard Shopify text/name locators (`link=...`, `name=...`), then stable attributes; keep them in Page Objects   |
 | Test data                          | Good        | 7 products, fixed prices, 2 sold out                                                              | Keep in `dataset/products.json`, never hard-coded in steps                                                                |
-| URL identity                       | Trap        | Black heels lives at `/products/flower-print-jeans`                                               | Map name → `url` in test data; never derive URLs from names                                                                 |
+| URL identity                       | Trap        | Black heels has the path-name `flower-print-jeans`                                                | Map name → `path-name` in test data; never derive URLs from names                                                           |
 | Environment                        | Weak        | Only a shared production demo, no staging                                                         | No load testing; limit parallelism; tag account-creating cases `@data-creating`                                             |
 | External dependencies              | Weak        | Checkout and payment hosted by Shopify; Sauce widgets, social links                               | Stop at the checkout page; do not automate widgets; blocking third-party requests is left to Playwright in Unit 2 (Day 6–7) |
 | Synchronisation (timing)           | Medium      | Mini-cart updates via JS after add-to-cart                                                        | Use Selenium explicit waits `WebDriverWait(...).until(...)`, never `sleep`                                                  |
@@ -423,7 +423,7 @@ ATEST03-unit1/
 | Independence             | Each scenario runs on its own, regardless of order                               |                  |
 | Step reuse               | No two steps with the same meaning but different wording                         |                  |
 | Traceability             | Every feature has a feature-area tag (`@cart`, `@login` …)                             |                  |
-| Data separated from code | Prices, names, URLs live in test data / Examples                              |                  |
+| Data separated from code | Prices, names, path-names live in test data / Examples                              |                  |
 | Reporting                | HTML/JSON report, screenshots on failure                                         |                  |
 | Stability                | No `sleep`; three consecutive runs give the same result                          |                  |
 
@@ -461,7 +461,7 @@ The framework has 4 layers and each layer only knows the one below it: feature f
 | Page Object      | `pages/*.py`                            | Locators and actions per page, explicit waits                     | Business assertions      |
 | Driver           | Selenium WebDriver                      | Drives Chrome/Firefox                                             | –                        |
 | Hooks            | `tests/environment.py`               | Open/close the browser, skip tags, screenshot on failure          | Business logic           |
-| Config / data    | `behave.ini`, `dataset/products.json` | Default tags, base_url, browser; product names, URLs, prices      | –                        |
+| Config / data    | `behave.ini`, `dataset/products.json` | Default tags, base_url, browser; product names, path-names, prices | –                        |
 
 Folder structure:
 
@@ -603,7 +603,7 @@ from helper_utility.helpers import page, product
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
     product_page = page(context, ProductPage)
-    product_page.open_product(product(context, name)["url"])
+    product_page.open_product(product(context, name)["path-name"])
     product_page.add_to_cart(quantity)
 
 
@@ -685,7 +685,7 @@ Step-writing rules:
 
 - No locators in steps; every locator lives in `pages/`.
 
-- Data (URLs, prices) comes from `dataset/products.json`, never hard-coded.
+- Data (path-names, prices) comes from `dataset/products.json`, never hard-coded.
 
 - Every assert says what was expected and what was found, so reports are readable.
 
@@ -704,7 +704,7 @@ A locator is a STRING with a strategy prefix, declared at the bottom of the page
 | `"id=cart"`, `"name=q"`, `"tag=html"`, `"class=errors"` | `By.ID`, `By.NAME`, `By.TAG_NAME`, `By.CLASS_NAME` |
 | `"link=Forgot your password?"`, `"partial_link=Forgot"` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
 | `"//h1"` (no prefix) / `"input[name='q']"` (no prefix) | XPath / CSS |
-| `"css=a[href*='{url}']"` | a template: `self.locator(self._tile, url="/products/grey-jacket")` |
+| `"css=a[href*='/products/{path_name}']"` | a template: `self.locator(self._tile, path_name="grey-jacket")` |
 
 Pages never call `driver.find_element` or `WebDriverWait`; they call the `BasePage` methods, which parse the locator, wait for the right state, log the action (shown by behave when a step fails; passwords are logged as `***`) and fail with a message that names the locator:
 
@@ -943,7 +943,7 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 | Search spec | `tests/features/search.feature` | REQ-08: results / no results |
 | New steps | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, detail page, search |
 | Traceability | Feature-area tag on every feature (`@cart`, `@checkout` …) | `behave --dry-run --tags=@checkout` lists the scenarios of one area; the Day 1 traceability matrix maps each requirement to its feature file |
-| Test data | `dataset/products.json` | Product names, URLs, prices read by the steps |
+| Test data | `dataset/products.json` | Product names, path-names, prices read by the steps |
 
 ### 2. Executable specifications
 
@@ -1072,7 +1072,7 @@ A rule that only lives in a review document erodes; a rule that fails the run do
 | Independence | Fresh browser per scenario (`before_scenario`) | 2 |
 | Step reuse | 0 unused, 0 undefined, 0 near-duplicates (checked by a test since F12) | 2 |
 | Traceability | 8/8 requirements, every scenario has one requirement tag; one requirement list (Day 1 section 6) after F5 | 2 |
-| Data separated from code | Names, URLs, prices in `dataset/products.json` / Examples | 2 |
+| Data separated from code | Names, path-names, prices in `dataset/products.json` / Examples | 2 |
 | Reporting | One run writes HTML, JSON and JUnit; Allure opt-in; screenshot on failure | 2 |
 | Stability | Explicit waits only; not yet proven on 3 live runs (F3) | 1 |
 | **Total** | | **15 / 16** |

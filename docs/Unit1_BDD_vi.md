@@ -44,7 +44,7 @@ Sauce Demo có 10 khu vực chức năng; catalog hiện có 7 sản phẩm, tro
 |-----|-------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------|
 | F01 | Trang chủ         | `/`                                                 | Logo, menu, 3 sản phẩm nổi bật: Grey jacket £55.00, Noir jacket £60.00, Striped top £50.00 |
 | F02 | Catalog           | `/collections/all`                                  | 7 sản phẩm, giá GBP, nhãn "Sold Out" cho hàng hết                                          |
-| F03 | Chi tiết sản phẩm | `/products/<tên trong URL>`                         | Tên, giá, ảnh, mô tả, nút thêm vào giỏ, mục "You Might Also Like"                          |
+| F03 | Chi tiết sản phẩm | `/products/<path-name>`                             | Tên, giá, ảnh, mô tả, nút thêm vào giỏ, mục "You Might Also Like"                          |
 | F04 | Giỏ hàng          | `/cart`, mini-cart "My Cart (n)" ở header           | Thêm/sửa số lượng/xóa, tổng tiền, nút Check Out                                            |
 | F05 | Checkout          | Từ `/cart` sang trang checkout do Shopify host      | Nhập địa chỉ, giao hàng, thanh toán                                                        |
 | F06 | Đăng nhập         | `/account/login`                                    | Email Address, Password, "Forgot your password?" mở form Reset Password                    |
@@ -55,17 +55,17 @@ Sauce Demo có 10 khu vực chức năng; catalog hiện có 7 sản phẩm, tro
 
 Dữ liệu sản phẩm dùng làm test data:
 
-| Sản phẩm       | Giá    | Trạng thái | `url` trong dataset/products.json |
-|----------------|--------|------------|---------------------------------|
-| Black heels    | £45.00 | Còn hàng   | `/products/flower-print-jeans`  |
-| Bronze sandals | £39.99 | Còn hàng   | `/products/bronze-sandals`      |
-| Brown Shades   | £20.00 | Sold Out   | `/products/brown-shades`        |
-| Grey jacket    | £55.00 | Còn hàng   | `/products/grey-jacket`         |
-| Noir jacket    | £60.00 | Còn hàng   | `/products/noir-jacket`         |
-| Striped top    | £50.00 | Còn hàng   | `/products/striped-top`         |
-| White sandals  | £25.00 | Sold Out   | `/products/white-sandals`       |
+| Sản phẩm       | Giá    | Trạng thái | `path-name` (URL: `/products/<path-name>`) |
+|----------------|--------|------------|--------------------------------------------|
+| Black heels    | £45.00 | Còn hàng   | `flower-print-jeans`                       |
+| Bronze sandals | £39.99 | Còn hàng   | `bronze-sandals`                           |
+| Brown Shades   | £20.00 | Sold Out   | `brown-shades`                             |
+| Grey jacket    | £55.00 | Còn hàng   | `grey-jacket`                              |
+| Noir jacket    | £60.00 | Còn hàng   | `noir-jacket`                              |
+| Striped top    | £50.00 | Còn hàng   | `striped-top`                              |
+| White sandals  | £25.00 | Sold Out   | `white-sandals`                            |
 
-Lưu ý: trang của Black heels là `/products/flower-print-jeans`, không khớp tên — test không được suy URL từ tên sản phẩm; `url` của từng sản phẩm được ghi sẵn trong `dataset/products.json` (xem mục Testability).
+Lưu ý: path-name của Black heels là `flower-print-jeans`, không khớp tên — test không được suy URL từ tên sản phẩm; `path-name` của từng sản phẩm được ghi sẵn trong `dataset/products.json` (xem mục Testability).
 
 ### 2. Phân tích rủi ro (Risk assessment)
 
@@ -154,7 +154,7 @@ Sauce Demo kiểm thử được ở mức trung bình: dữ liệu sản phẩm
 | Observability – quan sát kết quả        | Tốt            | Giá, tên SP, "My Cart (n)", nhãn Sold Out đều hiển thị dạng text                                  | Assert trên text hiển thị; chụp ảnh khi fail trong `after_step`                                                             |
 | Locator                                 | Trung bình–yếu | Theme cũ, không có `data-testid`; có thể có class/name chuẩn của Shopify (ví dụ form `/cart/add`) | Ưu tiên locator theo text/name chuẩn của Shopify (`link=...`, `name=...`), sau đó attribute ổn định; gom vào Page Object |
 | Test data                               | Tốt            | 7 sản phẩm, giá cố định, 2 SP Sold Out                                                            | Giữ trong `dataset/products.json`, không hard-code trong step                                                             |
-| Định danh URL                           | Có bẫy         | Black heels nằm ở `/products/flower-print-jeans`                                                  | Map tên → `url` trong test data, không suy URL từ tên                                                                       |
+| Định danh URL                           | Có bẫy         | Path-name của Black heels là `flower-print-jeans`                                                 | Map tên → `path-name` trong test data, không suy URL từ tên                                                                 |
 | Môi trường                              | Yếu            | Chỉ có production demo, dùng chung với người khác, không có staging                               | Không chạy tải; giới hạn song song; tag `@data-creating` cho case tạo tài khoản                                             |
 | Phụ thuộc bên ngoài                     | Yếu            | Checkout và thanh toán do Shopify host; widget Sauce, mạng xã hội                                 | Dừng ở trang checkout; không automate widget; chặn request bên thứ ba để dành cho Playwright ở Unit 2 (Day 6–7)             |
 | Đồng bộ (timing)                        | Trung bình     | Mini-cart cập nhật bằng JS sau khi thêm vào giỏ                                                   | Dùng explicit wait `WebDriverWait(...).until(...)` của Selenium, không dùng `sleep`                                         |
@@ -423,7 +423,7 @@ ATEST03-unit1/
 | Độc lập                | Mỗi scenario chạy riêng lẻ được, không phụ thuộc thứ tự                |               |
 | Tái sử dụng step       | Không có hai step cùng nghĩa khác câu chữ                              |               |
 | Truy vết               | Mọi feature có tag nhóm chức năng (`@cart`, `@login` …)                    |               |
-| Dữ liệu tách khỏi code | Giá, tên SP, URL nằm trong test data / Examples                     |               |
+| Dữ liệu tách khỏi code | Giá, tên SP, path-name nằm trong test data / Examples                     |               |
 | Báo cáo                | Có báo cáo HTML/JSON, ảnh chụp khi fail                                |               |
 | Ổn định                | Không dùng `sleep`; chạy 3 lần liên tiếp cùng kết quả                  |               |
 
@@ -467,7 +467,7 @@ Khi theme đổi giao diện, chỉ lớp Page Object phải sửa; feature và 
 | Page Object        | `pages/*.py`                            | Locator và thao tác trên từng trang, explicit wait         | Assert nghiệp vụ        |
 | Driver             | Selenium WebDriver                      | Điều khiển Chrome/Firefox                                  | –                       |
 | Hooks              | `tests/environment.py`               | Mở/đóng trình duyệt, bỏ qua tag, chụp ảnh khi fail         | Logic nghiệp vụ         |
-| Cấu hình / dữ liệu | `behave.ini`, `dataset/products.json` | Tag mặc định, base_url, browser; tên, URL, giá sản phẩm | –                       |
+| Cấu hình / dữ liệu | `behave.ini`, `dataset/products.json` | Tag mặc định, base_url, browser; tên, path-name, giá sản phẩm | –                       |
 
 Cấu trúc thư mục:
 
@@ -603,7 +603,7 @@ from helper_utility.helpers import page, product
 @given('the customer has {quantity:d} of "{name}" in the cart')
 def step_has_in_cart(context, quantity, name):
     product_page = page(context, ProductPage)
-    product_page.open_product(product(context, name)["url"])
+    product_page.open_product(product(context, name)["path-name"])
     product_page.add_to_cart(quantity)
 
 
@@ -685,7 +685,7 @@ Quy tắc viết step:
 
 - Step không chứa locator; mọi locator nằm trong `pages/`.
 
-- Dữ liệu (URL, giá) lấy từ `dataset/products.json`, không gõ cứng.
+- Dữ liệu (path-name, giá) lấy từ `dataset/products.json`, không gõ cứng.
 
 - Assert có thông điệp nói rõ mong đợi và thực tế để báo cáo đọc được.
 
@@ -705,7 +705,7 @@ Locator là một CHUỖI có tiền tố chiến lược, khai ở cuối class
 | `"id=cart"`, `"name=q"`, `"tag=html"`, `"class=errors"` | `By.ID`, `By.NAME`, `By.TAG_NAME`, `By.CLASS_NAME` |
 | `"link=Forgot your password?"`, `"partial_link=Forgot"` | `By.LINK_TEXT`, `By.PARTIAL_LINK_TEXT` |
 | `"//h1"` (không tiền tố) / `"input[name='q']"` (không tiền tố) | XPath / CSS |
-| `"css=a[href*='{url}']"` | template: `self.locator(self._tile, url="/products/grey-jacket")` |
+| `"css=a[href*='/products/{path_name}']"` | template: `self.locator(self._tile, path_name="grey-jacket")` |
 
 Page không bao giờ gọi `driver.find_element` hay `WebDriverWait`; page gọi các method của `BasePage`. Các method này đọc locator, chờ đúng trạng thái, ghi log thao tác (behave in ra khi step fail; mật khẩu được ghi là `***`) và báo lỗi có tên locator:
 
@@ -944,7 +944,7 @@ Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần
 | Đặc tả tìm kiếm | `tests/features/search.feature` | REQ-08: có / không có kết quả |
 | Step mới | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, trang chi tiết, tìm kiếm |
 | Truy vết | Tag nhóm chức năng trên mọi feature (`@cart`, `@checkout` …) | `behave --dry-run --tags=@checkout` liệt kê scenario của một nhóm; ma trận truy vết của Day 1 nối mỗi requirement với feature file |
-| Dữ liệu test | `dataset/products.json` | Tên, URL, giá sản phẩm mà step đọc |
+| Dữ liệu test | `dataset/products.json` | Tên, path-name, giá sản phẩm mà step đọc |
 
 ### 2. Đặc tả chạy được
 
@@ -1073,7 +1073,7 @@ Quy tắc chỉ nằm trong tài liệu review thì dần bị bỏ qua; quy t�
 | Độc lập | Trình duyệt mới mỗi scenario (`before_scenario`) | 2 |
 | Tái sử dụng step | 0 thừa, 0 chưa định nghĩa, 0 gần trùng (có test kiểm tra từ F12) | 2 |
 | Truy vết | 8/8 requirement, mỗi scenario một tag yêu cầu; một danh sách requirement (Day 1 mục 6) sau F5 | 2 |
-| Tách dữ liệu khỏi code | Tên, URL, giá nằm trong `dataset/products.json` / Examples | 2 |
+| Tách dữ liệu khỏi code | Tên, path-name, giá nằm trong `dataset/products.json` / Examples | 2 |
 | Báo cáo | Một lần chạy sinh HTML, JSON và JUnit; Allure tùy chọn; ảnh khi fail | 2 |
 | Ổn định | Chỉ explicit wait; chưa chứng minh qua 3 lần chạy trên site thật (F3) | 1 |
 | **Tổng** | | **15 / 16** |
