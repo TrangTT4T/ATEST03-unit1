@@ -97,13 +97,11 @@ class BasePage:
         """Go to ``path`` on the store. With no path, use this page's own path, or the store root.
 
         :param path: path after the domain, e.g. "/cart"
-        :return: this page, for chaining
         """
         target = path if path is not None else getattr(self.__class__, "path", "")
         url = f"{self.base_url}/{str(target).lstrip('/')}"
         self.logger.info("Open %s", url)
         self.driver.get(url)
-        return self
 
     @property
     def current_url(self) -> str:
@@ -117,7 +115,6 @@ class BasePage:
             f"URL never contained {fragment!r} (now {self.current_url})",
             timeout,
         )
-        return self
 
     ############################################################################
     # Locator methods
@@ -163,12 +160,10 @@ class BasePage:
 
         :param locator: locator string
         :param timeout: seconds; default is the page timeout
-        :return: this page
         """
         self.logger.info("Click %s", locator)
         self.wait_until(EC.element_to_be_clickable(self.parse_locator(locator)),
                         f"Element {locator!r} never became clickable", timeout).click()
-        return self
 
     def click_and_wait_for_new_page(self, locator: str):
         """Click a form button and wait until the browser has replaced the old page.
@@ -176,12 +171,10 @@ class BasePage:
         Without this, the next driver.get() can cancel the form POST (Day 4 findings F7/F8).
 
         :param locator: locator string of the submit button
-        :return: this page
         """
         old_page = self.wait_for_element(self._html)
         self.click_element(locator)
         self.wait_until(EC.staleness_of(old_page), f"Clicking {locator!r} did not load a new page")
-        return self
 
     def type_text(self, locator: str, text: str, clear: bool = True, secret: bool = False):
         """Type ``text`` into a field (cleared first by default).
@@ -203,10 +196,8 @@ class BasePage:
         """Press Enter in a field (e.g. submit a search).
 
         :param locator: locator string of the input
-        :return: this page
         """
         self.wait_for_element(locator).send_keys(Keys.ENTER)
-        return self
 
     ############################################################################
     # Wait and read methods
@@ -322,22 +313,18 @@ class BasePage:
 
         :param locator: locator string
         :param error_msg: message to fail with; default names the locator
-        :return: this page
         """
         if not self.is_element_visible(locator, self.timeout):
             raise AssertionError(error_msg or f"Element {locator!r} is not visible")
-        return self
 
     def element_should_be_disabled(self, locator: str, error_msg: str | None = None):
         """Fail unless the element is disabled (it must exist).
 
         :param locator: locator string
         :param error_msg: message to fail with; default names the locator
-        :return: this page
         """
         if self.wait_for_element(locator).is_enabled():
             raise AssertionError(error_msg or f"Element {locator!r} is not disabled")
-        return self
 
     def element_should_contain_text(self, locator: str, text: str, error_msg: str | None = None):
         """Fail unless the element's text contains ``text`` within the page timeout.
@@ -345,7 +332,6 @@ class BasePage:
         :param locator: locator string
         :param text: expected part of the text
         :param error_msg: message to fail with; default names the locator and both texts
-        :return: this page
         """
         try:
             self.wait_until(EC.text_to_be_present_in_element(self.parse_locator(locator), text), "")
@@ -353,16 +339,14 @@ class BasePage:
             matches = self.find_elements_now(locator)
             actual = matches[0].text if matches else "<no element>"
             raise AssertionError(error_msg or f"Element {locator!r} shows {actual!r}, expected to contain {text!r}")
-        return self
 
     def page_should_contain_text(self, text: str, error_msg: str | None = None):
         """Fail unless the page shows ``text`` within the page timeout.
 
         :param text: expected text
         :param error_msg: message to fail with
-        :return: this page
         """
-        return self.element_should_contain_text(self._body, text, error_msg or f"The page never showed {text!r}")
+        self.element_should_contain_text(self._body, text, error_msg or f"The page never showed {text!r}")
 
     ############################################################################
     # Header methods
@@ -412,7 +396,6 @@ class BasePage:
             raise AssertionError(
                 "Cloudflare asked to verify a human, so the search page did not open"
             )
-        return self
 
     def is_search_page_loaded(self, driver) -> bool:
         """True when the results banner is in the page, or Cloudflare is asking for a human check."""

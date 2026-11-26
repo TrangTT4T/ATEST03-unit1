@@ -14,7 +14,7 @@ class ProductPage(BasePage):
     ############################################################################
     def open_product_page(self, path_name: str):
         """Open /products/<path_name>; ``path_name`` comes from dataset/products.json, e.g. "grey-jacket"."""
-        return self.open_page(self.URL_TEMPLATE.format(path_name=path_name))
+        self.open_page(self.URL_TEMPLATE.format(path_name=path_name))
 
     def get_product_name(self) -> str:
         """The product name."""

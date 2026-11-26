@@ -24,19 +24,22 @@ def step_open_cart(context):
 
 @when('the customer changes the quantity of "{name}" to {quantity:d}')
 def step_change_qty(context, name, quantity):
-    cart = create_page_object(context, CartPage).open_page()
+    cart = create_page_object(context, CartPage)
+    cart.open_page()
     cart.change_quantity(name, quantity)
 
 
 @when('the customer removes "{name}" from the cart')
 def step_remove(context, name):
-    cart = create_page_object(context, CartPage).open_page()
+    cart = create_page_object(context, CartPage)
+    cart.open_page()
     cart.remove_product_from_cart(name)
 
 
 @when("the customer proceeds to checkout")
 def step_checkout(context):
-    cart = create_page_object(context, CartPage).open_page()
+    cart = create_page_object(context, CartPage)
+    cart.open_page()
     cart.click_checkout()
 
 
@@ -47,7 +50,8 @@ use_step_matcher("re")
 @then(r"the cart should contain (?P<count>\d+) items?")
 def step_cart_count(context, count):
     count = int(count)
-    cart = create_page_object(context, CartPage).open_page()
+    cart = create_page_object(context, CartPage)
+    cart.open_page()
     actual = cart.count_items_in_cart()
     assert actual == count, f"Expected {count} item(s) in the cart, found {actual}"
     assert cart.get_header_cart_count() == count, f"Mini-cart shows {cart.get_header_cart_count()}, expected {count}"
@@ -58,14 +62,16 @@ use_step_matcher("parse")
 
 @then('the cart total should be "{expected}"')
 def step_cart_total(context, expected):
-    cart = create_page_object(context, CartPage).open_page()
+    cart = create_page_object(context, CartPage)
+    cart.open_page()
     actual = cart.get_cart_total()
     assert actual == BasePage.money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
 
 
 @then("the cart should be empty")
 def step_cart_empty(context):
-    cart = create_page_object(context, CartPage).open_page()
+    cart = create_page_object(context, CartPage)
+    cart.open_page()
     assert cart.is_cart_empty(), f"Cart still holds {cart.count_items_in_cart()} item(s)"
 
 
