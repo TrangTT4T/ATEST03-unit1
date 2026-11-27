@@ -601,7 +601,7 @@ from helper_utility.helpers import Helper
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
-def step_has_in_cart(context, quantity, name):
+def add_product_to_cart(context, quantity, name):
     product_page = Helper.create_page_object(context, ProductPage)
     product = Helper.get_product_from_dataset(context, name)
     product_page.open_product_page(product["path-name"])
@@ -609,12 +609,12 @@ def step_has_in_cart(context, quantity, name):
 
 
 @when("the customer adds the product to the cart")
-def step_add_current(context):
+def add_viewed_product_to_cart(context):
     Helper.create_page_object(context, ProductPage).add_to_cart(1)
 
 
 @when('the customer changes the quantity of "{name}" to {quantity:d}')
-def step_change_qty(context, name, quantity):
+def change_product_quantity_in_cart(context, name, quantity):
     cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     cart.change_quantity(name, quantity)
@@ -625,7 +625,7 @@ use_step_matcher("re")
 
 
 @then(r"the cart should contain (?P<count>\d+) items?")
-def step_cart_count(context, count):
+def verify_cart_item_count(context, count):
     count = int(count)
     cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
@@ -638,7 +638,7 @@ use_step_matcher("parse")
 
 
 @then('the cart total should be "{expected}"')
-def step_cart_total(context, expected):
+def verify_cart_total(context, expected):
     cart = Helper.create_page_object(context, CartPage)
     cart.open_page()
     actual = cart.get_cart_total()
@@ -1156,7 +1156,7 @@ use_step_matcher("re")
 
 
 @then(r"the cart should contain (?P<count>\d+) items?")
-def step_cart_count(context, count):
+def verify_cart_item_count(context, count):
     count = int(count)
     ...
 

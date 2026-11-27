@@ -6,12 +6,12 @@ from helper_utility.helpers import Helper
 
 
 @when("the customer browses the full catalog")
-def step_browse_catalog(context):
+def open_catalog(context):
     Helper.create_page_object(context, CatalogPage).open_page()
 
 
 @then('the product "{name}" should be listed at its catalog price')
-def step_listed_price(context, name):
+def verify_catalog_price(context, name):
     data = Helper.get_product_from_dataset(context, name)
     text = Helper.create_page_object(context, CatalogPage).get_product_tile_text(data["path-name"])
     assert name in text, f"Tile for {name!r} not found, got: {text!r}"
@@ -19,7 +19,7 @@ def step_listed_price(context, name):
 
 
 @then('the product "{name}" should be shown as "{status}"')
-def step_listed_status(context, name, status):
+def verify_catalog_stock_status(context, name, status):
     product = Helper.get_product_from_dataset(context, name)
     text = Helper.create_page_object(context, CatalogPage).get_product_tile_text(product["path-name"])
     sold_out = "sold out" in text.lower()
@@ -27,18 +27,18 @@ def step_listed_status(context, name, status):
 
 
 @then('the product page should show the name "{name}"')
-def step_detail_name(context, name):
+def verify_product_page_name(context, name):
     actual = Helper.create_page_object(context, ProductPage).get_product_name()
     assert actual.strip() == name, f"Expected title {name!r}, found {actual!r}"
 
 
 @then('the product page should show the price "{price}"')
-def step_detail_price(context, price):
+def verify_product_page_price(context, price):
     page_text = Helper.create_page_object(context, ProductPage).get_page_text()
     assert price in page_text, f"Price {price} not shown on product page"
 
 
 @then("the customer should not be able to add it to the cart")
-def step_cannot_add(context):
+def verify_product_cannot_be_added(context):
     product_page = Helper.create_page_object(context, ProductPage)
     assert not product_page.can_add_to_cart(), "Sold-out product can still be added to the cart"
