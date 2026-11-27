@@ -1,6 +1,4 @@
-"""Cart and checkout steps."""
 from behave import given, then, use_step_matcher, when
-
 from pages import BasePage, CartPage, CheckoutPage, ProductPage
 from helper_utility.helpers import Helper
 

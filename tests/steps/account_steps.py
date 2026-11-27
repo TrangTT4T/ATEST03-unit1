@@ -1,6 +1,4 @@
-"""Login steps."""
 from behave import then, when
-
 from pages import LoginPage
 from helper_utility.helpers import Helper
 

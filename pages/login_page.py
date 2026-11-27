@@ -1,4 +1,3 @@
-"""Login page: /account/login (with the password-recovery form on the same page)"""
 from .base_page import BasePage
 
 
@@ -7,10 +6,8 @@ class LoginPage(BasePage):
 
     ############################################################################
     # Password reset methods
-    # Scope: Account > Login page > Forgot your password?
     ############################################################################
     def click_forgot_password(self):
-        """Click "Forgot your password?" to show the password-reset form."""
         self.click_element(self._forgot_password_link)
 
     def is_password_reset_form_shown(self) -> bool:
@@ -19,6 +16,5 @@ class LoginPage(BasePage):
         return True
 
     # --- Locators -------------------------------------------------------------
-    # Password reset
     _forgot_password_link = "//a[normalize-space()='Forgot your password?']"
     _reset_form = "//form[contains(@action,'/account/recover')]"

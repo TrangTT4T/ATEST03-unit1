@@ -1,15 +1,4 @@
-"""Helper: everything the steps and the pages share, in one class.
-
-* Step helpers: Helper.get_product_from_dataset(context, name), Helper.create_page_object(context, CartPage).
-* Element finder (used by BasePage, which does the finding): reads a locator string and tells Selenium how to find it, the same
-  idea as the team's selenium_wrapper/elementfinder.py. A locator is plain XPath with no prefix (the
-  default, and what every page writes), or "prefix=criteria" / "prefix:criteria": "id=cart", "name=q",
-  "css=#cart", "link=Forgot your password?", "partial link=Forgot", "tag_name=h1", "class_name=errors".
-
-Kept outside tests/steps so behave never loads it twice.
-"""
 import re
-
 from selenium.webdriver.common.by import By
 
 
@@ -53,17 +42,9 @@ class Helper:
     # Scope: BasePage > locator string -> (By, criteria)
     ############################################################################
     def by_locator(self, locator: str) -> tuple[str, str]:
-        """The (By, criteria) pair Selenium needs for ``locator``.
-
-        "//*[@id='cart']" -> (By.XPATH, "//*[@id='cart']");  "id=cart" or "id:cart" -> (By.ID, "cart")
-
-        A locator starting with "/" or "(" is XPath (prefix "default"). Otherwise any word before
-        the first "=" or ":" is the prefix, so a typo such as "nmae=q" fails here with a clear
-        message instead of being sent to Selenium as XPath.
-
-        :param locator: locator string, plain XPath or "prefix=criteria"
-        :return: (strategy, criteria) for driver.find_element(s) and expected_conditions
-        :raises ValueError: when the locator is empty or its prefix is not supported
+        """
+        :param locator: locator string
+        :return: (strategy, criteria) to find element(s)
         """
         if not isinstance(locator, str) or not locator.strip():
             raise ValueError(f"A locator is a non-empty string, got {locator!r}")

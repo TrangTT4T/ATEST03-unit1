@@ -1,6 +1,4 @@
-"""Search steps."""
 from behave import then, when
-
 from helper_utility.helpers import Helper
 from pages import BasePage, SearchPage
 

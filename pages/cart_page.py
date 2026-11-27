@@ -1,40 +1,26 @@
-"""Cart page: /cart"""
 import re
 from functools import partial
-
 from selenium.common.exceptions import TimeoutException
-
 from .base_page import BasePage
 
 
 class CartPage(BasePage):
-    """Every locator is scoped to #cart: each page also holds a HIDDEN mini-cart drawer with the same
-    rows and quantity boxes, which would otherwise be counted twice (or typed into, and fail)."""
 
     path = "/cart"
     TOTAL_PATTERN = re.compile(r"(sub)?total[^£]{0,40}£\s?([\d,]+\.\d{2})", re.IGNORECASE)  # text, not a locator
 
     ############################################################################
     # Cart line methods
-    # Scope: Cart page > Cart table
     ############################################################################
     def count_items_in_cart(self) -> int:
-        """Sum of the quantity boxes: the number of items in the cart."""
         return sum(int(i.get_attribute("value") or 0) for i in self.find_elements(self._quantity_inputs))
 
     def is_cart_empty(self) -> bool:
-        """True when the cart has no lines."""
         return not self.find_elements(self._quantity_inputs)
 
     def change_quantity(self, product_name: str, quantity: int):
-        """Type ``quantity`` in the line of ``product_name`` and click Update.
-
-        Quantity 0 + Update removes the line (standard Shopify behaviour).
-        """
         line = self._line_quantity.format(product_name)
         if not self.is_element_present(line):
-            # These scenarios put one product in the cart. The row markup does not always
-            # match the link text, but the quantity box in #cart is that line.
             self.wait_until(
                 partial(self.is_element_present, self._quantity_inputs),
                 f"{product_name!r} is not in the cart",
@@ -44,15 +30,12 @@ class CartPage(BasePage):
         self.click_and_wait_for_new_page(self._update_button)
 
     def remove_product_from_cart(self, product_name: str):
-        """Remove the line of ``product_name`` (quantity 0 + Update)."""
         self.change_quantity(product_name, 0)
 
     ############################################################################
     # Total and checkout methods
-    # Scope: Cart page > Total, Check Out button
     ############################################################################
     def get_cart_total(self) -> float:
-        """The cart total in pounds, e.g. 55.0."""
         match = self.TOTAL_PATTERN.search(self.get_page_text())
         if match:
             return float(match.group(2).replace(",", ""))
@@ -76,12 +59,10 @@ class CartPage(BasePage):
             self.wait_until_url_contains("checkout")
 
     # --- Locators -------------------------------------------------------------
-    # Cart table (inside #cart; the hidden mini-cart drawer repeats every row)
     _cart_form = "//*[@id='cart']"
     _quantity_inputs = "//*[@id='cart']//input[starts-with(@name,'updates')]"
-    _line_quantity = (  # the quantity box in the row of one product: .format(product_name)
-        "//*[@id='cart']//div[contains(@class,'row')][.//a[contains(normalize-space(),'{}')]]"
-        "//input[starts-with(@name,'updates')]"
+    _line_quantity = ("//*[@id='cart']//div[contains(@class,'row')][.//a[contains(normalize-space(),'{}')]]"
+                      "//input[starts-with(@name,'updates')]"
     )
     # Cart buttons
     _update_button = "//*[@id='update']"

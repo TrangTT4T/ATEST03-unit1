@@ -1,9 +1,6 @@
-"""Reusable navigation steps shared by every feature."""
 from behave import given
-
 from pages import BasePage, LoginPage, ProductPage
 from helper_utility.helpers import Helper
-
 
 
 @given("the customer is on the home page")

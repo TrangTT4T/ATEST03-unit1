@@ -1,6 +1,4 @@
-"""Catalog and product detail steps."""
 from behave import then, when
-
 from pages import CatalogPage, ProductPage
 from helper_utility.helpers import Helper
 

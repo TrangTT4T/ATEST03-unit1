@@ -1,11 +1,9 @@
-"""Checkout page (Shopify checkout): reached from the cart; no payment is ever made."""
 from .base_page import BasePage
 
 
 class CheckoutPage(BasePage):
     ############################################################################
     # Order summary methods
-    # Scope: Checkout > Order summary
     ############################################################################
     def is_checkout_page_open(self) -> bool:
         """Wait until the checkout page is open."""
