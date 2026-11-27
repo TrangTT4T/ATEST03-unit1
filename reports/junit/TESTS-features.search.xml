@@ -1,0 +1,28 @@
+<testsuite name="features.search.Product search" tests="2" errors="0" failures="0" skipped="0" time="4.146126" timestamp="2026-11-27T09:11:05.908339" hostname="DESKTOP-46MQSFV"><testcase classname="features.search.Product search" name="Search returns matching products" status="passed" time="2.288012"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @regression @search_products
+  Scenario: Search returns matching products
+    Given the customer is on the home page ... passed in 1.151s
+    When the customer searches for "jacket" ... passed in 0.526s
+    Then the results should include "Grey jacket" ... passed in 0.581s
+    And the results should include "Noir jacket" ... passed in 0.030s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.search.Product search" name="Search with no matching products" status="passed" time="1.858114"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @negative @regression @search_products
+  Scenario: Search with no matching products
+    Given the customer is on the home page ... passed in 1.319s
+    When the customer searches for "zzqqxx" ... passed in 0.505s
+    Then no products should be shown in the results ... passed in 0.034s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase></testsuite>

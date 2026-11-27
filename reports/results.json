@@ -1,0 +1,1432 @@
+[
+{
+  "description": [
+    "As a customer",
+    "I want to manage products in my cart",
+    "So that I can buy what I need"
+  ],
+  "elements": [
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/cart.feature:8",
+      "name": "Add an in-stock product to the cart",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/cart.feature:9",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Grey jacket"
+              }
+            ],
+            "location": "tests/steps/common_steps.py:14"
+          },
+          "name": "the customer is viewing the product \"Grey jacket\"",
+          "result": {
+            "duration": 1.953744888305664,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/cart.feature:10",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/cart_steps.py:15"
+          },
+          "name": "the customer adds the product to the cart",
+          "result": {
+            "duration": 1.4970738887786865,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/cart.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "count",
+                "value": "1"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:50"
+          },
+          "name": "the cart should contain 1 item",
+          "result": {
+            "duration": 0.4066579341888428,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/cart.feature:12",
+          "match": {
+            "arguments": [
+              {
+                "name": "expected",
+                "value": "\u00a355.00"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:63"
+          },
+          "name": "the cart total should be \"\u00a355.00\"",
+          "result": {
+            "duration": 0.6302580833435059,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "critical",
+        "smoke",
+        "add_to_cart"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/cart.feature:23",
+      "name": "Cart total equals price times quantity -- @1.1 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/cart.feature:16",
+          "match": {
+            "arguments": [
+              {
+                "name": "quantity",
+                "original": "2",
+                "value": 2
+              },
+              {
+                "name": "name",
+                "value": "Noir jacket"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:8"
+          },
+          "name": "the customer has 2 of \"Noir jacket\" in the cart",
+          "result": {
+            "duration": 4.615543365478516,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/cart.feature:17",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/cart_steps.py:20"
+          },
+          "name": "the customer opens the cart",
+          "result": {
+            "duration": 0.33989644050598145,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/cart.feature:18",
+          "match": {
+            "arguments": [
+              {
+                "name": "count",
+                "value": "2"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:50"
+          },
+          "name": "the cart should contain 2 items",
+          "result": {
+            "duration": 0.36328554153442383,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/cart.feature:19",
+          "match": {
+            "arguments": [
+              {
+                "name": "expected",
+                "value": "\u00a3120.00"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:63"
+          },
+          "name": "the cart total should be \"\u00a3120.00\"",
+          "result": {
+            "duration": 0.3376014232635498,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "critical",
+        "regression",
+        "add_to_cart"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/cart.feature:24",
+      "name": "Cart total equals price times quantity -- @1.2 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/cart.feature:16",
+          "match": {
+            "arguments": [
+              {
+                "name": "quantity",
+                "original": "3",
+                "value": 3
+              },
+              {
+                "name": "name",
+                "value": "Striped top"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:8"
+          },
+          "name": "the customer has 3 of \"Striped top\" in the cart",
+          "result": {
+            "duration": 5.898059844970703,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/cart.feature:17",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/cart_steps.py:20"
+          },
+          "name": "the customer opens the cart",
+          "result": {
+            "duration": 0.30121397972106934,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/cart.feature:18",
+          "match": {
+            "arguments": [
+              {
+                "name": "count",
+                "value": "3"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:50"
+          },
+          "name": "the cart should contain 3 items",
+          "result": {
+            "duration": 0.35701608657836914,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/cart.feature:19",
+          "match": {
+            "arguments": [
+              {
+                "name": "expected",
+                "value": "\u00a3150.00"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:63"
+          },
+          "name": "the cart total should be \"\u00a3150.00\"",
+          "result": {
+            "duration": 0.3542962074279785,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "critical",
+        "regression",
+        "add_to_cart"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/cart.feature:27",
+      "name": "Change the quantity of a product in the cart",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/cart.feature:28",
+          "match": {
+            "arguments": [
+              {
+                "name": "quantity",
+                "original": "1",
+                "value": 1
+              },
+              {
+                "name": "name",
+                "value": "Bronze sandals"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:8"
+          },
+          "name": "the customer has 1 of \"Bronze sandals\" in the cart",
+          "result": {
+            "duration": 2.2981834411621094,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/cart.feature:29",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Bronze sandals"
+              },
+              {
+                "name": "quantity",
+                "original": "2",
+                "value": 2
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:25"
+          },
+          "name": "the customer changes the quantity of \"Bronze sandals\" to 2",
+          "result": {
+            "duration": 2.30841064453125,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/cart.feature:30",
+          "match": {
+            "arguments": [
+              {
+                "name": "count",
+                "value": "2"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:50"
+          },
+          "name": "the cart should contain 2 items",
+          "result": {
+            "duration": 0.32354187965393066,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/cart.feature:31",
+          "match": {
+            "arguments": [
+              {
+                "name": "expected",
+                "value": "\u00a379.98"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:63"
+          },
+          "name": "the cart total should be \"\u00a379.98\"",
+          "result": {
+            "duration": 0.3310232162475586,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "critical",
+        "regression",
+        "update_cart"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/cart.feature:34",
+      "name": "Remove the only product from the cart",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/cart.feature:35",
+          "match": {
+            "arguments": [
+              {
+                "name": "quantity",
+                "original": "1",
+                "value": 1
+              },
+              {
+                "name": "name",
+                "value": "Striped top"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:8"
+          },
+          "name": "the customer has 1 of \"Striped top\" in the cart",
+          "result": {
+            "duration": 2.228473424911499,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/cart.feature:36",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Striped top"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:32"
+          },
+          "name": "the customer removes \"Striped top\" from the cart",
+          "result": {
+            "duration": 2.030714750289917,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/cart.feature:37",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/cart_steps.py:71"
+          },
+          "name": "the cart should be empty",
+          "result": {
+            "duration": 0.29545092582702637,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "critical",
+        "regression",
+        "update_cart"
+      ],
+      "type": "scenario"
+    }
+  ],
+  "keyword": "Feature",
+  "location": "tests/features/cart.feature:2",
+  "name": "Shopping cart",
+  "status": "passed",
+  "tags": [
+    "cart"
+  ]
+},
+
+{
+  "description": [
+    "As a customer",
+    "I want to go from my cart to checkout",
+    "So that I can pay for my order"
+  ],
+  "elements": [
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/checkout.feature:9",
+      "name": "Checkout opens from a non-empty cart",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/checkout.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "quantity",
+                "original": "1",
+                "value": 1
+              },
+              {
+                "name": "name",
+                "value": "Grey jacket"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:8"
+          },
+          "name": "the customer has 1 of \"Grey jacket\" in the cart",
+          "result": {
+            "duration": 2.252232074737549,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/checkout.feature:11",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/cart_steps.py:39"
+          },
+          "name": "the customer proceeds to checkout",
+          "result": {
+            "duration": 2.916574001312256,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/checkout.feature:12",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/cart_steps.py:78"
+          },
+          "name": "the checkout page should be shown",
+          "result": {
+            "duration": 0.49744486808776855,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/checkout.feature:13",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Grey jacket"
+              }
+            ],
+            "location": "tests/steps/cart_steps.py:83"
+          },
+          "name": "the checkout should list \"Grey jacket\"",
+          "result": {
+            "duration": 0.7019953727722168,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "critical",
+        "smoke",
+        "start_checkout"
+      ],
+      "type": "scenario"
+    }
+  ],
+  "keyword": "Feature",
+  "location": "tests/features/checkout.feature:2",
+  "name": "Proceed to checkout",
+  "status": "passed",
+  "tags": [
+    "checkout"
+  ]
+},
+
+{
+  "description": [
+    "As a customer",
+    "I want only valid credentials to log me in",
+    "So that my account stays safe"
+  ],
+  "elements": [
+    {
+      "keyword": "Background",
+      "location": "tests/features/login.feature:7",
+      "name": "",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/login.feature:8",
+          "name": "the customer is on the login page",
+          "step_type": "given"
+        }
+      ],
+      "type": "background"
+    },
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/login.feature:11",
+      "name": "Customer opens the password reset form",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/login.feature:8",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/common_steps.py:21"
+          },
+          "name": "the customer is on the login page",
+          "result": {
+            "duration": 2.877023935317993,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/login.feature:12",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/account_steps.py:8"
+          },
+          "name": "the customer chooses to reset the password",
+          "result": {
+            "duration": 0.1407604217529297,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/login.feature:13",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/account_steps.py:13"
+          },
+          "name": "the password reset form should be shown",
+          "result": {
+            "duration": 0.018053531646728516,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "secure_login"
+      ],
+      "type": "scenario"
+    }
+  ],
+  "keyword": "Feature",
+  "location": "tests/features/login.feature:2",
+  "name": "Customer login",
+  "status": "passed",
+  "tags": [
+    "login"
+  ]
+},
+
+{
+  "description": [
+    "As a customer",
+    "I want correct product names, prices and stock status",
+    "So that I know what I am buying"
+  ],
+  "elements": [
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:15",
+      "name": "Catalog shows correct price and stock status -- @1.1 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 1.835597038269043,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Black heels"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"Black heels\" should be listed at its catalog price",
+          "result": {
+            "duration": 0.06743335723876953,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Black heels"
+              },
+              {
+                "name": "status",
+                "value": "available"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"Black heels\" should be shown as \"available\"",
+          "result": {
+            "duration": 0.03192496299743652,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:16",
+      "name": "Catalog shows correct price and stock status -- @1.2 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 1.19268798828125,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Bronze sandals"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"Bronze sandals\" should be listed at its catalog price",
+          "result": {
+            "duration": 0.026130199432373047,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Bronze sandals"
+              },
+              {
+                "name": "status",
+                "value": "available"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"Bronze sandals\" should be shown as \"available\"",
+          "result": {
+            "duration": 0.018001079559326172,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:17",
+      "name": "Catalog shows correct price and stock status -- @1.3 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 0.8642847537994385,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Brown Shades"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"Brown Shades\" should be listed at its catalog price",
+          "result": {
+            "duration": 0.5510034561157227,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Brown Shades"
+              },
+              {
+                "name": "status",
+                "value": "sold out"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"Brown Shades\" should be shown as \"sold out\"",
+          "result": {
+            "duration": 0.01854848861694336,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:18",
+      "name": "Catalog shows correct price and stock status -- @1.4 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 1.0264008045196533,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Grey jacket"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"Grey jacket\" should be listed at its catalog price",
+          "result": {
+            "duration": 0.560645341873169,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Grey jacket"
+              },
+              {
+                "name": "status",
+                "value": "available"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"Grey jacket\" should be shown as \"available\"",
+          "result": {
+            "duration": 0.05138754844665527,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:19",
+      "name": "Catalog shows correct price and stock status -- @1.5 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 1.2382104396820068,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Noir jacket"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"Noir jacket\" should be listed at its catalog price",
+          "result": {
+            "duration": 0.5597949028015137,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Noir jacket"
+              },
+              {
+                "name": "status",
+                "value": "available"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"Noir jacket\" should be shown as \"available\"",
+          "result": {
+            "duration": 0.016260147094726562,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:20",
+      "name": "Catalog shows correct price and stock status -- @1.6 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 1.2898671627044678,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Striped top"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"Striped top\" should be listed at its catalog price",
+          "result": {
+            "duration": 0.5371153354644775,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Striped top"
+              },
+              {
+                "name": "status",
+                "value": "available"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"Striped top\" should be shown as \"available\"",
+          "result": {
+            "duration": 0.01599407196044922,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario Outline",
+      "location": "tests/features/product.feature:21",
+      "name": "Catalog shows correct price and stock status -- @1.7 ",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "When",
+          "location": "tests/features/product.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:8"
+          },
+          "name": "the customer browses the full catalog",
+          "result": {
+            "duration": 1.0480225086212158,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "White sandals"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:13"
+          },
+          "name": "the product \"White sandals\" should be listed at its catalog price",
+          "result": {
+            "duration": 1.079289436340332,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "White sandals"
+              },
+              {
+                "name": "status",
+                "value": "sold out"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:21"
+          },
+          "name": "the product \"White sandals\" should be shown as \"sold out\"",
+          "result": {
+            "duration": 0.012026309967041016,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "browse_catalog"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/product.feature:24",
+      "name": "Product page shows the catalog name and price",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/product.feature:25",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Noir jacket"
+              }
+            ],
+            "location": "tests/steps/common_steps.py:14"
+          },
+          "name": "the customer is viewing the product \"Noir jacket\"",
+          "result": {
+            "duration": 1.271134614944458,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:26",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Noir jacket"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:29"
+          },
+          "name": "the product page should show the name \"Noir jacket\"",
+          "result": {
+            "duration": 0.02785015106201172,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/product.feature:27",
+          "match": {
+            "arguments": [
+              {
+                "name": "price",
+                "value": "\u00a360.00"
+              }
+            ],
+            "location": "tests/steps/product_steps.py:35"
+          },
+          "name": "the product page should show the price \"\u00a360.00\"",
+          "result": {
+            "duration": 0.033399105072021484,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "regression",
+        "product_details"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/product.feature:30",
+      "name": "A sold-out product cannot be added to the cart",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/product.feature:31",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Brown Shades"
+              }
+            ],
+            "location": "tests/steps/common_steps.py:14"
+          },
+          "name": "the customer is viewing the product \"Brown Shades\"",
+          "result": {
+            "duration": 1.0122721195220947,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/product.feature:32",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/product_steps.py:41"
+          },
+          "name": "the customer should not be able to add it to the cart",
+          "result": {
+            "duration": 0.04512500762939453,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "high",
+        "negative",
+        "regression",
+        "product_details"
+      ],
+      "type": "scenario"
+    }
+  ],
+  "keyword": "Feature",
+  "location": "tests/features/product.feature:2",
+  "name": "Product information",
+  "status": "passed",
+  "tags": [
+    "product"
+  ]
+},
+
+{
+  "description": [
+    "As a customer",
+    "I want to find products by keyword",
+    "So that I do not have to browse the whole catalog"
+  ],
+  "elements": [
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/search.feature:8",
+      "name": "Search returns matching products",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/search.feature:9",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/common_steps.py:9"
+          },
+          "name": "the customer is on the home page",
+          "result": {
+            "duration": 1.1514019966125488,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/search.feature:10",
+          "match": {
+            "arguments": [
+              {
+                "name": "keyword",
+                "value": "jacket"
+              }
+            ],
+            "location": "tests/steps/search_steps.py:8"
+          },
+          "name": "the customer searches for \"jacket\"",
+          "result": {
+            "duration": 0.5255968570709229,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/search.feature:11",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Grey jacket"
+              }
+            ],
+            "location": "tests/steps/search_steps.py:13"
+          },
+          "name": "the results should include \"Grey jacket\"",
+          "result": {
+            "duration": 0.58133864402771,
+            "status": "passed"
+          },
+          "step_type": "then"
+        },
+        {
+          "keyword": "And",
+          "location": "tests/features/search.feature:12",
+          "match": {
+            "arguments": [
+              {
+                "name": "name",
+                "value": "Noir jacket"
+              }
+            ],
+            "location": "tests/steps/search_steps.py:13"
+          },
+          "name": "the results should include \"Noir jacket\"",
+          "result": {
+            "duration": 0.029674530029296875,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "regression",
+        "search_products"
+      ],
+      "type": "scenario"
+    },
+    {
+      "keyword": "Scenario",
+      "location": "tests/features/search.feature:15",
+      "name": "Search with no matching products",
+      "status": "passed",
+      "steps": [
+        {
+          "keyword": "Given",
+          "location": "tests/features/search.feature:16",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/common_steps.py:9"
+          },
+          "name": "the customer is on the home page",
+          "result": {
+            "duration": 1.319288969039917,
+            "status": "passed"
+          },
+          "step_type": "given"
+        },
+        {
+          "keyword": "When",
+          "location": "tests/features/search.feature:17",
+          "match": {
+            "arguments": [
+              {
+                "name": "keyword",
+                "value": "zzqqxx"
+              }
+            ],
+            "location": "tests/steps/search_steps.py:8"
+          },
+          "name": "the customer searches for \"zzqqxx\"",
+          "result": {
+            "duration": 0.5051465034484863,
+            "status": "passed"
+          },
+          "step_type": "when"
+        },
+        {
+          "keyword": "Then",
+          "location": "tests/features/search.feature:18",
+          "match": {
+            "arguments": [],
+            "location": "tests/steps/search_steps.py:19"
+          },
+          "name": "no products should be shown in the results",
+          "result": {
+            "duration": 0.03367877006530762,
+            "status": "passed"
+          },
+          "step_type": "then"
+        }
+      ],
+      "tags": [
+        "negative",
+        "regression",
+        "search_products"
+      ],
+      "type": "scenario"
+    }
+  ],
+  "keyword": "Feature",
+  "location": "tests/features/search.feature:2",
+  "name": "Product search",
+  "status": "passed",
+  "tags": [
+    "search",
+    "medium"
+  ]
+}
+]

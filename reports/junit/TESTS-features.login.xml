@@ -1,0 +1,14 @@
+<testsuite name="features.login.Customer login" tests="1" errors="0" failures="0" skipped="0" time="3.035838" timestamp="2026-11-27T09:10:15.101035" hostname="DESKTOP-46MQSFV"><testcase classname="features.login.Customer login" name="Customer opens the password reset form" status="passed" time="3.035838"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @high @regression @secure_login
+  Scenario: Customer opens the password reset form
+    Given the customer is on the login page ... passed in 2.877s
+    When the customer chooses to reset the password ... passed in 0.141s
+    Then the password reset form should be shown ... passed in 0.018s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase></testsuite>

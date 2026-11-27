@@ -1,0 +1,70 @@
+<testsuite name="features.cart.Shopping cart" tests="5" errors="0" failures="0" skipped="0" time="26.870446" timestamp="2026-11-27T09:09:57.332836" hostname="DESKTOP-46MQSFV"><testcase classname="features.cart.Shopping cart" name="Add an in-stock product to the cart" status="passed" time="4.487735"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @critical @smoke @add_to_cart
+  Scenario: Add an in-stock product to the cart
+    Given the customer is viewing the product "Grey jacket" ... passed in 1.954s
+    When the customer adds the product to the cart ... passed in 1.497s
+    Then the cart should contain 1 item ... passed in 0.407s
+    And the cart total should be "£55.00" ... passed in 0.630s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.cart.Shopping cart" name="Cart total equals price times quantity -- @1.1 " status="passed" time="5.656327"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @critical @regression @add_to_cart
+  Scenario Outline: Cart total equals price times quantity -- @1.1 
+    Given the customer has 2 of "Noir jacket" in the cart ... passed in 4.616s
+    When the customer opens the cart ... passed in 0.340s
+    Then the cart should contain 2 items ... passed in 0.363s
+    And the cart total should be "£120.00" ... passed in 0.338s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.cart.Shopping cart" name="Cart total equals price times quantity -- @1.2 " status="passed" time="6.910586"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @critical @regression @add_to_cart
+  Scenario Outline: Cart total equals price times quantity -- @1.2 
+    Given the customer has 3 of "Striped top" in the cart ... passed in 5.898s
+    When the customer opens the cart ... passed in 0.301s
+    Then the cart should contain 3 items ... passed in 0.357s
+    And the cart total should be "£150.00" ... passed in 0.354s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.cart.Shopping cart" name="Change the quantity of a product in the cart" status="passed" time="5.261159"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @critical @regression @update_cart
+  Scenario: Change the quantity of a product in the cart
+    Given the customer has 1 of "Bronze sandals" in the cart ... passed in 2.298s
+    When the customer changes the quantity of "Bronze sandals" to 2 ... passed in 2.308s
+    Then the cart should contain 2 items ... passed in 0.324s
+    And the cart total should be "£79.98" ... passed in 0.331s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase><testcase classname="features.cart.Shopping cart" name="Remove the only product from the cart" status="passed" time="4.554639"><system-out>
+<![CDATA[
+@scenario.begin
+
+  @critical @regression @update_cart
+  Scenario: Remove the only product from the cart
+    Given the customer has 1 of "Striped top" in the cart ... passed in 2.228s
+    When the customer removes "Striped top" from the cart ... passed in 2.031s
+    Then the cart should be empty ... passed in 0.295s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase></testsuite>
