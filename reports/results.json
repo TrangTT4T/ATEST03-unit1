@@ -22,11 +22,11 @@
                 "value": "Grey jacket"
               }
             ],
-            "location": "tests/steps/common_steps.py:14"
+            "location": "tests/steps/common_steps.py:11"
           },
           "name": "the customer is viewing the product \"Grey jacket\"",
           "result": {
-            "duration": 1.953744888305664,
+            "duration": 3.3629229068756104,
             "status": "passed"
           },
           "step_type": "given"
@@ -36,11 +36,11 @@
           "location": "tests/features/cart.feature:10",
           "match": {
             "arguments": [],
-            "location": "tests/steps/cart_steps.py:15"
+            "location": "tests/steps/cart_steps.py:13"
           },
           "name": "the customer adds the product to the cart",
           "result": {
-            "duration": 1.4970738887786865,
+            "duration": 2.5922625064849854,
             "status": "passed"
           },
           "step_type": "when"
@@ -55,11 +55,11 @@
                 "value": "1"
               }
             ],
-            "location": "tests/steps/cart_steps.py:50"
+            "location": "tests/steps/cart_steps.py:48"
           },
           "name": "the cart should contain 1 item",
           "result": {
-            "duration": 0.4066579341888428,
+            "duration": 0.4330434799194336,
             "status": "passed"
           },
           "step_type": "then"
@@ -74,11 +74,11 @@
                 "value": "\u00a355.00"
               }
             ],
-            "location": "tests/steps/cart_steps.py:63"
+            "location": "tests/steps/cart_steps.py:61"
           },
           "name": "the cart total should be \"\u00a355.00\"",
           "result": {
-            "duration": 0.6302580833435059,
+            "duration": 0.41970276832580566,
             "status": "passed"
           },
           "step_type": "then"
@@ -112,11 +112,11 @@
                 "value": "Noir jacket"
               }
             ],
-            "location": "tests/steps/cart_steps.py:8"
+            "location": "tests/steps/cart_steps.py:6"
           },
           "name": "the customer has 2 of \"Noir jacket\" in the cart",
           "result": {
-            "duration": 4.615543365478516,
+            "duration": 4.754241704940796,
             "status": "passed"
           },
           "step_type": "given"
@@ -126,11 +126,11 @@
           "location": "tests/features/cart.feature:17",
           "match": {
             "arguments": [],
-            "location": "tests/steps/cart_steps.py:20"
+            "location": "tests/steps/cart_steps.py:18"
           },
           "name": "the customer opens the cart",
           "result": {
-            "duration": 0.33989644050598145,
+            "duration": 0.40810728073120117,
             "status": "passed"
           },
           "step_type": "when"
@@ -145,11 +145,11 @@
                 "value": "2"
               }
             ],
-            "location": "tests/steps/cart_steps.py:50"
+            "location": "tests/steps/cart_steps.py:48"
           },
           "name": "the cart should contain 2 items",
           "result": {
-            "duration": 0.36328554153442383,
+            "duration": 0.4638094902038574,
             "status": "passed"
           },
           "step_type": "then"
@@ -164,11 +164,11 @@
                 "value": "\u00a3120.00"
               }
             ],
-            "location": "tests/steps/cart_steps.py:63"
+            "location": "tests/steps/cart_steps.py:61"
           },
           "name": "the cart total should be \"\u00a3120.00\"",
           "result": {
-            "duration": 0.3376014232635498,
+            "duration": 0.40160512924194336,
             "status": "passed"
           },
           "step_type": "then"
@@ -202,11 +202,11 @@
                 "value": "Striped top"
               }
             ],
-            "location": "tests/steps/cart_steps.py:8"
+            "location": "tests/steps/cart_steps.py:6"
           },
           "name": "the customer has 3 of \"Striped top\" in the cart",
           "result": {
-            "duration": 5.898059844970703,
+            "duration": 6.183750867843628,
             "status": "passed"
           },
           "step_type": "given"
@@ -216,11 +216,11 @@
           "location": "tests/features/cart.feature:17",
           "match": {
             "arguments": [],
-            "location": "tests/steps/cart_steps.py:20"
+            "location": "tests/steps/cart_steps.py:18"
           },
           "name": "the customer opens the cart",
           "result": {
-            "duration": 0.30121397972106934,
+            "duration": 0.30066514015197754,
             "status": "passed"
           },
           "step_type": "when"
@@ -235,11 +235,11 @@
                 "value": "3"
               }
             ],
-            "location": "tests/steps/cart_steps.py:50"
+            "location": "tests/steps/cart_steps.py:48"
           },
           "name": "the cart should contain 3 items",
           "result": {
-            "duration": 0.35701608657836914,
+            "duration": 0.32911038398742676,
             "status": "passed"
           },
           "step_type": "then"
@@ -254,11 +254,11 @@
                 "value": "\u00a3150.00"
               }
             ],
-            "location": "tests/steps/cart_steps.py:63"
+            "location": "tests/steps/cart_steps.py:61"
           },
           "name": "the cart total should be \"\u00a3150.00\"",
           "result": {
-            "duration": 0.3542962074279785,
+            "duration": 0.3548920154571533,
             "status": "passed"
           },
           "step_type": "then"
@@ -292,11 +292,11 @@
                 "value": "Bronze sandals"
               }
             ],
-            "location": "tests/steps/cart_steps.py:8"
+            "location": "tests/steps/cart_steps.py:6"
           },
           "name": "the customer has 1 of \"Bronze sandals\" in the cart",
           "result": {
-            "duration": 2.2981834411621094,
+            "duration": 2.571972370147705,
             "status": "passed"
           },
           "step_type": "given"
@@ -316,11 +316,11 @@
                 "value": 2
               }
             ],
-            "location": "tests/steps/cart_steps.py:25"
+            "location": "tests/steps/cart_steps.py:23"
           },
           "name": "the customer changes the quantity of \"Bronze sandals\" to 2",
           "result": {
-            "duration": 2.30841064453125,
+            "duration": 1.9489612579345703,
             "status": "passed"
           },
           "step_type": "when"
@@ -335,11 +335,11 @@
                 "value": "2"
               }
             ],
-            "location": "tests/steps/cart_steps.py:50"
+            "location": "tests/steps/cart_steps.py:48"
           },
           "name": "the cart should contain 2 items",
           "result": {
-            "duration": 0.32354187965393066,
+            "duration": 0.31005311012268066,
             "status": "passed"
           },
           "step_type": "then"
@@ -354,11 +354,11 @@
                 "value": "\u00a379.98"
               }
             ],
-            "location": "tests/steps/cart_steps.py:63"
+            "location": "tests/steps/cart_steps.py:61"
           },
           "name": "the cart total should be \"\u00a379.98\"",
           "result": {
-            "duration": 0.3310232162475586,
+            "duration": 0.32279014587402344,
             "status": "passed"
           },
           "step_type": "then"
@@ -392,11 +392,11 @@
                 "value": "Striped top"
               }
             ],
-            "location": "tests/steps/cart_steps.py:8"
+            "location": "tests/steps/cart_steps.py:6"
           },
           "name": "the customer has 1 of \"Striped top\" in the cart",
           "result": {
-            "duration": 2.228473424911499,
+            "duration": 2.3558743000030518,
             "status": "passed"
           },
           "step_type": "given"
@@ -411,11 +411,11 @@
                 "value": "Striped top"
               }
             ],
-            "location": "tests/steps/cart_steps.py:32"
+            "location": "tests/steps/cart_steps.py:30"
           },
           "name": "the customer removes \"Striped top\" from the cart",
           "result": {
-            "duration": 2.030714750289917,
+            "duration": 1.383599042892456,
             "status": "passed"
           },
           "step_type": "when"
@@ -425,11 +425,11 @@
           "location": "tests/features/cart.feature:37",
           "match": {
             "arguments": [],
-            "location": "tests/steps/cart_steps.py:71"
+            "location": "tests/steps/cart_steps.py:69"
           },
           "name": "the cart should be empty",
           "result": {
-            "duration": 0.29545092582702637,
+            "duration": 0.26090192794799805,
             "status": "passed"
           },
           "step_type": "then"
@@ -480,11 +480,11 @@
                 "value": "Grey jacket"
               }
             ],
-            "location": "tests/steps/cart_steps.py:8"
+            "location": "tests/steps/cart_steps.py:6"
           },
           "name": "the customer has 1 of \"Grey jacket\" in the cart",
           "result": {
-            "duration": 2.252232074737549,
+            "duration": 2.415522336959839,
             "status": "passed"
           },
           "step_type": "given"
@@ -494,11 +494,11 @@
           "location": "tests/features/checkout.feature:11",
           "match": {
             "arguments": [],
-            "location": "tests/steps/cart_steps.py:39"
+            "location": "tests/steps/cart_steps.py:37"
           },
           "name": "the customer proceeds to checkout",
           "result": {
-            "duration": 2.916574001312256,
+            "duration": 1.9596588611602783,
             "status": "passed"
           },
           "step_type": "when"
@@ -508,11 +508,11 @@
           "location": "tests/features/checkout.feature:12",
           "match": {
             "arguments": [],
-            "location": "tests/steps/cart_steps.py:78"
+            "location": "tests/steps/cart_steps.py:76"
           },
           "name": "the checkout page should be shown",
           "result": {
-            "duration": 0.49744486808776855,
+            "duration": 2.2497544288635254,
             "status": "passed"
           },
           "step_type": "then"
@@ -527,11 +527,11 @@
                 "value": "Grey jacket"
               }
             ],
-            "location": "tests/steps/cart_steps.py:83"
+            "location": "tests/steps/cart_steps.py:81"
           },
           "name": "the checkout should list \"Grey jacket\"",
           "result": {
-            "duration": 0.7019953727722168,
+            "duration": 1.0303101539611816,
             "status": "passed"
           },
           "step_type": "then"
@@ -586,11 +586,11 @@
           "location": "tests/features/login.feature:8",
           "match": {
             "arguments": [],
-            "location": "tests/steps/common_steps.py:21"
+            "location": "tests/steps/common_steps.py:18"
           },
           "name": "the customer is on the login page",
           "result": {
-            "duration": 2.877023935317993,
+            "duration": 3.0711660385131836,
             "status": "passed"
           },
           "step_type": "given"
@@ -600,11 +600,11 @@
           "location": "tests/features/login.feature:12",
           "match": {
             "arguments": [],
-            "location": "tests/steps/account_steps.py:8"
+            "location": "tests/steps/account_steps.py:6"
           },
           "name": "the customer chooses to reset the password",
           "result": {
-            "duration": 0.1407604217529297,
+            "duration": 0.18554902076721191,
             "status": "passed"
           },
           "step_type": "when"
@@ -614,11 +614,11 @@
           "location": "tests/features/login.feature:13",
           "match": {
             "arguments": [],
-            "location": "tests/steps/account_steps.py:13"
+            "location": "tests/steps/account_steps.py:11"
           },
           "name": "the password reset form should be shown",
           "result": {
-            "duration": 0.018053531646728516,
+            "duration": 0.03340744972229004,
             "status": "passed"
           },
           "step_type": "then"
@@ -659,11 +659,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 1.835597038269043,
+            "duration": 1.269622802734375,
             "status": "passed"
           },
           "step_type": "when"
@@ -678,11 +678,11 @@
                 "value": "Black heels"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"Black heels\" should be listed at its catalog price",
           "result": {
-            "duration": 0.06743335723876953,
+            "duration": 0.03417229652404785,
             "status": "passed"
           },
           "step_type": "then"
@@ -701,11 +701,11 @@
                 "value": "available"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"Black heels\" should be shown as \"available\"",
           "result": {
-            "duration": 0.03192496299743652,
+            "duration": 0.01757359504699707,
             "status": "passed"
           },
           "step_type": "then"
@@ -729,11 +729,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 1.19268798828125,
+            "duration": 1.6283228397369385,
             "status": "passed"
           },
           "step_type": "when"
@@ -748,11 +748,11 @@
                 "value": "Bronze sandals"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"Bronze sandals\" should be listed at its catalog price",
           "result": {
-            "duration": 0.026130199432373047,
+            "duration": 0.03192543983459473,
             "status": "passed"
           },
           "step_type": "then"
@@ -771,11 +771,11 @@
                 "value": "available"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"Bronze sandals\" should be shown as \"available\"",
           "result": {
-            "duration": 0.018001079559326172,
+            "duration": 0.012984514236450195,
             "status": "passed"
           },
           "step_type": "then"
@@ -799,11 +799,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 0.8642847537994385,
+            "duration": 1.4416306018829346,
             "status": "passed"
           },
           "step_type": "when"
@@ -818,11 +818,11 @@
                 "value": "Brown Shades"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"Brown Shades\" should be listed at its catalog price",
           "result": {
-            "duration": 0.5510034561157227,
+            "duration": 0.03859353065490723,
             "status": "passed"
           },
           "step_type": "then"
@@ -841,11 +841,11 @@
                 "value": "sold out"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"Brown Shades\" should be shown as \"sold out\"",
           "result": {
-            "duration": 0.01854848861694336,
+            "duration": 0.024021625518798828,
             "status": "passed"
           },
           "step_type": "then"
@@ -869,11 +869,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 1.0264008045196533,
+            "duration": 1.1852667331695557,
             "status": "passed"
           },
           "step_type": "when"
@@ -888,11 +888,11 @@
                 "value": "Grey jacket"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"Grey jacket\" should be listed at its catalog price",
           "result": {
-            "duration": 0.560645341873169,
+            "duration": 0.6362614631652832,
             "status": "passed"
           },
           "step_type": "then"
@@ -911,11 +911,11 @@
                 "value": "available"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"Grey jacket\" should be shown as \"available\"",
           "result": {
-            "duration": 0.05138754844665527,
+            "duration": 0.029423236846923828,
             "status": "passed"
           },
           "step_type": "then"
@@ -939,11 +939,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 1.2382104396820068,
+            "duration": 1.072843313217163,
             "status": "passed"
           },
           "step_type": "when"
@@ -958,11 +958,11 @@
                 "value": "Noir jacket"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"Noir jacket\" should be listed at its catalog price",
           "result": {
-            "duration": 0.5597949028015137,
+            "duration": 0.5493247509002686,
             "status": "passed"
           },
           "step_type": "then"
@@ -981,11 +981,11 @@
                 "value": "available"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"Noir jacket\" should be shown as \"available\"",
           "result": {
-            "duration": 0.016260147094726562,
+            "duration": 0.017086505889892578,
             "status": "passed"
           },
           "step_type": "then"
@@ -1009,11 +1009,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 1.2898671627044678,
+            "duration": 1.2534153461456299,
             "status": "passed"
           },
           "step_type": "when"
@@ -1028,11 +1028,11 @@
                 "value": "Striped top"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"Striped top\" should be listed at its catalog price",
           "result": {
-            "duration": 0.5371153354644775,
+            "duration": 0.5404562950134277,
             "status": "passed"
           },
           "step_type": "then"
@@ -1051,11 +1051,11 @@
                 "value": "available"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"Striped top\" should be shown as \"available\"",
           "result": {
-            "duration": 0.01599407196044922,
+            "duration": 0.010449886322021484,
             "status": "passed"
           },
           "step_type": "then"
@@ -1079,11 +1079,11 @@
           "location": "tests/features/product.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:8"
+            "location": "tests/steps/product_steps.py:6"
           },
           "name": "the customer browses the full catalog",
           "result": {
-            "duration": 1.0480225086212158,
+            "duration": 0.9193480014801025,
             "status": "passed"
           },
           "step_type": "when"
@@ -1098,11 +1098,11 @@
                 "value": "White sandals"
               }
             ],
-            "location": "tests/steps/product_steps.py:13"
+            "location": "tests/steps/product_steps.py:11"
           },
           "name": "the product \"White sandals\" should be listed at its catalog price",
           "result": {
-            "duration": 1.079289436340332,
+            "duration": 1.0502815246582031,
             "status": "passed"
           },
           "step_type": "then"
@@ -1121,11 +1121,11 @@
                 "value": "sold out"
               }
             ],
-            "location": "tests/steps/product_steps.py:21"
+            "location": "tests/steps/product_steps.py:19"
           },
           "name": "the product \"White sandals\" should be shown as \"sold out\"",
           "result": {
-            "duration": 0.012026309967041016,
+            "duration": 0.012997150421142578,
             "status": "passed"
           },
           "step_type": "then"
@@ -1154,11 +1154,11 @@
                 "value": "Noir jacket"
               }
             ],
-            "location": "tests/steps/common_steps.py:14"
+            "location": "tests/steps/common_steps.py:11"
           },
           "name": "the customer is viewing the product \"Noir jacket\"",
           "result": {
-            "duration": 1.271134614944458,
+            "duration": 0.9383997917175293,
             "status": "passed"
           },
           "step_type": "given"
@@ -1173,11 +1173,11 @@
                 "value": "Noir jacket"
               }
             ],
-            "location": "tests/steps/product_steps.py:29"
+            "location": "tests/steps/product_steps.py:27"
           },
           "name": "the product page should show the name \"Noir jacket\"",
           "result": {
-            "duration": 0.02785015106201172,
+            "duration": 0.024902820587158203,
             "status": "passed"
           },
           "step_type": "then"
@@ -1192,11 +1192,11 @@
                 "value": "\u00a360.00"
               }
             ],
-            "location": "tests/steps/product_steps.py:35"
+            "location": "tests/steps/product_steps.py:33"
           },
           "name": "the product page should show the price \"\u00a360.00\"",
           "result": {
-            "duration": 0.033399105072021484,
+            "duration": 0.025684595108032227,
             "status": "passed"
           },
           "step_type": "then"
@@ -1225,11 +1225,11 @@
                 "value": "Brown Shades"
               }
             ],
-            "location": "tests/steps/common_steps.py:14"
+            "location": "tests/steps/common_steps.py:11"
           },
           "name": "the customer is viewing the product \"Brown Shades\"",
           "result": {
-            "duration": 1.0122721195220947,
+            "duration": 1.1788640022277832,
             "status": "passed"
           },
           "step_type": "given"
@@ -1239,11 +1239,11 @@
           "location": "tests/features/product.feature:32",
           "match": {
             "arguments": [],
-            "location": "tests/steps/product_steps.py:41"
+            "location": "tests/steps/product_steps.py:39"
           },
           "name": "the customer should not be able to add it to the cart",
           "result": {
-            "duration": 0.04512500762939453,
+            "duration": 0.026966571807861328,
             "status": "passed"
           },
           "step_type": "then"
@@ -1285,11 +1285,11 @@
           "location": "tests/features/search.feature:9",
           "match": {
             "arguments": [],
-            "location": "tests/steps/common_steps.py:9"
+            "location": "tests/steps/common_steps.py:6"
           },
           "name": "the customer is on the home page",
           "result": {
-            "duration": 1.1514019966125488,
+            "duration": 0.9773108959197998,
             "status": "passed"
           },
           "step_type": "given"
@@ -1304,11 +1304,11 @@
                 "value": "jacket"
               }
             ],
-            "location": "tests/steps/search_steps.py:8"
+            "location": "tests/steps/search_steps.py:6"
           },
           "name": "the customer searches for \"jacket\"",
           "result": {
-            "duration": 0.5255968570709229,
+            "duration": 0.4751288890838623,
             "status": "passed"
           },
           "step_type": "when"
@@ -1323,11 +1323,11 @@
                 "value": "Grey jacket"
               }
             ],
-            "location": "tests/steps/search_steps.py:13"
+            "location": "tests/steps/search_steps.py:11"
           },
           "name": "the results should include \"Grey jacket\"",
           "result": {
-            "duration": 0.58133864402771,
+            "duration": 0.58937668800354,
             "status": "passed"
           },
           "step_type": "then"
@@ -1342,11 +1342,11 @@
                 "value": "Noir jacket"
               }
             ],
-            "location": "tests/steps/search_steps.py:13"
+            "location": "tests/steps/search_steps.py:11"
           },
           "name": "the results should include \"Noir jacket\"",
           "result": {
-            "duration": 0.029674530029296875,
+            "duration": 0.04772806167602539,
             "status": "passed"
           },
           "step_type": "then"
@@ -1369,11 +1369,11 @@
           "location": "tests/features/search.feature:16",
           "match": {
             "arguments": [],
-            "location": "tests/steps/common_steps.py:9"
+            "location": "tests/steps/common_steps.py:6"
           },
           "name": "the customer is on the home page",
           "result": {
-            "duration": 1.319288969039917,
+            "duration": 1.1034765243530273,
             "status": "passed"
           },
           "step_type": "given"
@@ -1388,11 +1388,11 @@
                 "value": "zzqqxx"
               }
             ],
-            "location": "tests/steps/search_steps.py:8"
+            "location": "tests/steps/search_steps.py:6"
           },
           "name": "the customer searches for \"zzqqxx\"",
           "result": {
-            "duration": 0.5051465034484863,
+            "duration": 0.6494190692901611,
             "status": "passed"
           },
           "step_type": "when"
@@ -1402,11 +1402,11 @@
           "location": "tests/features/search.feature:18",
           "match": {
             "arguments": [],
-            "location": "tests/steps/search_steps.py:19"
+            "location": "tests/steps/search_steps.py:17"
           },
           "name": "no products should be shown in the results",
           "result": {
-            "duration": 0.03367877006530762,
+            "duration": 0.031943559646606445,
             "status": "passed"
           },
           "step_type": "then"

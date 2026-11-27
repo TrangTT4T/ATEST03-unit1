@@ -1,13 +1,13 @@
-<testsuite name="features.checkout.Proceed to checkout" tests="1" errors="0" failures="0" skipped="0" time="6.368246" timestamp="2026-11-27T09:10:06.999885" hostname="DESKTOP-46MQSFV"><testcase classname="features.checkout.Proceed to checkout" name="Checkout opens from a non-empty cart" status="passed" time="6.368246"><system-out>
+<testsuite name="features.checkout.Proceed to checkout" tests="1" errors="0" failures="0" skipped="0" time="7.655246" timestamp="2026-11-27T09:46:04.272588" hostname="DESKTOP-46MQSFV"><testcase classname="features.checkout.Proceed to checkout" name="Checkout opens from a non-empty cart" status="passed" time="7.655246"><system-out>
 <![CDATA[
 @scenario.begin
 
   @critical @smoke @start_checkout
   Scenario: Checkout opens from a non-empty cart
-    Given the customer has 1 of "Grey jacket" in the cart ... passed in 2.252s
-    When the customer proceeds to checkout ... passed in 2.917s
-    Then the checkout page should be shown ... passed in 0.497s
-    And the checkout should list "Grey jacket" ... passed in 0.702s
+    Given the customer has 1 of "Grey jacket" in the cart ... passed in 2.416s
+    When the customer proceeds to checkout ... passed in 1.960s
+    Then the checkout page should be shown ... passed in 2.250s
+    And the checkout should list "Grey jacket" ... passed in 1.030s
 
 @scenario.end
 --------------------------------------------------------------------------------
